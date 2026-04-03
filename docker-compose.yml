@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  local-azure:
+    build: .
+    image: moabukar/local-azure:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - PORT=4566
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4566/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
