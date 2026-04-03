@@ -8,7 +8,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/moabukar/local-azure/internal/services/acr"
 	"github.com/moabukar/local-azure/internal/services/appconfig"
+	"github.com/moabukar/local-azure/internal/services/auth"
 	"github.com/moabukar/local-azure/internal/services/blob"
 	"github.com/moabukar/local-azure/internal/services/cosmosdb"
 	"github.com/moabukar/local-azure/internal/services/dns"
@@ -16,9 +18,9 @@ import (
 	"github.com/moabukar/local-azure/internal/services/functions"
 	"github.com/moabukar/local-azure/internal/services/identity"
 	"github.com/moabukar/local-azure/internal/services/keyvault"
+	"github.com/moabukar/local-azure/internal/services/metadata"
 	"github.com/moabukar/local-azure/internal/services/network"
 	"github.com/moabukar/local-azure/internal/services/queue"
-	"github.com/moabukar/local-azure/internal/services/acr"
 	"github.com/moabukar/local-azure/internal/services/resourcegroups"
 	"github.com/moabukar/local-azure/internal/services/servicebus"
 	"github.com/moabukar/local-azure/internal/services/table"
@@ -54,8 +56,12 @@ func (s *Server) setupMiddleware() {
 
 func (s *Server) setupRoutes() {
 	s.router.Get("/health", s.healthHandler)
-	
-	// Register all services
+
+	// Cloud metadata + auth (needed for az CLI custom cloud registration)
+	metadata.NewHandler(s.store).Register(s.router)
+	auth.NewHandler(s.store).Register(s.router)
+
+	// Azure services
 	resourcegroups.NewHandler(s.store).Register(s.router)
 	blob.NewHandler(s.store).Register(s.router)
 	table.NewHandler(s.store).Register(s.router)
