@@ -57,7 +57,7 @@ miniblue fills this gap for Azure developers.
 
 ## What miniblue is
 
-- **14 Azure services** emulated on a single port (4566)
+- **14 Azure services** emulated behind a single port (4566)
 - **Drop-in compatible** with Azure SDKs, Terraform, Pulumi
 - **In-memory storage** by default (fast, ephemeral)
 - **Docker-first** deployment
