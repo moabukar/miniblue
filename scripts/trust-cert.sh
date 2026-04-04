@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Trust the local-azure self-signed certificate
-# Run after starting local-azure at least once
+# Trust the miniblue self-signed certificate
+# Run after starting miniblue at least once
 
 set -e
 
-CERT_PATH="${HOME}/.local-azure/cert.pem"
+CERT_PATH="${HOME}/.miniblue/cert.pem"
 
 if [ ! -f "$CERT_PATH" ]; then
     echo "Certificate not found at $CERT_PATH"
-    echo "Start local-azure first: ./bin/local-azure"
+    echo "Start miniblue first: ./bin/miniblue"
     exit 1
 fi
 
@@ -24,11 +24,11 @@ case "$(uname -s)" in
     Linux)
         if command -v update-ca-certificates &>/dev/null; then
             echo "Adding to system CA store (Debian/Ubuntu)..."
-            sudo cp "$CERT_PATH" /usr/local/share/ca-certificates/local-azure.crt
+            sudo cp "$CERT_PATH" /usr/local/share/ca-certificates/miniblue.crt
             sudo update-ca-certificates
         elif command -v update-ca-trust &>/dev/null; then
             echo "Adding to system CA store (RHEL/Fedora)..."
-            sudo cp "$CERT_PATH" /etc/pki/ca-trust/source/anchors/local-azure.crt
+            sudo cp "$CERT_PATH" /etc/pki/ca-trust/source/anchors/miniblue.crt
             sudo update-ca-trust
         else
             echo "Could not detect CA trust utility."

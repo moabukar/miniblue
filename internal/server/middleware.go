@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/moabukar/local-azure/internal/azerr"
+	"github.com/moabukar/miniblue/internal/azerr"
 )
 
 // AzureHeaders adds standard Azure response headers to every request.

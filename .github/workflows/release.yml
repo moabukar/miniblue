@@ -39,8 +39,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/moabukar/local-azure
-            moabukar/local-azure
+            ghcr.io/moabukar/miniblue
+            moabukar/miniblue
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}

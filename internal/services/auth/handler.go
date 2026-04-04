@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/moabukar/local-azure/internal/store"
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 type Handler struct {
@@ -80,7 +80,7 @@ func (h *Handler) Token(w http.ResponseWriter, r *http.Request) {
 	tenantId := chi.URLParam(r, "tenantId")
 	clientId := r.FormValue("client_id")
 	if clientId == "" {
-		clientId = "local-azure"
+		clientId = "miniblue"
 	}
 	accessToken := mockJWT(tenantId, clientId)
 	token := map[string]interface{}{
@@ -90,7 +90,7 @@ func (h *Handler) Token(w http.ResponseWriter, r *http.Request) {
 		"expires_on":     time.Now().Add(24 * time.Hour).Unix(),
 		"not_before":     time.Now().Unix(),
 		"resource":       r.FormValue("resource"),
-		"refresh_token":  "local-azure-mock-refresh-token",
+		"refresh_token":  "miniblue-mock-refresh-token",
 		"scope":          r.FormValue("scope"),
 		"ext_expires_in": 86400,
 		"foci":           "1",
@@ -124,7 +124,7 @@ func (h *Handler) writeOpenIDConfig(w http.ResponseWriter, r *http.Request, tena
 		"jwks_uri":                              base + "/" + tenantId + "/discovery/v2.0/keys",
 		"userinfo_endpoint":                     base + "/" + tenantId + "/openid/userinfo",
 		"tenant_region_scope":                   "NA",
-		"cloud_instance_name":                   "local-azure",
+		"cloud_instance_name":                   "miniblue",
 		"cloud_graph_host_name":                 "localhost",
 		"msgraph_host":                          "localhost",
 		"rbac_url":                              base,
@@ -148,11 +148,11 @@ func (h *Handler) Authorize(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(redirectURI, "?") {
 			sep = "&"
 		}
-		http.Redirect(w, r, redirectURI+sep+"code=local-azure-mock-code&state="+state, http.StatusFound)
+		http.Redirect(w, r, redirectURI+sep+"code=miniblue-mock-code&state="+state, http.StatusFound)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"code": "local-azure-mock-code"})
+	json.NewEncoder(w).Encode(map[string]string{"code": "miniblue-mock-code"})
 }
 
 func (h *Handler) DiscoveryInstance(w http.ResponseWriter, r *http.Request) {

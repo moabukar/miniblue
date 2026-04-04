@@ -1,16 +1,16 @@
-# local-azure
+# miniblue
 
 **The free, open-source Azure emulator. Develop and test your Azure apps locally.**
 
 [![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/local-azure)](https://hub.docker.com/r/moabukar/local-azure)
+[![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/miniblue)](https://hub.docker.com/r/moabukar/miniblue)
 
 Single port. No account. No license key. No telemetry. Just Azure APIs, locally.
 
 ---
 
-## Why local-azure?
+## Why miniblue?
 
 **AWS has LocalStack and MiniStack. Azure has... nothing unified.**
 
@@ -26,7 +26,7 @@ The Azure ecosystem today forces developers to cobble together individual emulat
 
 That is 5 separate tools, 5 different Docker images, 5 different ports and configs - just to get basic local dev working. And you still have no local emulation for Resource Groups, Key Vault, DNS, VNets, Event Grid, ACR, or Managed Identity.
 
-**local-azure gives you 14+ Azure services on a single port.** One binary, one Docker image, zero config.
+**miniblue gives you 14+ Azure services on a single port.** One binary, one Docker image, zero config.
 
 ### How it compares
 
@@ -49,7 +49,7 @@ That is 5 separate tools, 5 different Docker images, 5 different ports and confi
 4. **LocalStack had first-mover advantage** - AWS developers hit the "I need local dev" wall first and built solutions
 5. **GCP has the same gap** - Google also only ships per-service emulators (Spanner, Pub/Sub, Firestore, etc.) with no unified tool
 
-local-azure fills this gap for Azure developers.
+miniblue fills this gap for Azure developers.
 
 ---
 
@@ -69,10 +69,10 @@ local-azure fills this gap for Azure developers.
 
 ```bash
 # From Docker Hub
-docker run -p 4566:4566 -p 4567:4567 moabukar/local-azure:latest
+docker run -p 4566:4566 -p 4567:4567 moabukar/miniblue:latest
 
 # From GitHub Container Registry
-docker run -p 4566:4566 -p 4567:4567 ghcr.io/moabukar/local-azure:latest
+docker run -p 4566:4566 -p 4567:4567 ghcr.io/moabukar/miniblue:latest
 ```
 
 ### Docker Compose
@@ -81,7 +81,7 @@ docker run -p 4566:4566 -p 4567:4567 ghcr.io/moabukar/local-azure:latest
 version: '3.8'
 services:
   local-azure:
-    image: moabukar/local-azure:latest
+    image: moabukar/miniblue:latest
     ports:
       - "4566:4566"
       - "4567:4567"
@@ -94,15 +94,15 @@ docker-compose up
 ### Build from Source
 
 ```bash
-git clone https://github.com/moabukar/local-azure.git
-cd local-azure
+git clone https://github.com/moabukar/miniblue.git
+cd miniblue
 make build
-./bin/local-azure
+./bin/miniblue
 ```
 
 ## azlocal CLI
 
-Just like `awslocal` for LocalStack, `azlocal` wraps HTTP calls to local-azure. No auth needed.
+Just like `awslocal` for LocalStack, `azlocal` wraps HTTP calls to miniblue. No auth needed.
 
 ```bash
 # Build
@@ -171,7 +171,7 @@ curl "http://localhost:4566/blob/myaccount/mycontainer/hello.txt"
 # Trust the self-signed cert (one-time)
 bash scripts/trust-cert.sh
 # Or for current session only:
-export SSL_CERT_FILE=~/.local-azure/cert.pem
+export SSL_CERT_FILE=~/.miniblue/cert.pem
 ```
 
 ```hcl

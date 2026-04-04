@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/moabukar/local-azure/internal/store"
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 type TokenResponse struct {
@@ -39,7 +39,7 @@ func (h *Handler) GetToken(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	token := TokenResponse{
-		AccessToken:  "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6ImxvY2FsLWF6dXJlIn0.local-azure-mock-token",
+		AccessToken:  "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6ImxvY2FsLWF6dXJlIn0.miniblue-mock-token",
 		TokenType:    "Bearer",
 		ExpiresIn:    86400,
 		ExpiresOn:    time.Now().Add(24 * time.Hour).UTC().Format(time.RFC3339),
@@ -54,10 +54,10 @@ func (h *Handler) GetInstanceMetadata(w http.ResponseWriter, r *http.Request) {
 	metadata := map[string]interface{}{
 		"compute": map[string]interface{}{
 			"location":       "eastus",
-			"name":           "local-azure-vm",
-			"resourceGroupName": "local-azure-rg",
+			"name":           "miniblue-vm",
+			"resourceGroupName": "miniblue-rg",
 			"subscriptionId": "00000000-0000-0000-0000-000000000000",
-			"vmId":           "local-azure-vm-id",
+			"vmId":           "miniblue-vm-id",
 		},
 	}
 	w.Header().Set("Content-Type", "application/json")

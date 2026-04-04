@@ -1,4 +1,4 @@
-module github.com/moabukar/local-azure
+module github.com/moabukar/miniblue
 
 go 1.23
 

@@ -1,8 +1,8 @@
 
 services:
-  local-azure:
+  miniblue:
     build: .
-    image: moabukar/local-azure:latest
+    image: moabukar/miniblue:latest
     ports:
       - "4566:4566"
     environment:
