@@ -136,27 +136,27 @@ azlocal storage blob upload --account myaccount --container mycontainer --name f
 
 ## Supported Services
 
-| Service | Status | Real Backend |
-|---------|--------|-------------|
-| Resource Groups | Done | In-memory / Postgres |
-| Blob Storage | Done | In-memory |
-| Table Storage | Done | In-memory |
-| Queue Storage | Done | In-memory |
-| Key Vault | Done | In-memory |
-| Cosmos DB | Done | In-memory / Postgres |
-| Service Bus | Done | In-memory |
-| Azure Functions | Done | Stub |
-| Virtual Networks | Done | In-memory |
-| DNS Zones | Done | In-memory |
-| Container Registry | Done | In-memory |
-| Event Grid | Done | In-memory |
-| App Configuration | Done | In-memory |
-| Managed Identity | Done | Mock tokens |
-| **DB for PostgreSQL** | **New** | **Real Postgres via POSTGRES_URL** |
-| **DB for MySQL** | **New** | Stub (real backend planned) |
-| **Azure SQL Database** | **New** | Stub (real backend planned) |
-| **Azure Cache for Redis** | **New** | **Real Redis via REDIS_URL** |
-| **Container Instances** | **New** | **Real Docker containers** |
+| Service | Description | Real Backend |
+|---------|-------------|-------------|
+| Resource Groups | ARM resource group management | In-memory / Postgres |
+| Blob Storage | Containers, blobs, upload/download | In-memory |
+| Table Storage | Entity CRUD operations | In-memory |
+| Queue Storage | Send/receive/peek messages | In-memory |
+| Key Vault | Secrets management | In-memory |
+| Cosmos DB | Document CRUD (SQL API) | In-memory / Postgres |
+| Service Bus | Queues, topics, messaging | In-memory |
+| Azure Functions | Function app registration | Stub |
+| Virtual Networks | VNets and subnets | In-memory |
+| DNS Zones | Zone and record management | In-memory |
+| Container Registry | Registry management, manifests | In-memory |
+| Event Grid | Topics and event publishing | In-memory |
+| App Configuration | Key-value configuration store | In-memory |
+| Managed Identity | IMDS token endpoint | Mock tokens |
+| DB for PostgreSQL | Flexible server + database CRUD | Real Postgres via `POSTGRES_URL` |
+| DB for MySQL | Flexible server + database CRUD | Stub (real backend planned) |
+| Azure SQL Database | Server + database CRUD | Stub (real backend planned) |
+| Azure Cache for Redis | Cache management + key listing | Real Redis via `REDIS_URL` |
+| Container Instances | Container group lifecycle | Real Docker containers |
 
 ## Usage Examples
 
