@@ -25,6 +25,11 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      - name: Lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
+
   docker:
     runs-on: ubuntu-latest
     steps:

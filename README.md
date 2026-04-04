@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/miniblue)](https://hub.docker.com/r/moabukar/miniblue)
 
-Single port. No account. No license key. No telemetry. Just Azure APIs, locally.
+Every Azure service. One binary. Zero config.
 
 ---
 
