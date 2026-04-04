@@ -48,7 +48,7 @@ Response:
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/quickstart-rg?api-version=2020-06-01",
+  "id": "/subscriptions/sub1/resourceGroups/quickstart-rg",
   "name": "quickstart-rg",
   "type": "Microsoft.Resources/resourceGroups",
   "location": "eastus",

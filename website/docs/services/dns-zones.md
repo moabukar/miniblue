@@ -33,7 +33,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com?api-version=2020-06-01",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com",
   "name": "example.com",
   "type": "Microsoft.Network/dnsZones",
   "location": "global",
@@ -84,7 +84,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www?api-version=2020-06-01",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www",
   "name": "www",
   "type": "Microsoft.Network/dnsZones/A",
   "properties": {

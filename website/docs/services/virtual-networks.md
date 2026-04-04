@@ -41,7 +41,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet?api-version=2020-06-01",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet",
   "name": "my-vnet",
   "type": "Microsoft.Network/virtualNetworks",
   "location": "eastus",
@@ -89,7 +89,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet?api-version=2020-06-01",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet",
   "name": "my-subnet",
   "etag": "W/\"miniblue\"",
   "type": "Microsoft.Network/virtualNetworks/subnets",

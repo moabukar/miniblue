@@ -41,7 +41,7 @@ services:
       - PORT=4566
       - LOG_LEVEL=info
     healthcheck:
-      test: ["CMD", "wget", "--no-check-certificate", "-q", "--spider", "https://localhost:4566/health"]
+      test: ["CMD", "wget", "--no-check-certificate", "-q", "--spider", "http://localhost:4566/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -61,7 +61,7 @@ services:
       - "4566:4566"
       - "4567:4567"
     healthcheck:
-      test: ["CMD", "wget", "--no-check-certificate", "-q", "--spider", "https://localhost:4566/health"]
+      test: ["CMD", "wget", "--no-check-certificate", "-q", "--spider", "http://localhost:4566/health"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -92,7 +92,7 @@ curl http://localhost:4566/health
 
 ```yaml
 healthcheck:
-  test: ["CMD", "wget", "--no-check-certificate", "-q", "--spider", "https://localhost:4566/health"]
+  test: ["CMD", "wget", "--no-check-certificate", "-q", "--spider", "http://localhost:4566/health"]
   interval: 10s
   timeout: 5s
   retries: 3
