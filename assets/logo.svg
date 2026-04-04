@@ -24,5 +24,5 @@
   <line x1="100" y1="101" x2="100" y2="167" stroke="white" stroke-opacity="0.12" stroke-width="0.8"/>
   <line x1="100" y1="101" x2="40" y2="68" stroke="white" stroke-opacity="0.08" stroke-width="0.8"/>
   <line x1="100" y1="101" x2="160" y2="68" stroke="white" stroke-opacity="0.08" stroke-width="0.8"/>
-  <text x="130" y="140" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="800" fill="white" fill-opacity="0.92">m</text>
+  <text x="100" y="78" text-anchor="middle" dominant-baseline="central" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="30" font-weight="800" fill="white" fill-opacity="0.95">m</text>
 </svg>
