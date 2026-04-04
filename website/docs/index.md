@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="miniblue" width="120" />
+  <img src="https://raw.githubusercontent.com/moabukar/miniblue/main/assets/logo.svg" alt="miniblue" width="120" />
 </p>
 
-# miniblue
+<h1 align="center">miniblue</h1>
 
-**Local Azure development. One binary. No account needed.**
+<p align="center"><strong>Local Azure development. One binary. No account needed.</strong></p>
 
 miniblue is a free, open-source Azure emulator that runs entirely on your machine. Test your Azure apps locally without an Azure account, network connection, or credit card.
 
