@@ -32,7 +32,7 @@ Brief description of the changes.
 ## Testing
 
 - [ ] Tested locally with curl
-- [ ] Tested with az CLI
+- [ ] Tested with azlocal CLI
 - [ ] Tested with Docker build
 - [ ] Added/updated tests
 

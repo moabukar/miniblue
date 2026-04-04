@@ -49,7 +49,7 @@ What's implemented, stubbed, and unsupported in miniblue compared to real Azure 
 |----------|--------|-------|
 | OAuth2 token (v1 + v2) | Full | Returns valid JWT with oid/tid claims |
 | OpenID configuration | Full | OIDC discovery for MSAL |
-| Instance discovery | Full | Authority validation for az CLI |
+| Instance discovery | Full | Authority validation (internal) |
 | Managed Identity (IMDS) | Full | Token endpoint for workload identity |
 | Cloud metadata | Full | Terraform provider metadata |
 | /health | Full | 21 services listed |

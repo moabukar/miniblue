@@ -238,19 +238,32 @@ See [examples/terraform/](examples/terraform/) for a full working example.
 endpoint := "http://localhost:4566"
 ```
 
-## az CLI Setup
+## CLI Usage
 
-**Recommended: use `azlocal`** (works out of the box, no auth setup needed).
-
-The native `az` CLI uses MSAL authentication which requires complex token negotiation. It's not fully compatible with local emulators. Use `azlocal` instead:
+Use `azlocal` to interact with miniblue. No authentication or cloud registration needed.
 
 ```bash
+# Resource groups
 azlocal group create --name myRG --location eastus
 azlocal group list
-azlocal keyvault secret set --vault myvault --name key --value secret
+azlocal group delete --name myRG
+
+# Key Vault
+azlocal keyvault secret set --vault myvault --name db-pass --value secret123
+azlocal keyvault secret show --vault myvault --name db-pass
+
+# Blob storage
+azlocal storage container create --account myaccount --name mycontainer
+azlocal storage blob upload --account myaccount --container mycontainer --name file.txt --data "Hello!"
+azlocal storage blob download --account myaccount --container mycontainer --name file.txt
+
+# All commands
+azlocal --help
 ```
 
 For Terraform, use the `metadata_host` provider config (see Terraform section above).
+
+> **Note:** The native Azure CLI (`az`) is not supported. It uses Microsoft's MSAL authentication library which requires real Azure AD endpoints. Use `azlocal` instead.
 
 ## Configuration
 

@@ -44,7 +44,7 @@ nav:
   - Guides:
     - Terraform: guides/terraform.md
     - azlocal CLI: guides/azlocal.md
-    - Azure CLI: guides/azure-cli.md
+    - CLI Reference: guides/azure-cli.md
     - Docker: guides/docker.md
   - Services:
     - Overview: services/overview.md

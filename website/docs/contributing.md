@@ -54,7 +54,7 @@ miniblue/
     terraform/         # Terraform example
   scripts/
     trust-cert.sh      # Trust self-signed cert
-    az-login-local.sh  # Configure az CLI
+    az-login-local.sh  # Legacy (use azlocal instead)
   website/
     docs/              # This documentation (mkdocs)
     mkdocs.yml
