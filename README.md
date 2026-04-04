@@ -69,11 +69,11 @@ miniblue fills this gap for Azure developers.
 
 miniblue is an **API emulator** for local development and testing. It does not run real Azure infrastructure.
 
-- **No VMs** — Azure VMs, VMSS, and compute are not emulated
-- **No real networking** — VNets/subnets are API stubs, no actual network layer
-- **No real containers** — AKS/ACI endpoints are not supported (yet)
-- **No data persistence** — all state is in-memory and lost on restart
-- **Not production-ready** — never expose miniblue to the internet
+- **No VMs** - Azure VMs, VMSS, and compute are not emulated
+- **No real networking** - VNets/subnets are API stubs, no actual network layer
+- **No real containers** - AKS/ACI endpoints are not supported (yet)
+- **No data persistence** - all state is in-memory and lost on restart
+- **Not production-ready** - never expose miniblue to the internet
 
 miniblue is designed for **CI pipelines, integration tests, and local development** where you need Azure API compatibility without an Azure account.
 
@@ -162,7 +162,7 @@ azlocal storage blob upload --account myaccount --container mycontainer --name f
 curl http://localhost:4566/health
 
 # Create a resource group
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{"location": "eastus"}'
 

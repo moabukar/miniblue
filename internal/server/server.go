@@ -34,7 +34,7 @@ type Server struct {
 func New() *Server {
 	s := &Server{
 		router: chi.NewRouter(),
-		store:  store.New(),
+		store:  store.NewWithBackend(store.NewBackend()),
 	}
 	s.setupMiddleware()
 	s.setupRoutes()

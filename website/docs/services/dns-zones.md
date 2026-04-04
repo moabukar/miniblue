@@ -24,7 +24,7 @@ miniblue emulates Azure DNS zones and record sets. Creating a zone automatically
 ## Create a DNS zone
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
@@ -33,7 +33,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com?api-version=2020-06-01",
   "name": "example.com",
   "type": "Microsoft.Network/dnsZones",
   "location": "global",
@@ -53,13 +53,13 @@ Response (`201 Created`):
 ## Get a DNS zone
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com"
+curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com?api-version=2020-06-01"
 ```
 
 ## List DNS zones
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones"
+curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones?api-version=2020-06-01"
 ```
 
 ## Create a record set
@@ -67,7 +67,7 @@ curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Mic
 ### A record
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "properties": {
@@ -84,7 +84,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www?api-version=2020-06-01",
   "name": "www",
   "type": "Microsoft.Network/dnsZones/A",
   "properties": {
@@ -100,7 +100,7 @@ Response (`201 Created`):
 ### CNAME record
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/CNAME/docs" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/CNAME/docs?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "properties": {
@@ -115,7 +115,7 @@ curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/provid
 ### MX record
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/MX/@" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/MX/@?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "properties": {
@@ -130,7 +130,7 @@ curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/provid
 ### TXT record
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/TXT/@" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/TXT/@?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "properties": {
@@ -145,19 +145,19 @@ curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/provid
 ## Get a record set
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www"
+curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www?api-version=2020-06-01"
 ```
 
 ## Delete a record set
 
 ```bash
-curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www"
+curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com/A/www?api-version=2020-06-01"
 ```
 
 ## Delete a DNS zone
 
 ```bash
-curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com"
+curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/dnsZones/example.com?api-version=2020-06-01"
 ```
 
 Deleting a zone also deletes all its record sets.

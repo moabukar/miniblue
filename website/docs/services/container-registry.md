@@ -25,7 +25,7 @@ miniblue emulates Azure Container Registry (ACR) with ARM management endpoints a
 ## Create a registry
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "location": "eastus",
@@ -39,7 +39,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry?api-version=2020-06-01",
   "name": "myregistry",
   "type": "Microsoft.ContainerRegistry/registries",
   "location": "eastus",
@@ -71,19 +71,19 @@ Response (`201 Created`):
 ## Get a registry
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry"
+curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry?api-version=2020-06-01"
 ```
 
 ## List registries
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries"
+curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries?api-version=2020-06-01"
 ```
 
 ## Check name availability
 
 ```bash
-curl -X POST "http://localhost:4566/subscriptions/sub1/providers/Microsoft.ContainerRegistry/checkNameAvailability" \
+curl -X POST "http://localhost:4566/subscriptions/sub1/providers/Microsoft.ContainerRegistry/checkNameAvailability?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{"name": "myregistry", "type": "Microsoft.ContainerRegistry/registries"}'
 ```
@@ -109,7 +109,7 @@ If the name is already taken:
 ## Delete a registry
 
 ```bash
-curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry"
+curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry?api-version=2020-06-01"
 ```
 
 Response: `202 Accepted`

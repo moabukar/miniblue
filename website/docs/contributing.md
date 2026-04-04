@@ -199,7 +199,7 @@ azerr.Conflict(w, "Microsoft.YourService/resources", name)
 For resources managed through Azure Resource Manager, use the standard ARM URL pattern:
 
 ```go
-r.Route("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.YourService/resources", func(r chi.Router) {
+r.Route("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.YourService/resources?api-version=2020-06-01", func(r chi.Router) {
     r.Get("/", h.List)
     r.Route("/{resourceName}", func(r chi.Router) {
         r.Put("/", h.CreateOrUpdate)

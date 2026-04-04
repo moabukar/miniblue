@@ -1,0 +1,22 @@
+services:
+  miniblue:
+    build: .
+    ports:
+      - "4566:4566"
+      - "4567:4567"
+    environment:
+      - DATABASE_URL=postgres://miniblue:miniblue@postgres:5432/miniblue?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: miniblue
+      POSTGRES_PASSWORD: miniblue
+      POSTGRES_DB: miniblue
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U miniblue"]
+      interval: 5s
+      timeout: 3s
+      retries: 5

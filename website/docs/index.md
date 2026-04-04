@@ -35,11 +35,11 @@ That's it. 14+ Azure services are now running locally.
 
 ## Works with your tools
 
-- **Terraform** — `metadata_host = "localhost:4567"` and you're done
-- **azlocal CLI** — like `awslocal` for LocalStack
-- **Azure CLI** — custom cloud registration
-- **Any Azure SDK** — just point the endpoint to `http://localhost:4566`
-- **curl** — standard REST API
+- **Terraform** - `metadata_host = "localhost:4567"` and you're done
+- **azlocal CLI** - like `awslocal` for LocalStack
+- **Azure CLI** - custom cloud registration
+- **Any Azure SDK** - just point the endpoint to `http://localhost:4566`
+- **curl** - standard REST API
 
 ## Quick start
 

@@ -95,12 +95,12 @@ Regardless of install method, confirm everything works:
 curl http://localhost:4566/health
 
 # Create a resource group
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/test-rg" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/test-rg?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{"location": "eastus"}'
 
 # Clean up
-curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourcegroups/test-rg"
+curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourcegroups/test-rg?api-version=2020-06-01"
 ```
 
 ## Next steps

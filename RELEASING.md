@@ -4,9 +4,9 @@
 
 miniblue follows [Semantic Versioning](https://semver.org/):
 
-- **MAJOR** (v2.0.0) — breaking API changes
-- **MINOR** (v0.2.0) — new services, features, backwards-compatible
-- **PATCH** (v0.1.1) — bug fixes, response format fixes
+- **MAJOR** (v2.0.0) - breaking API changes
+- **MINOR** (v0.2.0) - new services, features, backwards-compatible
+- **PATCH** (v0.1.1) - bug fixes, response format fixes
 
 ## How to release
 
@@ -81,7 +81,7 @@ Set these in **Settings > Secrets > Actions** on the GitHub repo:
 | `DOCKERHUB_USERNAME` | Docker Hub username |
 | `DOCKERHUB_TOKEN` | Docker Hub access token ([create here](https://hub.docker.com/settings/security)) |
 
-GHCR uses `GITHUB_TOKEN` automatically — no extra setup needed.
+GHCR uses `GITHUB_TOKEN` automatically - no extra setup needed.
 
 ## Rollback
 

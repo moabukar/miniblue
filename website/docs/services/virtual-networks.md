@@ -25,7 +25,7 @@ miniblue emulates Azure Virtual Networks (VNets) and subnets via the ARM API. Th
 ## Create a VNet
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "location": "eastus",
@@ -41,7 +41,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet?api-version=2020-06-01",
   "name": "my-vnet",
   "type": "Microsoft.Network/virtualNetworks",
   "location": "eastus",
@@ -66,7 +66,7 @@ Response (`201 Created`):
 ## Get a VNet
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet"
+curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet?api-version=2020-06-01"
 ```
 
 The response includes a `subnets` array populated from the store.
@@ -76,7 +76,7 @@ The response includes a `subnets` array populated from the store.
 The parent VNet must exist first.
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "properties": {
@@ -89,7 +89,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet?api-version=2020-06-01",
   "name": "my-subnet",
   "etag": "W/\"miniblue\"",
   "type": "Microsoft.Network/virtualNetworks/subnets",
@@ -109,19 +109,19 @@ Response (`201 Created`):
 ## List subnets
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets"
+curl "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets?api-version=2020-06-01"
 ```
 
 ## Delete a subnet
 
 ```bash
-curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet"
+curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet?api-version=2020-06-01"
 ```
 
 ## Delete a VNet
 
 ```bash
-curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet"
+curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/my-vnet?api-version=2020-06-01"
 ```
 
 Deleting a VNet also deletes all its subnets.

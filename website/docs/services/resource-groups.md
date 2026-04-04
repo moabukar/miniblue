@@ -16,7 +16,7 @@ Resource groups are the top-level container for Azure resources. miniblue implem
 ## Create a resource group
 
 ```bash
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG" \
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "location": "eastus",
@@ -31,7 +31,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG",
+  "id": "/subscriptions/sub1/resourceGroups/myRG?api-version=2020-06-01",
   "name": "myRG",
   "type": "Microsoft.Resources/resourceGroups",
   "location": "eastus",
@@ -51,13 +51,13 @@ Response (`201 Created`):
 ## Get a resource group
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG"
+curl "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG?api-version=2020-06-01"
 ```
 
 ## Check existence
 
 ```bash
-curl -I "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG"
+curl -I "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG?api-version=2020-06-01"
 ```
 
 Returns `204 No Content` if it exists, `404 Not Found` otherwise.
@@ -65,7 +65,7 @@ Returns `204 No Content` if it exists, `404 Not Found` otherwise.
 ## Update tags
 
 ```bash
-curl -X PATCH "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG" \
+curl -X PATCH "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG?api-version=2020-06-01" \
   -H "Content-Type: application/json" \
   -d '{
     "tags": {
@@ -77,7 +77,7 @@ curl -X PATCH "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG" \
 ## List all resource groups
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourcegroups"
+curl "http://localhost:4566/subscriptions/sub1/resourcegroups?api-version=2020-06-01"
 ```
 
 Response:
@@ -86,7 +86,7 @@ Response:
 {
   "value": [
     {
-      "id": "/subscriptions/sub1/resourceGroups/myRG",
+      "id": "/subscriptions/sub1/resourceGroups/myRG?api-version=2020-06-01",
       "name": "myRG",
       "type": "Microsoft.Resources/resourceGroups",
       "location": "eastus",
@@ -101,7 +101,7 @@ Response:
 ## Delete a resource group
 
 ```bash
-curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG"
+curl -X DELETE "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG?api-version=2020-06-01"
 ```
 
 Returns `202 Accepted` with a `Location` header for async polling. Deleting a resource group also cleans up all resources inside it (VNets, subnets, DNS zones, ACR registries, functions, Event Grid topics).
@@ -109,7 +109,7 @@ Returns `202 Accepted` with a `Location` header for async polling. Deleting a re
 ## List resources in a group
 
 ```bash
-curl "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG/resources"
+curl "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG/resources?api-version=2020-06-01"
 ```
 
 !!! info

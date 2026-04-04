@@ -157,7 +157,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	h.store.DeleteByPrefix("dns:zone:" + sub + ":" + name + ":")
 	h.store.DeleteByPrefix("dns:record:" + sub + ":" + name + ":")
 
-	// Async operation — return Location header for polling (Terraform requires this on 202)
+	// Async operation - return Location header for polling (Terraform requires this on 202)
 	scheme := "http"
 	if r.TLS != nil {
 		scheme = "https"

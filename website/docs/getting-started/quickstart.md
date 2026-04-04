@@ -33,7 +33,7 @@ Every Azure resource lives inside a resource group. Create one:
 === "curl"
 
     ```bash
-    curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/quickstart-rg" \
+    curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/quickstart-rg?api-version=2020-06-01" \
       -H "Content-Type: application/json" \
       -d '{"location": "eastus"}'
     ```
@@ -48,7 +48,7 @@ Response:
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/quickstart-rg",
+  "id": "/subscriptions/sub1/resourceGroups/quickstart-rg?api-version=2020-06-01",
   "name": "quickstart-rg",
   "type": "Microsoft.Resources/resourceGroups",
   "location": "eastus",
