@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="top" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#60A5FA"/>
+      <stop offset="100%" style="stop-color:#3B82F6"/>
+    </linearGradient>
+    <linearGradient id="left" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2563EB"/>
+      <stop offset="100%" style="stop-color:#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="right" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#3B82F6"/>
+      <stop offset="100%" style="stop-color:#2563EB"/>
+    </linearGradient>
+  </defs>
+  <polygon points="100,35 155,65 100,95 45,65" fill="url(#top)"/>
+  <polygon points="45,65 100,95 100,155 45,125" fill="url(#left)"/>
+  <polygon points="155,65 100,95 100,155 155,125" fill="url(#right)"/>
+  <line x1="100" y1="95" x2="100" y2="155" stroke="white" stroke-opacity="0.15" stroke-width="1"/>
+  <line x1="100" y1="95" x2="45" y2="65" stroke="white" stroke-opacity="0.1" stroke-width="1"/>
+  <line x1="100" y1="95" x2="155" y2="65" stroke="white" stroke-opacity="0.1" stroke-width="1"/>
+  <text x="115" y="118" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="700" fill="white" fill-opacity="0.9">m</text>
+</svg>

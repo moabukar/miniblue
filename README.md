@@ -1,6 +1,12 @@
-# miniblue
+<p align="center">
+  <img src="assets/logo.svg" alt="miniblue" width="120" />
+</p>
 
-**The free, open-source Azure emulator. Develop and test your Azure apps locally.**
+<h1 align="center">miniblue</h1>
+
+<p align="center"><strong>The free, open-source Azure emulator. Develop and test your Azure apps locally.</strong></p>
+
+<p align="center">
 
 [![Go Version](https://img.shields.io/badge/go-1.25+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -8,7 +14,9 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/miniblue)](https://hub.docker.com/r/moabukar/miniblue)
 [![Docs](https://img.shields.io/badge/docs-moabukar.github.io%2Fminiblue-blue)](https://moabukar.github.io/miniblue)
 
-Local Azure development. One binary. No account needed.
+</p>
+
+<p align="center">Local Azure development. One binary. No account needed.</p>
 
 ---
 
