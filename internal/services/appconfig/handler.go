@@ -3,11 +3,11 @@ package appconfig
 import (
 	"encoding/json"
 	"net/http"
-	"github.com/moabukar/local-azure/internal/azerr"
+	"github.com/moabukar/miniblue/internal/azerr"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/moabukar/local-azure/internal/store"
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 type KeyValue struct {

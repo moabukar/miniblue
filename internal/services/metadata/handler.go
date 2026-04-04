@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/moabukar/local-azure/internal/store"
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 type Handler struct {
@@ -84,11 +84,11 @@ func (h *Handler) Instance(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"compute": map[string]interface{}{
 			"location":          "eastus",
-			"name":              "local-azure-vm",
-			"resourceGroupName": "local-azure-rg",
+			"name":              "miniblue-vm",
+			"resourceGroupName": "miniblue-rg",
 			"subscriptionId":    "00000000-0000-0000-0000-000000000000",
-			"vmId":              "local-azure-vm-id",
-			"azEnvironment":     "local-azure",
+			"vmId":              "miniblue-vm-id",
+			"azEnvironment":     "miniblue",
 		},
 	})
 }

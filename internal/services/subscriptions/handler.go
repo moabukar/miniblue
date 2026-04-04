@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/moabukar/local-azure/internal/store"
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 type Subscription struct {
@@ -55,7 +55,7 @@ func (h *Handler) ListTenants(w http.ResponseWriter, r *http.Request) {
 			{
 				"id":          "/tenants/00000000-0000-0000-0000-000000000001",
 				"tenantId":    "00000000-0000-0000-0000-000000000001",
-				"displayName": "local-azure",
+				"displayName": "miniblue",
 				"tenantType":  "AAD",
 			},
 		},
@@ -84,7 +84,7 @@ func defaultSub() Subscription {
 	return Subscription{
 		ID:                  "/subscriptions/00000000-0000-0000-0000-000000000000",
 		SubscriptionId:      "00000000-0000-0000-0000-000000000000",
-		DisplayName:         "local-azure",
+		DisplayName:         "miniblue",
 		State:               "Enabled",
 		TenantId:            "00000000-0000-0000-0000-000000000001",
 		AuthorizationSource: "Legacy",

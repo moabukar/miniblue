@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/moabukar/local-azure/internal/server"
+	"github.com/moabukar/miniblue/internal/server"
 )
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 	srv := server.New()
 	handler := srv.Handler()
 
-	// Generate cert and save to ~/.local-azure/
+	// Generate cert and save to ~/.miniblue/
 	certDir := certDirectory()
 	cert, certPEM, err := generateAndSaveCert(certDir)
 	if err != nil {
@@ -42,21 +42,21 @@ func main() {
 	}
 
 	certPath := filepath.Join(certDir, "cert.pem")
-	log.Printf("local-azure certificate saved to %s", certPath)
+	log.Printf("miniblue certificate saved to %s", certPath)
 	log.Printf("  Trust it:  export SSL_CERT_FILE=%s", certPath)
 	log.Printf("  Or on Mac: sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain %s", certPath)
-	log.Printf("  Or on Linux: sudo cp %s /usr/local/share/ca-certificates/local-azure.crt && sudo update-ca-certificates", certPath)
+	log.Printf("  Or on Linux: sudo cp %s /usr/local/share/ca-certificates/miniblue.crt && sudo update-ca-certificates", certPath)
 
 	// Start HTTP
 	go func() {
-		log.Printf("local-azure HTTP  on http://localhost:%s", port)
+		log.Printf("miniblue HTTP  on http://localhost:%s", port)
 		if err := http.ListenAndServe(":"+port, handler); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
 	// Start HTTPS
-	log.Printf("local-azure HTTPS on https://localhost:%s", tlsPort)
+	log.Printf("miniblue HTTPS on https://localhost:%s", tlsPort)
 	_ = certPEM // already saved to disk
 	tlsServer := &http.Server{
 		Addr:    ":" + tlsPort,
@@ -76,7 +76,7 @@ func certDirectory() string {
 		return dir
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".local-azure")
+	return filepath.Join(home, ".miniblue")
 }
 
 func generateAndSaveCert(dir string) (tls.Certificate, []byte, error) {
@@ -111,7 +111,7 @@ func generateAndSaveCert(dir string) (tls.Certificate, []byte, error) {
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{"local-azure"},
+			Organization: []string{"miniblue"},
 			CommonName:   "localhost",
 		},
 		NotBefore:             time.Now(),

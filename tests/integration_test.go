@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/moabukar/local-azure/internal/server"
+	"github.com/moabukar/miniblue/internal/server"
 )
 
 func setupServer() *httptest.Server {

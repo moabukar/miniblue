@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/moabukar/local-azure/internal/azerr"
-	"github.com/moabukar/local-azure/internal/store"
+	"github.com/moabukar/miniblue/internal/azerr"
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 type ResourceGroup struct {
@@ -180,7 +180,7 @@ func (h *Handler) ListResources(w http.ResponseWriter, r *http.Request) {
 }
 
 // OperationResult returns 200 (completed) for async operation polling.
-// Since local-azure operations are synchronous, all ops are already done.
+// Since miniblue operations are synchronous, all ops are already done.
 func (h *Handler) OperationResult(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }

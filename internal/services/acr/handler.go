@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/moabukar/local-azure/internal/azerr"
-	"github.com/moabukar/local-azure/internal/store"
+	"github.com/moabukar/miniblue/internal/azerr"
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 type Registry struct {

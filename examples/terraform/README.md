@@ -13,7 +13,7 @@ Use local-azure as a local Azure emulator with Terraform.
 bash scripts/trust-cert.sh
 
 #    Option B: Session only
-export SSL_CERT_FILE=~/.local-azure/cert.pem
+export SSL_CERT_FILE=~/.miniblue/cert.pem
 
 # 3. Run Terraform
 cd examples/terraform
@@ -35,16 +35,16 @@ returns `http://localhost:4566` as the resource manager endpoint.
 
 The `azurerm` provider always uses HTTPS for `metadata_host`. local-azure
 generates a self-signed certificate on first run and saves it to
-`~/.local-azure/cert.pem`.
+`~/.miniblue/cert.pem`.
 
 You must trust this certificate. Options:
 
 | Method | Command | Scope |
 |--------|---------|-------|
 | Script | `bash scripts/trust-cert.sh` | System-wide (persistent) |
-| macOS | `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.local-azure/cert.pem` | System-wide |
-| Linux | `sudo cp ~/.local-azure/cert.pem /usr/local/share/ca-certificates/local-azure.crt && sudo update-ca-certificates` | System-wide |
-| Env var | `export SSL_CERT_FILE=~/.local-azure/cert.pem` | Current session only |
+| macOS | `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.miniblue/cert.pem` | System-wide |
+| Linux | `sudo cp ~/.miniblue/cert.pem /usr/local/share/ca-certificates/miniblue.crt && sudo update-ca-certificates` | System-wide |
+| Env var | `export SSL_CERT_FILE=~/.miniblue/cert.pem` | Current session only |
 
 ## Authentication
 

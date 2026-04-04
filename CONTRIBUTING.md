@@ -1,11 +1,11 @@
-# Contributing to local-azure
+# Contributing to miniblue
 
 Thanks for your interest in contributing! Here is how you can help.
 
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/local-azure.git`
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/miniblue.git`
 3. Create a branch: `git checkout -b feature/my-feature`
 4. Make your changes
 5. Test: `go build ./... && go test ./...`
@@ -29,7 +29,7 @@ package yourservice
 
 import (
     "github.com/go-chi/chi/v5"
-    "github.com/moabukar/local-azure/internal/store"
+    "github.com/moabukar/miniblue/internal/store"
 )
 
 type Handler struct {

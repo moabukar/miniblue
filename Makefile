@@ -1,10 +1,10 @@
 .PHONY: build test docker-build docker-run lint clean install
 
-BINARY_NAME=local-azure
-DOCKER_IMAGE=moabukar/local-azure
+BINARY_NAME=miniblue
+DOCKER_IMAGE=moabukar/miniblue
 
 build:
-	go build -o bin/$(BINARY_NAME) ./cmd/local-azure
+	go build -o bin/$(BINARY_NAME) ./cmd/miniblue
 	go build -o bin/azlocal ./cmd/azlocal
 
 test:
@@ -24,7 +24,7 @@ clean:
 	go clean
 
 run:
-	go run ./cmd/local-azure
+	go run ./cmd/miniblue
 
 install: build
 	cp bin/azlocal /usr/local/bin/azlocal

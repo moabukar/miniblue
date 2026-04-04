@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/moabukar/local-azure/internal/azerr"
-	"github.com/moabukar/local-azure/internal/store"
+	"github.com/moabukar/miniblue/internal/azerr"
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 type VNet struct {
@@ -104,7 +104,7 @@ func buildVNetResponse(sub, rg, name string, input map[string]interface{}) map[s
 		"name":     name,
 		"type":     "Microsoft.Network/virtualNetworks",
 		"location": location,
-		"etag":     "W/\"local-azure\"",
+		"etag":     "W/\"miniblue\"",
 		"properties": map[string]interface{}{
 			"provisioningState":  "Succeeded",
 			"resourceGuid":      "00000000-0000-0000-0000-000000000000",
@@ -209,7 +209,7 @@ func buildSubnetResponse(sub, rg, vnetName, subnetName string, input map[string]
 	return map[string]interface{}{
 		"id":   id,
 		"name": subnetName,
-		"etag": "W/\"local-azure\"",
+		"etag": "W/\"miniblue\"",
 		"type": "Microsoft.Network/virtualNetworks/subnets",
 		"properties": map[string]interface{}{
 			"provisioningState":                 "Succeeded",
