@@ -87,5 +87,15 @@ func (h *Handler) DeleteSecret(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListSecrets(w http.ResponseWriter, r *http.Request) {
 	vault := chi.URLParam(r, "vaultName")
 	items := h.store.ListByPrefix("kv:" + vault + ":")
-	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
+	// Azure Key Vault list returns metadata only, NOT the secret value
+	redacted := make([]map[string]interface{}, 0, len(items))
+	for _, item := range items {
+		if s, ok := item.(Secret); ok {
+			redacted = append(redacted, map[string]interface{}{
+				"id":         s.ID,
+				"attributes": s.Attributes,
+			})
+		}
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": redacted})
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/moabukar/miniblue/internal/azerr"
 	"github.com/moabukar/miniblue/internal/store"
 )
@@ -107,7 +108,7 @@ func buildVNetResponse(sub, rg, name string, input map[string]interface{}) map[s
 		"etag":     "W/\"miniblue\"",
 		"properties": map[string]interface{}{
 			"provisioningState":  "Succeeded",
-			"resourceGuid":      "00000000-0000-0000-0000-000000000000",
+			"resourceGuid":      uuid.New().String(),
 			"addressSpace":      addrSpace,
 			"dhcpOptions":       map[string]interface{}{"dnsServers": []interface{}{}},
 			"subnets":           []interface{}{},
