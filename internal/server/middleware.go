@@ -24,18 +24,16 @@ func AzureHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// apiVersionPaths are ARM paths that require api-version in real Azure.
+// apiVersionPrefixes are ARM paths that require api-version in real Azure.
 var apiVersionPrefixes = []string{
 	"/subscriptions/",
 }
 
 // APIVersionCheck validates that ARM requests include ?api-version= parameter.
-// Non-ARM paths (health, blob data plane, cosmosdb, etc.) are exempt.
 func APIVersionCheck(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
-		// Only enforce on ARM management paths
 		needsVersion := false
 		for _, prefix := range apiVersionPrefixes {
 			if strings.HasPrefix(path, prefix) {
@@ -52,7 +50,6 @@ func APIVersionCheck(next http.Handler) http.Handler {
 					"The api-version query parameter (?api-version=) is required for all API calls.")
 				return
 			}
-			// Store the api-version for handlers that need it
 			w.Header().Set("x-ms-api-version", apiVersion)
 		}
 
