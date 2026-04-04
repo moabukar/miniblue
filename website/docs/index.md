@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="miniblue" width="120" />
+</p>
+
 # miniblue
 
 **Local Azure development. One binary. No account needed.**
