@@ -46,10 +46,10 @@ When you push a tag matching `v*`:
 ### 4. Create GitHub release (optional)
 
 ```bash
-gh release create v0.1.0 \
+gh release create v0.2.1 \
   --repo moabukar/miniblue \
-  --title "v0.1.0" \
-  --notes "Initial public release. 14 Azure services, Terraform support, azlocal CLI."
+  --title "v0.2.1" \
+  --notes "Bug fixes, scratch Dockerfile, updated docs."
 ```
 
 ### 5. Verify
