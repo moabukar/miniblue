@@ -39,26 +39,21 @@ func TestAzureResponseHeaders(t *testing.T) {
 	}
 }
 
-func TestAPIVersionRequired(t *testing.T) {
+func TestAPIVersionOptional(t *testing.T) {
 	ts := setupServer()
 	defer ts.Close()
 
-	// ARM endpoint without api-version should fail
+	// Without api-version should still work (miniblue is lenient)
 	resp := doRequest(t, "GET", ts.URL+"/subscriptions/sub1/resourcegroups", "")
 	defer resp.Body.Close()
-	expectStatus(t, resp, 400)
-
-	e := decodeError(t, resp)
-	if e.Error.Code != "MissingApiVersionParameter" {
-		t.Fatalf("expected MissingApiVersionParameter, got %s", e.Error.Code)
-	}
+	expectStatus(t, resp, 200)
 }
 
 func TestAPIVersionAccepted(t *testing.T) {
 	ts := setupServer()
 	defer ts.Close()
 
-	// With api-version should work
+	// With api-version should also work
 	resp := doRequest(t, "GET", ts.URL+"/subscriptions/sub1/resourcegroups?api-version=2023-07-01", "")
 	defer resp.Body.Close()
 	expectStatus(t, resp, 200)
