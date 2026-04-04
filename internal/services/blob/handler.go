@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"github.com/moabukar/local-azure/internal/store"
 )
 
@@ -31,7 +32,6 @@ func NewHandler(s *store.Store) *Handler {
 }
 
 func (h *Handler) Register(r chi.Router) {
-	// Blob storage data plane
 	r.Route("/blob/{accountName}", func(r chi.Router) {
 		r.Route("/{containerName}", func(r chi.Router) {
 			r.Put("/", h.CreateContainer)
@@ -57,12 +57,12 @@ func (h *Handler) blobKey(account, container, blob string) string {
 func (h *Handler) CreateContainer(w http.ResponseWriter, r *http.Request) {
 	account := chi.URLParam(r, "accountName")
 	container := chi.URLParam(r, "containerName")
-	
+
 	c := Container{
 		Name: container,
 		Properties: map[string]string{
 			"lastModified": time.Now().UTC().Format(time.RFC1123),
-			"etag":         "0x8D123456789",
+			"etag":         fmt.Sprintf("\"0x%X\"", time.Now().UnixNano()),
 		},
 	}
 	h.store.Set(h.containerKey(account, container), c)
@@ -88,14 +88,19 @@ func (h *Handler) UploadBlob(w http.ResponseWriter, r *http.Request) {
 	account := chi.URLParam(r, "accountName")
 	container := chi.URLParam(r, "containerName")
 	blobName := chi.URLParam(r, "blobName")
-	
+
 	data, _ := io.ReadAll(r.Body)
+	ct := r.Header.Get("Content-Type")
+	if ct == "" {
+		ct = "application/octet-stream"
+	}
 	b := Blob{
 		Name: blobName,
 		Properties: map[string]string{
 			"lastModified":  time.Now().UTC().Format(time.RFC1123),
 			"contentLength": fmt.Sprintf("%d", len(data)),
-			"contentType":   r.Header.Get("Content-Type"),
+			"contentType":   ct,
+			"etag":          fmt.Sprintf("\"0x%X\"", time.Now().UnixNano()),
 		},
 		Content: data,
 	}
@@ -107,14 +112,16 @@ func (h *Handler) DownloadBlob(w http.ResponseWriter, r *http.Request) {
 	account := chi.URLParam(r, "accountName")
 	container := chi.URLParam(r, "containerName")
 	blobName := chi.URLParam(r, "blobName")
-	
+
 	v, ok := h.store.Get(h.blobKey(account, container, blobName))
 	if !ok {
-		http.Error(w, "BlobNotFound", http.StatusNotFound)
+		azerr.NotFound(w, "blob", blobName)
 		return
 	}
 	b := v.(Blob)
 	w.Header().Set("Content-Type", b.Properties["contentType"])
+	w.Header().Set("Content-Length", b.Properties["contentLength"])
+	w.Header().Set("ETag", b.Properties["etag"])
 	w.Write(b.Content)
 }
 

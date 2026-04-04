@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"github.com/moabukar/local-azure/internal/store"
 )
 
@@ -13,8 +14,10 @@ type ResourceGroup struct {
 	Name       string            `json:"name"`
 	Type       string            `json:"type"`
 	Location   string            `json:"location"`
-	Properties map[string]string `json:"properties"`
 	Tags       map[string]string `json:"tags,omitempty"`
+	Properties struct {
+		ProvisioningState string `json:"provisioningState"`
+	} `json:"properties"`
 }
 
 type Handler struct {
@@ -43,20 +46,25 @@ func (h *Handler) key(sub, name string) string {
 func (h *Handler) CreateOrUpdate(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	name := chi.URLParam(r, "resourceGroupName")
-	
-	var rg ResourceGroup
-	if err := json.NewDecoder(r.Body).Decode(&rg); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+
+	var input struct {
+		Location string            `json:"location"`
+		Tags     map[string]string `json:"tags,omitempty"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		azerr.BadRequest(w, "The request content was invalid: "+err.Error())
 		return
 	}
-	
-	rg.ID = "/subscriptions/" + sub + "/resourceGroups/" + name
-	rg.Name = name
-	rg.Type = "Microsoft.Resources/resourceGroups"
-	if rg.Properties == nil {
-		rg.Properties = map[string]string{"provisioningState": "Succeeded"}
+
+	rg := ResourceGroup{
+		ID:       "/subscriptions/" + sub + "/resourceGroups/" + name,
+		Name:     name,
+		Type:     "Microsoft.Resources/resourceGroups",
+		Location: input.Location,
+		Tags:     input.Tags,
 	}
-	
+	rg.Properties.ProvisioningState = "Succeeded"
+
 	h.store.Set(h.key(sub, name), rg)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(rg)
@@ -65,10 +73,10 @@ func (h *Handler) CreateOrUpdate(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	name := chi.URLParam(r, "resourceGroupName")
-	
+
 	v, ok := h.store.Get(h.key(sub, name))
 	if !ok {
-		http.Error(w, "ResourceGroupNotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.Resources/resourceGroups", name)
 		return
 	}
 	json.NewEncoder(w).Encode(v)
@@ -77,9 +85,9 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	name := chi.URLParam(r, "resourceGroupName")
-	
+
 	if !h.store.Delete(h.key(sub, name)) {
-		http.Error(w, "ResourceGroupNotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.Resources/resourceGroups", name)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -88,6 +96,5 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	items := h.store.ListByPrefix("rg:" + sub + ":")
-	result := map[string]interface{}{"value": items}
-	json.NewEncoder(w).Encode(result)
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
 }

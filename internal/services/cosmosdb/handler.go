@@ -2,6 +2,7 @@ package cosmosdb
 
 import (
 	"encoding/json"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -42,7 +43,7 @@ func (h *Handler) CreateDocument(w http.ResponseWriter, r *http.Request) {
 
 	id, _ := doc["id"].(string)
 	if id == "" {
-		http.Error(w, "document must have an id field", http.StatusBadRequest)
+		azerr.BadRequest(w, "Document must contain an id property.")
 		return
 	}
 
@@ -59,7 +60,7 @@ func (h *Handler) GetDocument(w http.ResponseWriter, r *http.Request) {
 
 	v, ok := h.store.Get(h.key(account, db, coll, docId))
 	if !ok {
-		http.Error(w, "DocumentNotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.DocumentDB/documents", docId)
 		return
 	}
 	json.NewEncoder(w).Encode(v)

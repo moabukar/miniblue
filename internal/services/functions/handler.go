@@ -2,6 +2,7 @@ package functions
 
 import (
 	"encoding/json"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -62,7 +63,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	
 	v, ok := h.store.Get(h.key(sub, rg, name))
 	if !ok {
-		http.Error(w, "NotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return
 	}
 	json.NewEncoder(w).Encode(v)

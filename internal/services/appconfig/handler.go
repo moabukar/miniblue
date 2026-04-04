@@ -3,6 +3,7 @@ package appconfig
 import (
 	"encoding/json"
 	"net/http"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -61,7 +62,7 @@ func (h *Handler) GetKeyValue(w http.ResponseWriter, r *http.Request) {
 	
 	v, ok := h.store.Get(h.kvKey(storeName, key))
 	if !ok {
-		http.Error(w, "KeyNotFound", http.StatusNotFound)
+		azerr.NotFound(w, "AppConfiguration/keyValues", key)
 		return
 	}
 	json.NewEncoder(w).Encode(v)

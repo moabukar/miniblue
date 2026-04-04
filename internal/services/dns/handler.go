@@ -2,6 +2,7 @@ package dns
 
 import (
 	"encoding/json"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -82,7 +83,7 @@ func (h *Handler) GetZone(w http.ResponseWriter, r *http.Request) {
 	
 	v, ok := h.store.Get(h.zoneKey(sub, rg, name))
 	if !ok {
-		http.Error(w, "NotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.Network/dnsZones", "resource")
 		return
 	}
 	json.NewEncoder(w).Encode(v)
@@ -132,7 +133,7 @@ func (h *Handler) GetRecordSet(w http.ResponseWriter, r *http.Request) {
 	key := "dns:record:" + sub + ":" + rg + ":" + zoneName + ":" + recordType + ":" + recordName
 	v, ok := h.store.Get(key)
 	if !ok {
-		http.Error(w, "NotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.Network/dnsZones", "resource")
 		return
 	}
 	json.NewEncoder(w).Encode(v)

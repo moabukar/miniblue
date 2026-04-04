@@ -2,6 +2,7 @@ package acr
 
 import (
 	"encoding/json"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -79,7 +80,7 @@ func (h *Handler) GetRegistry(w http.ResponseWriter, r *http.Request) {
 	
 	v, ok := h.store.Get(h.registryKey(sub, rg, name))
 	if !ok {
-		http.Error(w, "NotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.ContainerRegistry/registries", name)
 		return
 	}
 	json.NewEncoder(w).Encode(v)

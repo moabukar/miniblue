@@ -2,6 +2,7 @@ package network
 
 import (
 	"encoding/json"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -80,7 +81,7 @@ func (h *Handler) GetVNet(w http.ResponseWriter, r *http.Request) {
 	
 	v, ok := h.store.Get(h.vnetKey(sub, rg, name))
 	if !ok {
-		http.Error(w, "NotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.Network/virtualNetworks", "resource")
 		return
 	}
 	json.NewEncoder(w).Encode(v)
@@ -127,7 +128,7 @@ func (h *Handler) GetSubnet(w http.ResponseWriter, r *http.Request) {
 	key := "subnet:" + sub + ":" + rg + ":" + vnetName + ":" + subnetName
 	v, ok := h.store.Get(key)
 	if !ok {
-		http.Error(w, "NotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.Network/virtualNetworks", "resource")
 		return
 	}
 	json.NewEncoder(w).Encode(v)

@@ -2,6 +2,7 @@ package table
 
 import (
 	"encoding/json"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -70,7 +71,7 @@ func (h *Handler) GetEntity(w http.ResponseWriter, r *http.Request) {
 	
 	v, ok := h.store.Get(h.key(account, table, pk, rk))
 	if !ok {
-		http.Error(w, "EntityNotFound", http.StatusNotFound)
+		azerr.NotFound(w, "TableStorage/entity", rk)
 		return
 	}
 	json.NewEncoder(w).Encode(v)

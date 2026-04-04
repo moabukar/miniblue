@@ -49,12 +49,7 @@ func (s *Server) setupMiddleware() {
 	s.router.Use(middleware.Logger)
 	s.router.Use(middleware.Recoverer)
 	s.router.Use(middleware.RequestID)
-	s.router.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("x-ms-version", "2023-11-03")
-			next.ServeHTTP(w, r)
-		})
-	})
+	s.router.Use(AzureHeaders)
 }
 
 func (s *Server) setupRoutes() {
@@ -90,9 +85,9 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 		"cosmosdb", "servicebus", "functions", "network", "dns",
 		"acr", "eventgrid", "appconfig", "identity",
 	}
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":   "running",
 		"services": services,
+		"version":  "0.1.0",
 	})
 }

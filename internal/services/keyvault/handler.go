@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"github.com/moabukar/local-azure/internal/store"
 )
 
@@ -41,12 +42,15 @@ func (h *Handler) key(vault, name string) string {
 func (h *Handler) SetSecret(w http.ResponseWriter, r *http.Request) {
 	vault := chi.URLParam(r, "vaultName")
 	name := chi.URLParam(r, "secretName")
-	
+
 	var body struct {
 		Value string `json:"value"`
 	}
-	json.NewDecoder(r.Body).Decode(&body)
-	
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		azerr.BadRequest(w, "Invalid request body: "+err.Error())
+		return
+	}
+
 	secret := Secret{
 		ID:    "https://" + vault + ".vault.azure.net/secrets/" + name,
 		Value: body.Value,
@@ -56,7 +60,7 @@ func (h *Handler) SetSecret(w http.ResponseWriter, r *http.Request) {
 			"updated": time.Now().UTC().Format(time.RFC3339),
 		},
 	}
-	
+
 	h.store.Set(h.key(vault, name), secret)
 	json.NewEncoder(w).Encode(secret)
 }
@@ -64,10 +68,10 @@ func (h *Handler) SetSecret(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetSecret(w http.ResponseWriter, r *http.Request) {
 	vault := chi.URLParam(r, "vaultName")
 	name := chi.URLParam(r, "secretName")
-	
+
 	v, ok := h.store.Get(h.key(vault, name))
 	if !ok {
-		http.Error(w, "SecretNotFound", http.StatusNotFound)
+		azerr.NotFound(w, "Microsoft.KeyVault/vaults/secrets", name)
 		return
 	}
 	json.NewEncoder(w).Encode(v)
