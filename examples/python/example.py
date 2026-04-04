@@ -1,42 +1,68 @@
 """
 Azure SDK for Python + miniblue example.
 
-Install: pip install azure-identity azure-mgmt-resource azure-storage-blob azure-keyvault-secrets
+Install: pip install azure-mgmt-resource azure-core requests
 Start miniblue: ./bin/miniblue
+Trust cert: export SSL_CERT_FILE=~/.miniblue/cert.pem
 Run: python example.py
 """
 import os
+import requests
 
-# Point Azure SDK at miniblue
-os.environ["AZURE_AUTHORITY_HOST"] = "http://localhost:4566"
-os.environ["AZURE_CLI_DISABLE_CONNECTION_VERIFICATION"] = "1"
+MINIBLUE_URL = "http://localhost:4566"
 
-from azure.identity import ClientSecretCredential
-from azure.mgmt.resource import ResourceManagementClient
 
-# Mock credentials (miniblue accepts anything)
-credential = ClientSecretCredential(
-    tenant_id="00000000-0000-0000-0000-000000000001",
-    client_id="miniblue",
-    client_secret="miniblue",
-)
+def main():
+    print("miniblue Python SDK example")
+    print("===========================\n")
 
-# Resource Management - point to miniblue
-client = ResourceManagementClient(
-    credential=credential,
-    subscription_id="00000000-0000-0000-0000-000000000000",
-    base_url="http://localhost:4566",
-)
+    # Create resource group
+    resp = requests.put(
+        f"{MINIBLUE_URL}/subscriptions/sub1/resourcegroups/python-rg",
+        json={"location": "eastus", "tags": {"sdk": "python"}},
+    )
+    rg = resp.json()
+    print(f"Resource Group: {rg['name']} ({rg['location']})")
 
-# Create a resource group
-rg = client.resource_groups.create_or_update(
-    "example-rg",
-    {"location": "eastus", "tags": {"env": "local"}},
-)
-print(f"Created: {rg.name} in {rg.location}")
+    # List resource groups
+    resp = requests.get(f"{MINIBLUE_URL}/subscriptions/sub1/resourcegroups")
+    for rg in resp.json()["value"]:
+        print(f"  - {rg['name']}")
 
-# List resource groups
-for rg in client.resource_groups.list():
-    print(f"  - {rg.name}")
+    # Key Vault - store a secret
+    resp = requests.put(
+        f"{MINIBLUE_URL}/keyvault/myvault/secrets/db-password",
+        json={"value": "super-secret-123"},
+    )
+    secret = resp.json()
+    print(f"\nSecret stored: {secret['id']}")
 
-print("\nDone! All calls went to miniblue, not real Azure.")
+    # Key Vault - read it back
+    resp = requests.get(f"{MINIBLUE_URL}/keyvault/myvault/secrets/db-password")
+    print(f"Secret value: {resp.json()['value']}")
+
+    # Blob storage
+    requests.put(f"{MINIBLUE_URL}/blob/myaccount/data")
+    requests.put(
+        f"{MINIBLUE_URL}/blob/myaccount/data/config.json",
+        json={"database": "postgres://localhost:5432/mydb"},
+    )
+    resp = requests.get(f"{MINIBLUE_URL}/blob/myaccount/data/config.json")
+    print(f"\nBlob content: {resp.json()}")
+
+    # Cosmos DB
+    requests.post(
+        f"{MINIBLUE_URL}/cosmosdb/myaccount/dbs/app/colls/users/docs",
+        json={"id": "user1", "name": "Mo", "role": "admin"},
+    )
+    resp = requests.get(
+        f"{MINIBLUE_URL}/cosmosdb/myaccount/dbs/app/colls/users/docs/user1"
+    )
+    user = resp.json()
+    print(f"\nCosmos doc: {user['name']} ({user['role']})")
+
+    print("\nAll calls went to miniblue, not real Azure.")
+
+
+if __name__ == "__main__":
+    main()

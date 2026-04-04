@@ -44,5 +44,15 @@ docker-compose.override.yml
 *.tfstate.backup
 .terraform.lock.hcl
 
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Node.js
+node_modules/
+package-lock.json
+
 # Certificates
 .miniblue/
