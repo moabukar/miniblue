@@ -2,7 +2,10 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -46,7 +49,7 @@ func (s *Server) Handler() http.Handler {
 }
 
 func (s *Server) setupMiddleware() {
-	s.router.Use(middleware.Logger)
+	s.router.Use(StructuredLogger)
 	s.router.Use(middleware.Recoverer)
 	s.router.Use(middleware.RequestID)
 	s.router.Use(AzureHeaders)
@@ -55,6 +58,7 @@ func (s *Server) setupMiddleware() {
 
 func (s *Server) setupRoutes() {
 	s.router.Get("/health", s.healthHandler)
+	s.router.Get("/metrics", s.metricsHandler)
 
 	// Cloud metadata + auth
 	metadata.NewHandler(s.store).Register(s.router)
@@ -78,6 +82,33 @@ func (s *Server) setupRoutes() {
 	eventgrid.NewHandler(s.store).Register(s.router)
 	appconfig.NewHandler(s.store).Register(s.router)
 	identity.NewHandler(s.store).Register(s.router)
+}
+
+func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
+	m := GetMetrics()
+	uptime := time.Since(m.StartTime)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"uptime_seconds":  int(uptime.Seconds()),
+		"total_requests":  m.TotalRequests.Load(),
+		"total_errors":    m.TotalErrors.Load(),
+		"error_rate":      fmt.Sprintf("%.2f%%", errorRate(m)),
+		"store_backend":   storeBackendName(s.store),
+	})
+}
+
+func errorRate(m *Metrics) float64 {
+	total := m.TotalRequests.Load()
+	if total == 0 {
+		return 0
+	}
+	return float64(m.TotalErrors.Load()) / float64(total) * 100
+}
+
+func storeBackendName(st *store.Store) string {
+	if os.Getenv("DATABASE_URL") != "" {
+		return "postgres"
+	}
+	return "memory"
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
