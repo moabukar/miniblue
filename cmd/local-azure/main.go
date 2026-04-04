@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/moabukar/local-azure/internal/server"
@@ -33,7 +34,20 @@ func main() {
 	srv := server.New()
 	handler := srv.Handler()
 
-	// Always start HTTP
+	// Generate cert and save to ~/.local-azure/
+	certDir := certDirectory()
+	cert, certPEM, err := generateAndSaveCert(certDir)
+	if err != nil {
+		log.Fatalf("Failed to generate cert: %v", err)
+	}
+
+	certPath := filepath.Join(certDir, "cert.pem")
+	log.Printf("local-azure certificate saved to %s", certPath)
+	log.Printf("  Trust it:  export SSL_CERT_FILE=%s", certPath)
+	log.Printf("  Or on Mac: sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain %s", certPath)
+	log.Printf("  Or on Linux: sudo cp %s /usr/local/share/ca-certificates/local-azure.crt && sudo update-ca-certificates", certPath)
+
+	// Start HTTP
 	go func() {
 		log.Printf("local-azure HTTP  on http://localhost:%s", port)
 		if err := http.ListenAndServe(":"+port, handler); err != nil {
@@ -41,13 +55,9 @@ func main() {
 		}
 	}()
 
-	// Always start HTTPS (self-signed) on TLS_PORT
-	log.Printf("local-azure HTTPS on https://localhost:%s (self-signed)", tlsPort)
-	cert, err := generateSelfSignedCert()
-	if err != nil {
-		log.Fatalf("Failed to generate self-signed cert: %v", err)
-	}
-
+	// Start HTTPS
+	log.Printf("local-azure HTTPS on https://localhost:%s", tlsPort)
+	_ = certPEM // already saved to disk
 	tlsServer := &http.Server{
 		Addr:    ":" + tlsPort,
 		Handler: handler,
@@ -60,16 +70,43 @@ func main() {
 	}
 }
 
-func generateSelfSignedCert() (tls.Certificate, error) {
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		return tls.Certificate{}, err
+func certDirectory() string {
+	dir := os.Getenv("LOCAL_AZURE_CERT_DIR")
+	if dir != "" {
+		return dir
+	}
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".local-azure")
+}
+
+func generateAndSaveCert(dir string) (tls.Certificate, []byte, error) {
+	os.MkdirAll(dir, 0700)
+
+	certPath := filepath.Join(dir, "cert.pem")
+	keyPath := filepath.Join(dir, "key.pem")
+
+	// Reuse existing cert if it's still valid
+	if certPEM, err := os.ReadFile(certPath); err == nil {
+		if keyPEM, err := os.ReadFile(keyPath); err == nil {
+			if tlsCert, err := tls.X509KeyPair(certPEM, keyPEM); err == nil {
+				// Check expiry
+				if leaf, err := x509.ParseCertificate(tlsCert.Certificate[0]); err == nil {
+					if time.Now().Before(leaf.NotAfter.Add(-24 * time.Hour)) {
+						log.Printf("Reusing existing certificate (expires %s)", leaf.NotAfter.Format("2006-01-02"))
+						return tlsCert, certPEM, nil
+					}
+				}
+			}
+		}
 	}
 
-	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
+	// Generate new
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
-		return tls.Certificate{}, err
+		return tls.Certificate{}, nil, err
 	}
+
+	serialNumber, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
@@ -82,21 +119,24 @@ func generateSelfSignedCert() (tls.Certificate, error) {
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
+		IsCA:                  true,
 		DNSNames:              []string{"localhost"},
 		IPAddresses:           []net.IP{net.IPv4(127, 0, 0, 1), net.IPv6loopback},
 	}
 
 	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
 	if err != nil {
-		return tls.Certificate{}, err
+		return tls.Certificate{}, nil, err
 	}
 
 	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
-	keyDER, err := x509.MarshalECPrivateKey(key)
-	if err != nil {
-		return tls.Certificate{}, err
-	}
+	keyDER, _ := x509.MarshalECPrivateKey(key)
 	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyDER})
 
-	return tls.X509KeyPair(certPEM, keyPEM)
+	// Save to disk
+	os.WriteFile(certPath, certPEM, 0644)
+	os.WriteFile(keyPath, keyPEM, 0600)
+
+	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
+	return tlsCert, certPEM, err
 }
