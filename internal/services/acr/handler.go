@@ -45,8 +45,10 @@ func (h *Handler) Register(r chi.Router) {
 			r.Put("/", h.CreateOrUpdateRegistry)
 			r.Get("/", h.GetRegistry)
 			r.Delete("/", h.DeleteRegistry)
+			r.Get("/replications", h.ListReplications)
 		})
 	})
+	r.Post("/subscriptions/{subscriptionId}/providers/Microsoft.ContainerRegistry/checkNameAvailability", h.CheckNameAvailability)
 	r.Route("/acr/{registryName}/v2/{repository}/manifests", func(r chi.Router) {
 		r.Get("/", h.ListManifests)
 		r.Get("/{reference}", h.GetManifest)
@@ -58,36 +60,64 @@ func (h *Handler) registryKey(sub, rg, name string) string {
 	return "acr:registry:" + sub + ":" + rg + ":" + name
 }
 
+func buildRegistryResponse(sub, rg, name string, input map[string]interface{}) map[string]interface{} {
+	id := "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.ContainerRegistry/registries/" + name
+
+	location, _ := input["location"].(string)
+	if location == "" {
+		location = "eastus"
+	}
+	skuName := "Basic"
+	if sku, ok := input["sku"].(map[string]interface{}); ok {
+		if n, ok := sku["name"].(string); ok {
+			skuName = n
+		}
+	}
+
+	return map[string]interface{}{
+		"id":       id,
+		"name":     name,
+		"type":     "Microsoft.ContainerRegistry/registries",
+		"location": location,
+		"sku": map[string]interface{}{
+			"name": skuName,
+			"tier": skuName,
+		},
+		"properties": map[string]interface{}{
+			"loginServer":              name + ".azurecr.io",
+			"provisioningState":        "Succeeded",
+			"adminUserEnabled":         false,
+			"creationDate":             "2026-01-01T00:00:00Z",
+			"publicNetworkAccess":      "Enabled",
+			"zoneRedundancy":           "Disabled",
+			"networkRuleBypassOptions": "AzureServices",
+			"dataEndpointEnabled":      false,
+			"encryption": map[string]interface{}{
+				"status": "disabled",
+			},
+			"networkRuleSet": map[string]interface{}{
+				"defaultAction": "Allow",
+				"ipRules":       []interface{}{},
+			},
+			"policies": map[string]interface{}{
+				"quarantinePolicy": map[string]interface{}{"status": "disabled"},
+				"trustPolicy":     map[string]interface{}{"status": "disabled", "type": "Notary"},
+				"retentionPolicy": map[string]interface{}{"status": "disabled", "days": 7},
+				"exportPolicy":    map[string]interface{}{"status": "enabled"},
+			},
+		},
+	}
+}
+
 func (h *Handler) CreateOrUpdateRegistry(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "registryName")
 
-	var input struct {
-		Location   string `json:"location"`
-		SKU        *RegistrySKU `json:"sku,omitempty"`
-		Properties *struct {
-			AdminUserEnabled bool `json:"adminUserEnabled"`
-		} `json:"properties,omitempty"`
-	}
+	var input map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&input)
 
-	reg := Registry{
-		ID:       "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.ContainerRegistry/registries/" + name,
-		Name:     name,
-		Type:     "Microsoft.ContainerRegistry/registries",
-		Location: input.Location,
-		SKU:      RegistrySKU{Name: "Basic", Tier: "Basic"},
-	}
-	if input.SKU != nil {
-		reg.SKU = *input.SKU
-	}
-	reg.Properties.LoginServer = name + ".azurecr.io"
-	reg.Properties.ProvisioningState = "Succeeded"
-	if input.Properties != nil {
-		reg.Properties.AdminUserEnabled = input.Properties.AdminUserEnabled
-	}
-
+	reg := buildRegistryResponse(sub, rg, name, input)
 	k := h.registryKey(sub, rg, name)
 	_, exists := h.store.Get(k)
 	h.store.Set(k, reg)
@@ -147,4 +177,52 @@ func (h *Handler) ListTags(w http.ResponseWriter, r *http.Request) {
 		"name": chi.URLParam(r, "repository"),
 		"tags": []string{},
 	})
+}
+
+func (h *Handler) ListReplications(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": []interface{}{}})
+}
+
+func (h *Handler) CheckNameAvailability(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Name string `json:"name"`
+		Type string `json:"type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"error": map[string]interface{}{
+				"code":    "InvalidRequestBody",
+				"message": "Could not parse request body.",
+			},
+		})
+		return
+	}
+
+	// Check if any existing registry already uses this name
+	sub := chi.URLParam(r, "subscriptionId")
+	nameAvailable := true
+	reason := ""
+	message := ""
+
+	items := h.store.ListByPrefix("acr:registry:" + sub + ":")
+	for _, item := range items {
+		if reg, ok := item.(Registry); ok {
+			if reg.Name == input.Name {
+				nameAvailable = false
+				reason = "AlreadyExists"
+				message = "The registry " + input.Name + " is already in use."
+				break
+			}
+		}
+	}
+
+	resp := map[string]interface{}{
+		"nameAvailable": nameAvailable,
+	}
+	if !nameAvailable {
+		resp["reason"] = reason
+		resp["message"] = message
+	}
+	json.NewEncoder(w).Encode(resp)
 }

@@ -68,7 +68,11 @@ local-azure fills this gap for Azure developers.
 ### Docker Run
 
 ```bash
+# From Docker Hub
 docker run -p 4566:4566 -p 4567:4567 moabukar/local-azure:latest
+
+# From GitHub Container Registry
+docker run -p 4566:4566 -p 4567:4567 ghcr.io/moabukar/local-azure:latest
 ```
 
 ### Docker Compose
@@ -163,18 +167,40 @@ curl "http://localhost:4566/blob/myaccount/mycontainer/hello.txt"
 
 ### Terraform
 
+```bash
+# Trust the self-signed cert (one-time)
+bash scripts/trust-cert.sh
+# Or for current session only:
+export SSL_CERT_FILE=~/.local-azure/cert.pem
+```
+
 ```hcl
 provider "azurerm" {
   features {}
-  resource_manager_endpoint = "http://localhost:4566"
+
+  metadata_host              = "localhost:4567"
   skip_provider_registration = true
+
+  subscription_id = "00000000-0000-0000-0000-000000000000"
+  tenant_id       = "00000000-0000-0000-0000-000000000001"
+  client_id       = "local-azure"
+  client_secret   = "local-azure"
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "example-resources"
+  name     = "example-rg"
   location = "East US"
 }
+
+resource "azurerm_virtual_network" "example" {
+  name                = "example-vnet"
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.example.location
+  resource_group_name = azurerm_resource_group.example.name
+}
 ```
+
+See [examples/terraform/](examples/terraform/) for a full working example.
 
 ### Go SDK
 

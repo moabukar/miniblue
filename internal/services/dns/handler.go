@@ -82,6 +82,44 @@ func (h *Handler) CreateOrUpdateZone(w http.ResponseWriter, r *http.Request) {
 
 	h.store.Set(k, zone)
 
+	// Auto-create SOA and NS records (Azure always creates these for new zones)
+	if !exists {
+		soaProps, _ := json.Marshal(map[string]interface{}{
+			"TTL": 3600,
+			"SOARecord": map[string]interface{}{
+				"host":         "ns1-01.azure-dns.com.",
+				"email":        "azuredns-hostmaster.microsoft.com",
+				"serialNumber": 1,
+				"refreshTime":  3600,
+				"retryTime":    300,
+				"expireTime":   2419200,
+				"minimumTTL":   300,
+			},
+			"fqdn": name + ".",
+		})
+		h.store.Set(h.recordKey(sub, rg, name, "SOA", "@"), RecordSet{
+			ID:         zone.ID + "/SOA/@",
+			Name:       "@",
+			Type:       "Microsoft.Network/dnsZones/SOA",
+			Properties: json.RawMessage(soaProps),
+		})
+
+		nsProps, _ := json.Marshal(map[string]interface{}{
+			"TTL":       172800,
+			"NSRecords": []map[string]string{{"nsdname": "ns1-01.azure-dns.com."}, {"nsdname": "ns2-01.azure-dns.net."}},
+			"fqdn":      name + ".",
+		})
+		h.store.Set(h.recordKey(sub, rg, name, "NS", "@"), RecordSet{
+			ID:         zone.ID + "/NS/@",
+			Name:       "@",
+			Type:       "Microsoft.Network/dnsZones/NS",
+			Properties: json.RawMessage(nsProps),
+		})
+
+		zone.Properties.NumberOfRecordSets = 2
+		h.store.Set(k, zone)
+	}
+
 	if exists {
 		w.WriteHeader(http.StatusOK)
 	} else {
