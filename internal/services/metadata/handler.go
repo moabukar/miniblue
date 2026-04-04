@@ -26,20 +26,15 @@ func (h *Handler) Endpoints(w http.ResponseWriter, r *http.Request) {
 	if httpPort == "" {
 		httpPort = "4566"
 	}
-	tlsPort := os.Getenv("TLS_PORT")
-	if tlsPort == "" {
-		tlsPort = "4567"
-	}
 
 	httpBase := "http://localhost:" + httpPort
-	httpsBase := "https://localhost:" + tlsPort
 
 	endpoints := map[string]interface{}{
 		"galleryEndpoint":                       nil,
 		"graphEndpoint":                         httpBase,
 		"portalEndpoint":                        httpBase,
 		"authentication": map[string]interface{}{
-			"loginEndpoint": httpsBase,
+			"loginEndpoint": httpBase,
 			"audiences":     []string{httpBase},
 		},
 		"media":                                 httpBase,
@@ -55,7 +50,7 @@ func (h *Handler) Endpoints(w http.ResponseWriter, r *http.Request) {
 		"cosmosDBDnsSuffix":                     "localhost",
 		"containerRegistryDnsSuffix":            "localhost",
 		"serviceBusEndpointSuffix":              "localhost",
-		"activeDirectoryEndpoint":               httpsBase,
+		"activeDirectoryEndpoint":               httpBase,
 		"activeDirectoryResourceId":             httpBase,
 		"activeDirectoryGraphResourceId":        httpBase,
 		"microsoftGraphResourceId":              httpBase,
