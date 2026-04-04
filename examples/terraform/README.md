@@ -1,52 +1,59 @@
 # Terraform + local-azure
 
-This example shows how to use local-azure as a local Azure emulator with Terraform.
+Use local-azure as a local Azure emulator with Terraform.
 
-## How it works
-
-The `azurerm` provider has a `metadata_host` argument. When set, it fetches
-`/metadata/endpoints?api-version=2022-09-01` from that host and uses the
-returned `resourceManagerEndpoint` for all ARM API calls.
-
-local-azure serves this endpoint and returns `http://localhost:4566` as the
-resource manager endpoint, so all Terraform calls route to our emulator.
-
-## Prerequisites
-
-1. local-azure running:
-   ```bash
-   ./bin/local-azure
-   ```
-2. Terraform installed
-
-## Usage
+## Quick Start
 
 ```bash
+# 1. Start local-azure
+./bin/local-azure
+
+# 2. Trust the self-signed certificate (one-time)
+#    Option A: System-wide (recommended)
+bash scripts/trust-cert.sh
+
+#    Option B: Session only
+export SSL_CERT_FILE=~/.local-azure/cert.pem
+
+# 3. Run Terraform
 cd examples/terraform
 terraform init
 terraform plan
 terraform apply -auto-approve
-terraform destroy -auto-approve
 ```
+
+## How it works
+
+The `azurerm` provider has a `metadata_host` argument. When set, it fetches
+`/metadata/endpoints?api-version=2022-09-01` over HTTPS and uses the returned
+`resourceManagerEndpoint` for all ARM API calls.
+
+local-azure serves this on port 4567 (HTTPS with a self-signed cert) and
+returns `http://localhost:4566` as the resource manager endpoint.
+
+## Certificate Trust
+
+The `azurerm` provider always uses HTTPS for `metadata_host`. local-azure
+generates a self-signed certificate on first run and saves it to
+`~/.local-azure/cert.pem`.
+
+You must trust this certificate. Options:
+
+| Method | Command | Scope |
+|--------|---------|-------|
+| Script | `bash scripts/trust-cert.sh` | System-wide (persistent) |
+| macOS | `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.local-azure/cert.pem` | System-wide |
+| Linux | `sudo cp ~/.local-azure/cert.pem /usr/local/share/ca-certificates/local-azure.crt && sudo update-ca-certificates` | System-wide |
+| Env var | `export SSL_CERT_FILE=~/.local-azure/cert.pem` | Current session only |
 
 ## Authentication
 
 local-azure accepts any credentials. The mock values in `main.tf` are
 placeholders - no real Azure auth needed.
 
-You can also set environment variables instead:
-```bash
-export ARM_SUBSCRIPTION_ID="00000000-0000-0000-0000-000000000000"
-export ARM_TENANT_ID="00000000-0000-0000-0000-000000000001"
-export ARM_CLIENT_ID="local-azure"
-export ARM_CLIENT_SECRET="local-azure"
-```
-
 ## Notes
 
-- `skip_provider_registration = true` prevents Terraform from trying to
-  register resource provider namespaces (Microsoft.Compute etc.)
-- `metadata_host` takes hostname:port only (no http:// prefix, no path)
-- This approach works because the `azurerm` provider dynamically discovers
-  all API endpoints from the metadata service - same mechanism used for
-  Azure Stack and sovereign clouds
+- `metadata_host` takes hostname:port only (no https:// prefix)
+- The cert is reused across restarts (regenerated if expiring within 24h)
+- `skip_provider_registration = true` prevents namespace registration calls
+- `LOCAL_AZURE_CERT_DIR` env var overrides cert storage location
