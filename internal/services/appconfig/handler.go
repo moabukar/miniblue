@@ -78,5 +78,5 @@ func (h *Handler) DeleteKeyValue(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListKeyValues(w http.ResponseWriter, r *http.Request) {
 	storeName := chi.URLParam(r, "configStoreName")
 	items := h.store.ListByPrefix("appconfig:" + storeName + ":")
-	json.NewEncoder(w).Encode(map[string]interface{}{"items": items})
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
 }
