@@ -53,7 +53,7 @@ func (m *MemoryBackend) List() []string {
 func (m *MemoryBackend) ListByPrefix(prefix string) []interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	var results []interface{}
+	results := make([]interface{}, 0)
 	for k, v := range m.data {
 		if strings.HasPrefix(k, prefix) {
 			results = append(results, v)
