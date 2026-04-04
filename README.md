@@ -8,7 +8,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/miniblue)](https://hub.docker.com/r/moabukar/miniblue)
 [![Docs](https://img.shields.io/badge/docs-moabukar.github.io%2Fminiblue-blue)](https://moabukar.github.io/miniblue)
 
-Every Azure service. One binary. Zero config.
+Local Azure development. One binary. No account needed.
 
 ---
 
@@ -55,7 +55,7 @@ miniblue fills this gap for Azure developers.
 
 ---
 
-## Features
+## What miniblue is
 
 - **14 Azure services** emulated on a single port (4566)
 - **Drop-in compatible** with Azure SDKs, Terraform, Pulumi
@@ -64,6 +64,18 @@ miniblue fills this gap for Azure developers.
 - **Zero configuration** required
 - **ARM API compatible** responses
 - **azlocal CLI** included (like awslocal for LocalStack)
+
+## What miniblue is NOT
+
+miniblue is an **API emulator** for local development and testing. It does not run real Azure infrastructure.
+
+- **No VMs** — Azure VMs, VMSS, and compute are not emulated
+- **No real networking** — VNets/subnets are API stubs, no actual network layer
+- **No real containers** — AKS/ACI endpoints are not supported (yet)
+- **No data persistence** — all state is in-memory and lost on restart
+- **Not production-ready** — never expose miniblue to the internet
+
+miniblue is designed for **CI pipelines, integration tests, and local development** where you need Azure API compatibility without an Azure account.
 
 ## Quick Start
 

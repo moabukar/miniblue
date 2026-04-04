@@ -1,6 +1,6 @@
 site_name: miniblue
 site_url: https://moabukar.github.io/miniblue
-site_description: The free, open-source Azure emulator
+site_description: Local Azure development. One binary. No account needed.
 site_author: Mo Abukar
 repo_url: https://github.com/moabukar/miniblue
 repo_name: moabukar/miniblue

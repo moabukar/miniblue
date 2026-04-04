@@ -1,6 +1,6 @@
 # miniblue
 
-**Every Azure service. One binary. Zero config.**
+**Local Azure development. One binary. No account needed.**
 
 miniblue is a free, open-source Azure emulator that runs entirely on your machine. Test your Azure apps locally without an Azure account, network connection, or credit card.
 
