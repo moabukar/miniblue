@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
@@ -13,7 +14,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/moabukar/miniblue/internal/server"
@@ -47,11 +50,16 @@ func main() {
 	log.Printf("  Or on Mac: sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain %s", certPath)
 	log.Printf("  Or on Linux: sudo cp %s /usr/local/share/ca-certificates/miniblue.crt && sudo update-ca-certificates", certPath)
 
+	// Graceful shutdown on SIGINT/SIGTERM
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
 	// Start HTTP
+	httpServer := &http.Server{Addr: ":" + port, Handler: handler}
 	go func() {
 		log.Printf("miniblue HTTP  on http://localhost:%s", port)
-		if err := http.ListenAndServe(":"+port, handler); err != nil {
-			log.Fatal(err)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("HTTP server error: %v", err)
 		}
 	}()
 
@@ -65,9 +73,20 @@ func main() {
 			Certificates: []tls.Certificate{cert},
 		},
 	}
-	if err := tlsServer.ListenAndServeTLS("", ""); err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		if err := tlsServer.ListenAndServeTLS("", ""); err != nil && err != http.ErrServerClosed {
+			log.Printf("HTTPS server error: %v", err)
+		}
+	}()
+
+	// Block until shutdown signal
+	<-stop
+	log.Println("miniblue shutting down gracefully...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	httpServer.Shutdown(ctx)
+	tlsServer.Shutdown(ctx)
+	log.Println("miniblue stopped")
 }
 
 func certDirectory() string {

@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -55,10 +56,30 @@ func (s *Server) Handler() http.Handler {
 
 func (s *Server) setupMiddleware() {
 	s.router.Use(StructuredLogger)
-	s.router.Use(middleware.Recoverer)
+	s.router.Use(safeRecover)
 	s.router.Use(middleware.RequestID)
 	s.router.Use(AzureHeaders)
 	s.router.Use(APIVersionCheck)
+}
+
+// safeRecover catches panics and returns a 500 error instead of crashing the server.
+func safeRecover(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rvr := recover(); rvr != nil {
+				log.Printf("[PANIC] %s %s: %v", r.Method, r.URL.Path, rvr)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"error": map[string]interface{}{
+						"code":    "InternalServerError",
+						"message": "An unexpected error occurred. The server has recovered.",
+					},
+				})
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) setupRoutes() {
