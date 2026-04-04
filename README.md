@@ -240,18 +240,17 @@ endpoint := "http://localhost:4566"
 
 ## az CLI Setup
 
-The az CLI uses MSAL for authentication which requires HTTPS and validates authority endpoints against Microsoft's servers. To use az CLI with miniblue, use the helper script:
+**Recommended: use `azlocal`** (works out of the box, no auth setup needed).
+
+The native `az` CLI uses MSAL authentication which requires complex token negotiation. It's not fully compatible with local emulators. Use `azlocal` instead:
 
 ```bash
-./scripts/az-login-local.sh
-
-az group create --name myRG --location eastus
-az group list
-
-# Switch back to real Azure when done
-az cloud set --name AzureCloud
-az login
+azlocal group create --name myRG --location eastus
+azlocal group list
+azlocal keyvault secret set --vault myvault --name key --value secret
 ```
+
+For Terraform, use the `metadata_host` provider config (see Terraform section above).
 
 ## Configuration
 
