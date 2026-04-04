@@ -21,7 +21,9 @@ import (
 	"github.com/moabukar/local-azure/internal/services/queue"
 	"github.com/moabukar/local-azure/internal/services/resourcegroups"
 	"github.com/moabukar/local-azure/internal/services/servicebus"
+	"github.com/moabukar/local-azure/internal/services/subscriptions"
 	"github.com/moabukar/local-azure/internal/services/table"
+	"github.com/moabukar/local-azure/internal/services/tenants"
 	"github.com/moabukar/local-azure/internal/store"
 )
 
@@ -63,7 +65,9 @@ func (s *Server) setupRoutes() {
 	metadata.NewHandler(s.store).Register(s.router)
 	auth.NewHandler(s.store).Register(s.router)
 
-	// Azure services
+	// ARM core (subscriptions, tenants, resource groups)
+	subscriptions.NewHandler(s.store).Register(s.router)
+	tenants.NewHandler(s.store).Register(s.router)
 	resourcegroups.NewHandler(s.store).Register(s.router)
 	blob.NewHandler(s.store).Register(s.router)
 	table.NewHandler(s.store).Register(s.router)
@@ -82,7 +86,7 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	services := []string{
-		"resourcegroups", "blob", "table", "queue", "keyvault",
+		"subscriptions", "tenants", "resourcegroups", "blob", "table", "queue", "keyvault",
 		"cosmosdb", "servicebus", "functions", "network", "dns",
 		"acr", "eventgrid", "appconfig", "identity",
 	}
