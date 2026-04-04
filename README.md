@@ -3,7 +3,7 @@
 **The free, open-source Azure emulator. Develop and test your Azure apps locally.**
 
 [![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/local-azure)](https://hub.docker.com/r/moabukar/local-azure)
 
 Single port. No account. No license key. No telemetry. Just Azure APIs, locally.
@@ -38,7 +38,7 @@ That is 5 separate tools, 5 different Docker images, 5 different ports and confi
 | Auth required | No (free tier) | No | No | No |
 | Docker image | ~1GB | ~200MB | ~300MB | ~15MB |
 | CLI wrapper | awslocal | awslocal | N/A | azlocal |
-| License | BSL (was Apache) | MIT | MIT | Apache 2.0 |
+| License | BSL (was Apache) | MIT | MIT | MIT |
 | ARM API support | N/A (AWS) | N/A (AWS) | No | Yes |
 
 ### Why has no one built this before?
@@ -257,12 +257,4 @@ Adding a new service is straightforward - each service is its own Go package und
 
 ## License
 
-Apache 2.0 - see [LICENSE](LICENSE).
-
-## Acknowledgments
-
-Inspired by [LocalStack](https://github.com/localstack/localstack) and [MiniStack](https://github.com/Nahuel990/ministack).
-
----
-
-Made with care for the Azure developer community.
+MIT - see [LICENSE](LICENSE).
