@@ -16,7 +16,7 @@ provider "azurerm" {
 
   # Point to local-azure metadata endpoint
   # The provider fetches /metadata/endpoints and uses the returned URLs
-  metadata_host = "localhost:4566"
+  metadata_host = "localhost:4567"
 
   # Skip provider namespace registration (no real Azure)
   skip_provider_registration = true
