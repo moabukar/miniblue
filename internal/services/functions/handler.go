@@ -2,19 +2,25 @@ package functions
 
 import (
 	"encoding/json"
-	"github.com/moabukar/local-azure/internal/azerr"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"github.com/moabukar/local-azure/internal/store"
 )
 
-type Function struct {
-	ID       string            `json:"id"`
-	Name     string            `json:"name"`
-	Type     string            `json:"type"`
-	Location string            `json:"location"`
-	Properties map[string]string `json:"properties"`
+type FunctionApp struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	Location   string `json:"location"`
+	Kind       string `json:"kind"`
+	Properties struct {
+		ProvisioningState string `json:"provisioningState"`
+		DefaultHostName   string `json:"defaultHostName"`
+		State             string `json:"state"`
+		Enabled           bool   `json:"enabled"`
+	} `json:"properties"`
 }
 
 type Handler struct {
@@ -44,15 +50,27 @@ func (h *Handler) CreateOrUpdate(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
-	
-	var fn Function
+
+	var fn FunctionApp
 	json.NewDecoder(r.Body).Decode(&fn)
 	fn.ID = "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.Web/sites/" + name
 	fn.Name = name
 	fn.Type = "Microsoft.Web/sites"
-	
-	h.store.Set(h.key(sub, rg, name), fn)
-	w.WriteHeader(http.StatusCreated)
+	fn.Kind = "functionapp"
+	fn.Properties.ProvisioningState = "Succeeded"
+	fn.Properties.DefaultHostName = name + ".azurewebsites.net"
+	fn.Properties.State = "Running"
+	fn.Properties.Enabled = true
+
+	k := h.key(sub, rg, name)
+	_, exists := h.store.Get(k)
+	h.store.Set(k, fn)
+
+	if exists {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+	}
 	json.NewEncoder(w).Encode(fn)
 }
 
@@ -60,7 +78,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
-	
+
 	v, ok := h.store.Get(h.key(sub, rg, name))
 	if !ok {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
@@ -73,8 +91,11 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
-	
-	h.store.Delete(h.key(sub, rg, name))
+
+	if !h.store.Delete(h.key(sub, rg, name)) {
+		azerr.NotFound(w, "Microsoft.Web/sites", name)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }
 

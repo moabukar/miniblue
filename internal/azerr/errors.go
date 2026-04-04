@@ -30,3 +30,18 @@ func NotFound(w http.ResponseWriter, resourceType, name string) {
 func BadRequest(w http.ResponseWriter, message string) {
 	WriteError(w, http.StatusBadRequest, "InvalidRequestContent", message)
 }
+
+func Conflict(w http.ResponseWriter, resourceType, name string) {
+	WriteError(w, http.StatusConflict, "Conflict",
+		"The resource '"+resourceType+"/"+name+"' already exists.")
+}
+
+func Gone(w http.ResponseWriter, resourceType, name string) {
+	WriteError(w, http.StatusGone, "ResourceGone",
+		"The resource '"+resourceType+"/"+name+"' has been deleted.")
+}
+
+func MethodNotAllowed(w http.ResponseWriter, method string) {
+	WriteError(w, http.StatusMethodNotAllowed, "MethodNotAllowed",
+		"The request method '"+method+"' is not allowed.")
+}
