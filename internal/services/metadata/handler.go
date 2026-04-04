@@ -27,70 +27,52 @@ func (h *Handler) Endpoints(w http.ResponseWriter, r *http.Request) {
 	if httpPort == "" {
 		httpPort = "4566"
 	}
-
 	httpBase := "http://localhost:" + httpPort
 
-	// This must match go-autorest/autorest/azure.Environment struct exactly.
-	// The azurerm Terraform provider unmarshals this into that struct.
+	// This MUST match the metaDataResponse struct in:
+	// github.com/hashicorp/go-azure-sdk/sdk/internal/metadata/client.go
+	// The azurerm Terraform provider unmarshals this response using those exact JSON tags.
 	endpoints := map[string]interface{}{
-		// Required: name must be non-nil or provider panics
-		"name": "local-azure",
-
-		// Core endpoints
-		"managementPortalURL":       httpBase,
-		"publishSettingsURL":        httpBase + "/publishsettings",
-		"serviceManagementEndpoint": httpBase + "/",
-		"resourceManagerEndpoint":   httpBase + "/",
-		"activeDirectoryEndpoint":   httpBase + "/",
-		"galleryEndpoint":           httpBase + "/",
-		"keyVaultEndpoint":          httpBase + "/",
-		"managedHSMEndpoint":        httpBase + "/",
-		"graphEndpoint":             httpBase + "/",
-		"serviceBusEndpoint":        httpBase + "/",
-		"batchManagementEndpoint":   httpBase + "/",
-		"microsoftGraphEndpoint":    httpBase + "/",
-
-		// DNS suffixes
-		"storageEndpointSuffix":        "localhost:" + httpPort,
-		"cosmosDBDNSSuffix":            "localhost",
-		"mariaDBDNSSuffix":             "localhost",
-		"mySqlDatabaseDNSSuffix":       "localhost",
-		"postgresqlDatabaseDNSSuffix":  "localhost",
-		"sqlDatabaseDNSSuffix":         "localhost",
-		"trafficManagerDNSSuffix":      "localhost",
-		"keyVaultDNSSuffix":            "localhost",
-		"managedHSMDNSSuffix":          "localhost",
-		"serviceBusEndpointSuffix":     "localhost",
-		"serviceManagementVMDNSSuffix": "localhost",
-		"resourceManagerVMDNSSuffix":   "localhost",
-		"containerRegistryDNSSuffix":   "localhost",
-		"tokenAudience":                httpBase + "/",
-		"apiManagementHostNameSuffix":  "localhost",
-		"synapseEndpointSuffix":        "localhost",
-		"datalakeSuffix":               "localhost",
-
-		// Resource identifiers
-		"resourceIdentifiers": map[string]interface{}{
-			"graph":               httpBase + "/",
-			"keyVault":            httpBase,
-			"datalake":            httpBase + "/",
-			"batch":               httpBase + "/",
-			"operationalInsights": httpBase,
-			"ossRDBMS":            httpBase,
-			"storage":             httpBase + "/",
-			"synapse":             httpBase,
-			"serviceBus":          httpBase + "/",
-			"sqlDatabase":         httpBase + "/",
-			"cosmosDB":            httpBase,
-			"managedHSM":          httpBase,
-			"microsoftGraph":      httpBase + "/",
-		},
-
-		// Legacy fields some older provider versions may read
+		"name":    "local-azure",
+		"portal":  httpBase,
 		"authentication": map[string]interface{}{
-			"loginEndpoint": httpBase,
-			"audiences":     []string{httpBase + "/"},
+			"loginEndpoint":    httpBase + "/",
+			"audiences":        []string{httpBase + "/"},
+			"tenant":           "00000000-0000-0000-0000-000000000001",
+			"identityProvider": "AAD",
 		},
+		"media":         httpBase + "/",
+		"graphAudience": httpBase + "/",
+		"graph":         httpBase + "/",
+		"suffixes": map[string]interface{}{
+			"azureDataLakeStoreFileSystem":        "localhost",
+			"acrLoginServer":                      "localhost",
+			"sqlServerHostname":                   "localhost",
+			"azureDataLakeAnalyticsCatalogAndJob": "localhost",
+			"keyVaultDns":                         "localhost",
+			"storage":                             "localhost:" + httpPort,
+			"azureFrontDoorEndpointSuffix":        "localhost",
+			"storageSyncEndpointSuffix":           "localhost",
+			"mhsmDns":                             "localhost",
+			"mysqlServerEndpoint":                 "localhost",
+			"postgresqlServerEndpoint":            "localhost",
+			"mariadbServerEndpoint":               "localhost",
+			"synapseAnalytics":                    "localhost",
+			"attestationEndpoint":                 "localhost",
+		},
+		"batch":                                 httpBase + "/",
+		"resourceManager":                       httpBase + "/",
+		"vmImageAliasDoc":                       "",
+		"activeDirectoryDataLake":               httpBase + "/",
+		"sqlManagement":                         httpBase + "/",
+		"microsoftGraphResourceId":              httpBase + "/",
+		"appInsightsResourceId":                 httpBase + "/",
+		"appInsightsTelemetryChannelResourceId": httpBase + "/",
+		"attestationResourceId":                 httpBase + "/",
+		"synapseAnalyticsResourceId":            httpBase + "/",
+		"logAnalyticsResourceId":                httpBase + "/",
+		"ossrDbmsResourceId":                    httpBase + "/",
+		"gallery":                               httpBase + "/",
 	}
 
 	w.Header().Set("Content-Type", "application/json")
