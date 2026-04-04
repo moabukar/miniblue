@@ -89,6 +89,14 @@ miniblue is designed for **CI pipelines, integration tests, and local developmen
 
 ## Quick Start
 
+### Homebrew (macOS / Linux)
+
+```bash
+brew tap moabukar/tap
+brew install miniblue
+miniblue
+```
+
 ### Docker Run
 
 ```bash

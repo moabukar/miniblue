@@ -1,5 +1,14 @@
 # Installation
 
+## Homebrew (macOS / Linux)
+
+```bash
+brew tap moabukar/tap
+brew install miniblue
+```
+
+This installs both `miniblue` (server) and `azlocal` (CLI).
+
 ## Docker (recommended)
 
 Pull and run with a single command:
