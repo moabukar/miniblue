@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" width="200" height="220">
   <defs>
     <linearGradient id="top" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" style="stop-color:#93C5FD"/>
@@ -12,26 +12,17 @@
       <stop offset="0%" style="stop-color:#3B82F6"/>
       <stop offset="100%" style="stop-color:#1D4ED8"/>
     </linearGradient>
-    <linearGradient id="mGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFFFFF"/>
-      <stop offset="100%" style="stop-color:#BFDBFE"/>
-    </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="1.5" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1E3A5F" flood-opacity="0.4"/>
     </filter>
   </defs>
-  <polygon points="100,30 160,63 100,96 40,63" fill="url(#top)"/>
-  <polygon points="40,63 100,96 100,162 40,129" fill="url(#left)"/>
-  <polygon points="160,63 100,96 100,162 160,129" fill="url(#right)"/>
-  <line x1="100" y1="96" x2="100" y2="162" stroke="white" stroke-opacity="0.12" stroke-width="0.8"/>
-  <line x1="100" y1="96" x2="40" y2="63" stroke="white" stroke-opacity="0.08" stroke-width="0.8"/>
-  <line x1="100" y1="96" x2="160" y2="63" stroke="white" stroke-opacity="0.08" stroke-width="0.8"/>
-  <g filter="url(#glow)" transform="translate(108,104)">
-    <text x="0" y="0" font-family="'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="800" fill="url(#mGrad)" letter-spacing="-1">m</text>
-    <text x="0.5" y="0.5" font-family="'SF Pro Display', 'Helvetica Neue', Arial, sans-serif" font-size="28" font-weight="800" fill="rgba(0,0,0,0.15)" letter-spacing="-1">m</text>
+  <g filter="url(#shadow)">
+    <polygon points="100,50 160,83 100,116 40,83" fill="url(#top)"/>
+    <polygon points="40,83 100,116 100,182 40,149" fill="url(#left)"/>
+    <polygon points="160,83 100,116 100,182 160,149" fill="url(#right)"/>
   </g>
+  <line x1="100" y1="116" x2="100" y2="182" stroke="white" stroke-opacity="0.12" stroke-width="0.8"/>
+  <line x1="100" y1="116" x2="40" y2="83" stroke="white" stroke-opacity="0.08" stroke-width="0.8"/>
+  <line x1="100" y1="116" x2="160" y2="83" stroke="white" stroke-opacity="0.08" stroke-width="0.8"/>
+  <text x="100" y="28" text-anchor="middle" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="30" font-weight="800" fill="white" filter="url(#shadow)">m</text>
 </svg>
