@@ -9,6 +9,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"log"
 	"math/big"
 	"net"
@@ -25,6 +26,41 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "--help", "-h", "help":
+			fmt.Println(`miniblue - Local Azure development. One binary. No account needed.
+
+Usage:
+  miniblue              Start the server
+  miniblue --help       Show this help
+  miniblue --version    Show version
+
+Environment variables:
+  PORT                   HTTP port (default: 4566)
+  TLS_PORT               HTTPS port (default: 4567)
+  LOG_LEVEL              Log level: debug, info, warn, error (default: info)
+  DATABASE_URL           PostgreSQL URL for persistent storage
+  POSTGRES_URL           Real PostgreSQL for DB for PostgreSQL service
+  REDIS_URL              Real Redis for Azure Cache for Redis service
+  LOCAL_AZURE_CERT_DIR   TLS certificate directory (default: ~/.miniblue)
+  MINIBLUE_INIT_DIR      Init hook scripts directory (default: /etc/miniblue/init/ready.d)
+
+Endpoints:
+  http://localhost:4566   HTTP API (all services)
+  https://localhost:4567  HTTPS API (Terraform metadata)
+  /health                 Health check
+  /metrics                Request metrics
+  /_miniblue/reset        Wipe all state
+
+Documentation: https://moabukar.github.io/miniblue`)
+			return
+		case "--version", "-v", "version":
+			fmt.Println("miniblue v0.2.1")
+			return
+		}
+	}
+
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	port := os.Getenv("PORT")

@@ -9,7 +9,7 @@ miniblue is a **local development tool**. It is not designed for production use 
 If you discover a security vulnerability, please report it responsibly:
 
 1. **Do not** open a public issue
-2. Email: mo-abukar10@hotmail.com
+2. Email: devopsbymo@gmail.com
 3. Include a description of the vulnerability and steps to reproduce
 
 We will respond within 48 hours and work with you to understand and address the issue.
