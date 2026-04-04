@@ -103,6 +103,8 @@ var supportedProviders = []string{
 	"Microsoft.EventGrid",
 	"Microsoft.ManagedIdentity",
 	"Microsoft.AppConfiguration",
+	"Microsoft.Sql",
+	"Microsoft.DBforMySQL",
 }
 
 func providerEntry(namespace string) map[string]interface{} {

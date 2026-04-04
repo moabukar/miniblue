@@ -9,11 +9,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/moabukar/miniblue/internal/services/aci"
 	"github.com/moabukar/miniblue/internal/services/acr"
 	"github.com/moabukar/miniblue/internal/services/appconfig"
 	"github.com/moabukar/miniblue/internal/services/auth"
 	"github.com/moabukar/miniblue/internal/services/blob"
 	"github.com/moabukar/miniblue/internal/services/cosmosdb"
+	"github.com/moabukar/miniblue/internal/services/dbmysql"
+	"github.com/moabukar/miniblue/internal/services/dbpostgres"
 	"github.com/moabukar/miniblue/internal/services/dns"
 	"github.com/moabukar/miniblue/internal/services/eventgrid"
 	"github.com/moabukar/miniblue/internal/services/functions"
@@ -22,7 +25,9 @@ import (
 	"github.com/moabukar/miniblue/internal/services/metadata"
 	"github.com/moabukar/miniblue/internal/services/network"
 	"github.com/moabukar/miniblue/internal/services/queue"
+	"github.com/moabukar/miniblue/internal/services/redis"
 	"github.com/moabukar/miniblue/internal/services/resourcegroups"
+	"github.com/moabukar/miniblue/internal/services/sqldb"
 	"github.com/moabukar/miniblue/internal/services/servicebus"
 	"github.com/moabukar/miniblue/internal/services/subscriptions"
 	"github.com/moabukar/miniblue/internal/services/table"
@@ -78,10 +83,15 @@ func (s *Server) setupRoutes() {
 	functions.NewHandler(s.store).Register(s.router)
 	network.NewHandler(s.store).Register(s.router)
 	dns.NewHandler(s.store).Register(s.router)
+	aci.NewHandler(s.store).Register(s.router)
 	acr.NewHandler(s.store).Register(s.router)
 	eventgrid.NewHandler(s.store).Register(s.router)
 	appconfig.NewHandler(s.store).Register(s.router)
 	identity.NewHandler(s.store).Register(s.router)
+	dbpostgres.NewHandler(s.store).Register(s.router)
+	redis.NewHandler(s.store).Register(s.router)
+	sqldb.NewHandler(s.store).Register(s.router)
+	dbmysql.NewHandler(s.store).Register(s.router)
 }
 
 func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +125,8 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	services := []string{
 		"subscriptions", "tenants", "resourcegroups", "blob", "table", "queue", "keyvault",
 		"cosmosdb", "servicebus", "functions", "network", "dns",
-		"acr", "eventgrid", "appconfig", "identity",
+		"aci", "acr", "eventgrid", "appconfig", "identity", "dbpostgres", "redis",
+		"sqldb", "dbmysql",
 	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":   "running",

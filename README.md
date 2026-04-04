@@ -2,7 +2,7 @@
 
 **The free, open-source Azure emulator. Develop and test your Azure apps locally.**
 
-[![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/go-1.24+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/moabukar/miniblue/actions/workflows/ci.yml/badge.svg)](https://github.com/moabukar/miniblue/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/miniblue)](https://hub.docker.com/r/moabukar/miniblue)
@@ -57,7 +57,7 @@ miniblue fills this gap for Azure developers.
 
 ## What miniblue is
 
-- **14 Azure services** emulated behind a single port (4566)
+- **19 Azure services** emulated behind a single port (4566)
 - **Drop-in compatible** with Azure SDKs, Terraform, Pulumi
 - **In-memory storage** by default (fast, ephemeral)
 - **Docker-first** deployment
@@ -136,22 +136,27 @@ azlocal storage blob upload --account myaccount --container mycontainer --name f
 
 ## Supported Services
 
-| Service | Status | Description |
+| Service | Status | Real Backend |
 |---------|--------|-------------|
-| Resource Groups | Done | ARM resource group management |
-| Blob Storage | Done | Containers, blobs, upload/download |
-| Table Storage | Done | Entity CRUD operations |
-| Queue Storage | Done | Send/receive/peek messages |
-| Key Vault | Done | Secrets management |
-| Cosmos DB | Done | Document CRUD (SQL API) |
-| Service Bus | Done | Queues, topics, messaging |
-| Azure Functions | Done | Function app registration (stub) |
-| Virtual Networks | Done | VNets and subnets |
-| DNS Zones | Done | Zone and record management |
-| Container Registry | Done | Registry management, manifest listing |
-| Event Grid | Done | Topics, subscriptions, event publish |
-| App Configuration | Done | Key-value configuration store |
-| Managed Identity | Done | Token endpoint (IMDS) |
+| Resource Groups | Done | In-memory / Postgres |
+| Blob Storage | Done | In-memory |
+| Table Storage | Done | In-memory |
+| Queue Storage | Done | In-memory |
+| Key Vault | Done | In-memory |
+| Cosmos DB | Done | In-memory / Postgres |
+| Service Bus | Done | In-memory |
+| Azure Functions | Done | Stub |
+| Virtual Networks | Done | In-memory |
+| DNS Zones | Done | In-memory |
+| Container Registry | Done | In-memory |
+| Event Grid | Done | In-memory |
+| App Configuration | Done | In-memory |
+| Managed Identity | Done | Mock tokens |
+| **DB for PostgreSQL** | **New** | **Real Postgres via POSTGRES_URL** |
+| **DB for MySQL** | **New** | Stub (real backend planned) |
+| **Azure SQL Database** | **New** | Stub (real backend planned) |
+| **Azure Cache for Redis** | **New** | **Real Redis via REDIS_URL** |
+| **Container Instances** | **New** | **Real Docker containers** |
 
 ## Usage Examples
 
