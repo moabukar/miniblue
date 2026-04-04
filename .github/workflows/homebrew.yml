@@ -1,0 +1,19 @@
+name: Update Homebrew
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  homebrew:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Homebrew formula
+        uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          formula-name: miniblue
+          homebrew-tap: moabukar/homebrew-tap
+          tag-name: ${{ github.ref_name }}
+          commit-message: "feat: Bump miniblue to {{version}}"
+        env:
+          COMMITTER_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
