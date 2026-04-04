@@ -10,5 +10,8 @@
   "dockerfile": {
     "enabled": true
   },
-  "schedule": ["before 9am on Monday"]
+  "github-actions": {
+    "enabled": true
+  },
+  "schedule": ["at any time"]
 }
