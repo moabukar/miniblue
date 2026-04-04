@@ -38,12 +38,20 @@ func (h *Handler) Register(r chi.Router) {
 	r.Get("/{tenantId}/discovery/instance", h.DiscoveryInstance)
 }
 
-func httpsBase() string {
-	tlsPort := os.Getenv("TLS_PORT")
-	if tlsPort == "" {
-		tlsPort = "4567"
+func httpBase() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4566"
 	}
-	return "https://localhost:" + tlsPort
+	return "http://localhost:" + port
+}
+
+func baseFromRequest(r *http.Request) string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	return scheme + "://" + r.Host
 }
 
 func (h *Handler) Token(w http.ResponseWriter, r *http.Request) {
@@ -72,15 +80,15 @@ func (h *Handler) OpenIDConfig(w http.ResponseWriter, r *http.Request) {
 	if tenantId == "" {
 		tenantId = "common"
 	}
-	h.writeOpenIDConfig(w, tenantId)
+	h.writeOpenIDConfig(w, r, tenantId)
 }
 
 func (h *Handler) OpenIDConfigCommon(w http.ResponseWriter, r *http.Request) {
-	h.writeOpenIDConfig(w, "common")
+	h.writeOpenIDConfig(w, r, "common")
 }
 
-func (h *Handler) writeOpenIDConfig(w http.ResponseWriter, tenantId string) {
-	base := httpsBase()
+func (h *Handler) writeOpenIDConfig(w http.ResponseWriter, r *http.Request, tenantId string) {
+	base := baseFromRequest(r)
 	config := map[string]interface{}{
 		"issuer":                                base + "/" + tenantId,
 		"authorization_endpoint":                base + "/" + tenantId + "/oauth2/v2.0/authorize",
@@ -121,7 +129,15 @@ func (h *Handler) Authorize(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DiscoveryInstance(w http.ResponseWriter, r *http.Request) {
-	base := httpsBase()
+	base := baseFromRequest(r)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4566"
+	}
+	tlsPort := os.Getenv("TLS_PORT")
+	if tlsPort == "" {
+		tlsPort = "4567"
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"tenant_discovery_endpoint": base + "/common/.well-known/openid-configuration",
@@ -129,7 +145,7 @@ func (h *Handler) DiscoveryInstance(w http.ResponseWriter, r *http.Request) {
 			{
 				"preferred_network": "localhost",
 				"preferred_cache":   "localhost",
-				"aliases":           []string{"localhost", "localhost:4567"},
+				"aliases":           []string{"localhost", "localhost:" + port, "localhost:" + tlsPort},
 			},
 		},
 	})
