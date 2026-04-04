@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/moabukar/local-azure/internal/azerr"
@@ -39,8 +38,13 @@ func (h *Handler) Register(r chi.Router) {
 			r.Get("/", h.Get)
 			r.Delete("/", h.Delete)
 			r.Head("/", h.CheckExistence)
+			r.Get("/resources", h.ListResources)
 		})
 	})
+	// Case-sensitive duplicate (Azure ARM is case-insensitive on 'resourceGroups')
+	r.Get("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/resources", h.ListResources)
+	// Async operation status polling endpoint
+	r.Get("/subscriptions/{subscriptionId}/operationresults/*", h.OperationResult)
 }
 
 func (h *Handler) key(sub, name string) string {
@@ -151,8 +155,15 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	h.store.DeleteByPrefix("acr:registry:" + sub + ":" + name + ":")
 	h.store.DeleteByPrefix("eg:topic:" + sub + ":" + name + ":")
 	h.store.DeleteByPrefix("dns:zone:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("dns:record:" + sub + ":" + name + ":")
 
-	_ = fmt.Sprint(time.Now()) // used for async operation simulation
+	// Async operation — return Location header for polling (Terraform requires this on 202)
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	opURL := fmt.Sprintf("%s://%s/subscriptions/%s/operationresults/delete-rg-%s?api-version=2020-06-01", scheme, r.Host, sub, name)
+	w.Header().Set("Location", opURL)
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -160,4 +171,16 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	items := h.store.ListByPrefix("rg:" + sub + ":")
 	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
+}
+
+// ListResources returns resources within a resource group.
+// The azurerm TF provider calls this before deleting a group.
+func (h *Handler) ListResources(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": []interface{}{}})
+}
+
+// OperationResult returns 200 (completed) for async operation polling.
+// Since local-azure operations are synchronous, all ops are already done.
+func (h *Handler) OperationResult(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
