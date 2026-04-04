@@ -11,7 +11,7 @@ miniblue works with zero configuration out of the box. This page covers everythi
 | `LOG_LEVEL` | `info` | Log verbosity: `debug`, `info`, `warn`, `error` |
 | `LOCAL_AZURE_ENDPOINT` | `http://localhost:4566` | Endpoint used by the `azlocal` CLI |
 | `LOCAL_AZURE_CERT_DIR` | `~/.miniblue` | Directory for TLS certificate and key |
-| `LOCAL_AZURE_NO_TLS` | _(unset)_ | Set to `true` to disable the HTTPS listener |
+| `DATABASE_URL` | _(unset)_ | PostgreSQL connection string for persistent storage |
 
 Example -- run on custom ports:
 
@@ -85,16 +85,19 @@ You need to trust the certificate for Terraform, Go SDKs, and other tools that v
 LOCAL_AZURE_CERT_DIR=/tmp/my-certs ./bin/miniblue
 ```
 
-### Disabling TLS
+### Persistent storage
 
-If you do not need the HTTPS port at all:
+By default miniblue stores everything in memory (lost on restart). For persistence, set `DATABASE_URL`:
 
 ```bash
-LOCAL_AZURE_NO_TLS=true ./bin/miniblue
+DATABASE_URL=postgres://user:pass@localhost:5432/miniblue ./bin/miniblue
 ```
 
-!!! warning
-    Disabling TLS means Terraform and the Azure CLI will not work. Only disable TLS if you are using curl or azlocal exclusively.
+Or use the included Postgres docker-compose:
+
+```bash
+docker-compose -f docker-compose.postgres.yml up
+```
 
 ## Docker configuration
 

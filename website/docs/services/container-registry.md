@@ -39,7 +39,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry?api-version=2020-06-01",
+  "id": "/subscriptions/sub1/resourceGroups/myRG/providers/Microsoft.ContainerRegistry/registries/myregistry",
   "name": "myregistry",
   "type": "Microsoft.ContainerRegistry/registries",
   "location": "eastus",

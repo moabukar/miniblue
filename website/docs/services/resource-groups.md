@@ -31,7 +31,7 @@ Response (`201 Created`):
 
 ```json
 {
-  "id": "/subscriptions/sub1/resourceGroups/myRG?api-version=2020-06-01",
+  "id": "/subscriptions/sub1/resourceGroups/myRG",
   "name": "myRG",
   "type": "Microsoft.Resources/resourceGroups",
   "location": "eastus",
@@ -86,7 +86,7 @@ Response:
 {
   "value": [
     {
-      "id": "/subscriptions/sub1/resourceGroups/myRG?api-version=2020-06-01",
+      "id": "/subscriptions/sub1/resourceGroups/myRG",
       "name": "myRG",
       "type": "Microsoft.Resources/resourceGroups",
       "location": "eastus",

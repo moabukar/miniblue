@@ -245,7 +245,9 @@ az login
 | `PORT` | `4566` | HTTP server port |
 | `TLS_PORT` | `4567` | HTTPS server port (self-signed cert) |
 | `LOG_LEVEL` | `info` | Log level (debug, info, warn, error) |
+| `DATABASE_URL` | (none) | PostgreSQL connection string for persistent storage |
 | `LOCAL_AZURE_ENDPOINT` | `http://localhost:4566` | azlocal CLI endpoint override |
+| `LOCAL_AZURE_CERT_DIR` | `~/.miniblue` | Directory for TLS certificate storage |
 
 ## Ports
 

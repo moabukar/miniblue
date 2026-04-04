@@ -1,12 +1,12 @@
-# Terraform + local-azure
+# Terraform + miniblue
 
-Use local-azure as a local Azure emulator with Terraform.
+Use miniblue as a local Azure emulator with Terraform.
 
 ## Quick Start
 
 ```bash
-# 1. Start local-azure
-./bin/local-azure
+# 1. Start miniblue
+./bin/miniblue
 
 # 2. Trust the self-signed certificate (one-time)
 #    Option A: System-wide (recommended)
@@ -28,12 +28,12 @@ The `azurerm` provider has a `metadata_host` argument. When set, it fetches
 `/metadata/endpoints?api-version=2022-09-01` over HTTPS and uses the returned
 `resourceManagerEndpoint` for all ARM API calls.
 
-local-azure serves this on port 4567 (HTTPS with a self-signed cert) and
+miniblue serves this on port 4567 (HTTPS with a self-signed cert) and
 returns `http://localhost:4566` as the resource manager endpoint.
 
 ## Certificate Trust
 
-The `azurerm` provider always uses HTTPS for `metadata_host`. local-azure
+The `azurerm` provider always uses HTTPS for `metadata_host`. miniblue
 generates a self-signed certificate on first run and saves it to
 `~/.miniblue/cert.pem`.
 
@@ -48,7 +48,7 @@ You must trust this certificate. Options:
 
 ## Authentication
 
-local-azure accepts any credentials. The mock values in `main.tf` are
+miniblue accepts any credentials. The mock values in `main.tf` are
 placeholders - no real Azure auth needed.
 
 ## Notes
