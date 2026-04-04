@@ -28,7 +28,9 @@ run:
 
 install: build
 	cp bin/azlocal /usr/local/bin/azlocal
-	@echo "azlocal installed to /usr/local/bin/azlocal"
+	cp bin/miniblue /usr/local/bin/miniblue
+	@echo "Installed miniblue and azlocal to /usr/local/bin/"
+	@echo "Run 'miniblue' to start the server, 'azlocal' to interact with it."
 
 tidy:
 	go mod tidy
