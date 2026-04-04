@@ -13,7 +13,7 @@ make test
 
 Requirements:
 
-- Go 1.23+
+- Go 1.25+
 - Make (optional but recommended)
 
 ## Project structure

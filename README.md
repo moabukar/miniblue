@@ -2,7 +2,7 @@
 
 **The free, open-source Azure emulator. Develop and test your Azure apps locally.**
 
-[![Go Version](https://img.shields.io/badge/go-1.24+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/go-1.25+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/moabukar/miniblue/actions/workflows/ci.yml/badge.svg)](https://github.com/moabukar/miniblue/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/miniblue)](https://hub.docker.com/r/moabukar/miniblue)
@@ -250,7 +250,9 @@ az login
 | `PORT` | `4566` | HTTP server port |
 | `TLS_PORT` | `4567` | HTTPS server port (self-signed cert) |
 | `LOG_LEVEL` | `info` | Log level (debug, info, warn, error) |
-| `DATABASE_URL` | (none) | PostgreSQL connection string for persistent storage |
+| `DATABASE_URL` | (none) | PostgreSQL backend for persistent storage |
+| `POSTGRES_URL` | (none) | Real PostgreSQL for DB for PostgreSQL service |
+| `REDIS_URL` | (none) | Real Redis for Azure Cache for Redis service |
 | `LOCAL_AZURE_ENDPOINT` | `http://localhost:4566` | azlocal CLI endpoint override |
 | `LOCAL_AZURE_CERT_DIR` | `~/.miniblue` | Directory for TLS certificate storage |
 

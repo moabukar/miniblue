@@ -1,23 +1,17 @@
-# Build stage
-FROM golang:1.24-alpine AS builder
-
+FROM golang:1.25-alpine AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o /miniblue ./cmd/miniblue
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /miniblue ./cmd/miniblue
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /healthcheck ./cmd/healthcheck
 
-# Final stage
-FROM alpine:3.19
-
-RUN apk --no-cache add ca-certificates && \
-    adduser -D -H miniblue
+FROM scratch
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /miniblue /miniblue
-
+COPY --from=builder /healthcheck /healthcheck
 EXPOSE 4566 4567
 ENV PORT=4566
-
-USER miniblue
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -q --spider http://localhost:4566/health || exit 1
-
+USER 65534
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD ["/healthcheck"]
 ENTRYPOINT ["/miniblue"]

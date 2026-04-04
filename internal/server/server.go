@@ -152,6 +152,6 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":   "running",
 		"services": services,
-		"version":  "0.1.0",
+		"version":  "0.2.0",
 	})
 }

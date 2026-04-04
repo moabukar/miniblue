@@ -24,7 +24,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions follow 
 - mkdocs documentation site (17 pages)
 
 ### Changed
-- Go version bumped from 1.23 to 1.24
+- Go version bumped to 1.25
 - Dockerfile now runs as non-root user (`miniblue`)
 - Dockerfile includes HEALTHCHECK
 - golangci-lint added to CI pipeline

@@ -46,6 +46,7 @@ nav:
     - Docker: guides/docker.md
   - Services:
     - Overview: services/overview.md
+    - API Parity Matrix: services/parity.md
     - Resource Groups: services/resource-groups.md
     - Blob Storage: services/blob-storage.md
     - Key Vault: services/key-vault.md
@@ -54,6 +55,7 @@ nav:
     - Container Registry: services/container-registry.md
     - Cosmos DB: services/cosmos-db.md
     - Service Bus: services/service-bus.md
+  - Architecture: architecture/overview.md
   - Contributing: contributing.md
 
 markdown_extensions:

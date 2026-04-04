@@ -169,7 +169,7 @@ make docker-run
 | Exposed port | `4566` |
 | User | `root` (Alpine default) |
 
-The image uses a two-stage build: Go compilation in `golang:1.23-alpine`, then the static binary is copied into a minimal Alpine image.
+The image uses a two-stage build: Go compilation in `golang:1.25-alpine`, then the static binary is copied into a minimal Alpine image.
 
 ## Stopping and removing
 
