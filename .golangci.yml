@@ -9,12 +9,8 @@ linters:
     - gosimple
   disable:
     - errcheck
-
-linters-settings:
-  govet:
-    disable:
-      - fieldalignment
-      - shadow
-
-issues:
-  exclude-use-default: true
+  settings:
+    govet:
+      disable:
+        - fieldalignment
+        - shadow
