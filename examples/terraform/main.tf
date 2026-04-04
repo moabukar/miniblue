@@ -1,5 +1,6 @@
-# Example Terraform config for local-azure
-# Run: terraform init && terraform apply
+# Terraform + local-azure example
+# Start local-azure first: ./bin/local-azure
+# Then: terraform init && terraform apply -auto-approve
 
 terraform {
   required_providers {
@@ -13,13 +14,14 @@ terraform {
 provider "azurerm" {
   features {}
 
-  # Point to local-azure
-  resource_manager_endpoint         = "http://localhost:4566"
-  skip_provider_registration        = true
-  use_cli                           = false
-  use_msi                           = false
+  # Point to local-azure metadata endpoint
+  # The provider fetches /metadata/endpoints and uses the returned URLs
+  metadata_host = "localhost:4566"
 
-  # Use mock credentials
+  # Skip provider namespace registration (no real Azure)
+  skip_provider_registration = true
+
+  # Mock credentials - local-azure accepts anything
   subscription_id = "00000000-0000-0000-0000-000000000000"
   tenant_id       = "00000000-0000-0000-0000-000000000001"
   client_id       = "local-azure"
