@@ -30,7 +30,7 @@ That is 5 separate tools, 5 different Docker images, 5 different ports and confi
 
 ### How it compares
 
-| | LocalStack (AWS) | MiniStack (AWS) | Azurite (Azure) | local-azure |
+| | LocalStack (AWS) | MiniStack (AWS) | Azurite (Azure) | miniblue |
 |---|---|---|---|---|
 | Services | 80+ | 36 | 3 (storage only) | 14+ |
 | Single port | 4566 | 4566 | 10000-10002 | 4566 |
@@ -80,7 +80,7 @@ docker run -p 4566:4566 -p 4567:4567 ghcr.io/moabukar/miniblue:latest
 ```yaml
 version: '3.8'
 services:
-  local-azure:
+  miniblue:
     image: moabukar/miniblue:latest
     ports:
       - "4566:4566"
@@ -161,7 +161,7 @@ curl -X PUT "http://localhost:4566/keyvault/myvault/secrets/mysecret" \
 curl -X PUT "http://localhost:4566/blob/myaccount/mycontainer"
 curl -X PUT "http://localhost:4566/blob/myaccount/mycontainer/hello.txt" \
   -H "Content-Type: text/plain" \
-  -d "Hello from local-azure!"
+  -d "Hello from miniblue!"
 curl "http://localhost:4566/blob/myaccount/mycontainer/hello.txt"
 ```
 
@@ -183,8 +183,8 @@ provider "azurerm" {
 
   subscription_id = "00000000-0000-0000-0000-000000000000"
   tenant_id       = "00000000-0000-0000-0000-000000000001"
-  client_id       = "local-azure"
-  client_secret   = "local-azure"
+  client_id       = "miniblue"
+  client_secret   = "miniblue"
 }
 
 resource "azurerm_resource_group" "example" {
@@ -211,7 +211,7 @@ endpoint := "http://localhost:4566"
 
 ## az CLI Setup
 
-The az CLI uses MSAL for authentication which requires HTTPS and validates authority endpoints against Microsoft's servers. To use az CLI with local-azure, use the helper script:
+The az CLI uses MSAL for authentication which requires HTTPS and validates authority endpoints against Microsoft's servers. To use az CLI with miniblue, use the helper script:
 
 ```bash
 ./scripts/az-login-local.sh

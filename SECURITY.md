@@ -2,7 +2,7 @@
 
 ## Important Note
 
-local-azure is a **local development tool**. It is not designed for production use and should never be exposed to the internet.
+miniblue is a **local development tool**. It is not designed for production use and should never be exposed to the internet.
 
 ## Reporting a Vulnerability
 
@@ -16,7 +16,7 @@ We will respond within 48 hours and work with you to understand and address the 
 
 ## Scope
 
-Since local-azure is a local emulator, security concerns are primarily around:
+Since miniblue is a local emulator, security concerns are primarily around:
 
 - Preventing unintended network exposure
 - Ensuring mock tokens cannot be confused with real Azure tokens

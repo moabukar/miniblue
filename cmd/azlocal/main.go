@@ -56,7 +56,7 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println(`azlocal - CLI for local-azure (like awslocal for LocalStack)
+	fmt.Println(`azlocal - CLI for miniblue (like awslocal for LocalStack)
 
 Usage:
   azlocal <command> <subcommand> [flags]
@@ -70,7 +70,7 @@ Commands:
   servicebus   Service Bus operations
   appconfig    App Configuration operations
   functionapp  Azure Functions operations
-  health       Check local-azure health
+  health       Check miniblue health
 
 Examples:
   azlocal group create --name myRG --location eastus
