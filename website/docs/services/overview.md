@@ -1,6 +1,6 @@
 # Services Overview
 
-miniblue emulates 14 Azure services on a single port. All services use in-memory storage and require no authentication.
+miniblue emulates 19 Azure services on a single port. All services use in-memory storage and require no authentication.
 
 ## Service status
 

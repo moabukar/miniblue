@@ -34,20 +34,24 @@ The Azure ecosystem today forces developers to cobble together individual emulat
 
 That is 5 separate tools, 5 different Docker images, 5 different ports and configs - just to get basic local dev working. And you still have no local emulation for Resource Groups, Key Vault, DNS, VNets, Event Grid, ACR, or Managed Identity.
 
-**miniblue gives you 14+ Azure services on a single port.** One binary, one Docker image, zero config.
+**miniblue gives you 19 Azure services on a single port.** One binary, one Docker image, zero config.
 
 ### How it compares
 
 | | LocalStack (AWS) | MiniStack (AWS) | Azurite (Azure) | miniblue |
 |---|---|---|---|---|
-| Services | 80+ | 36 | 3 (storage only) | 14+ |
+| Services | 80+ | 36 | 3 (storage only) | **19** |
 | Single port | 4566 | 4566 | 10000-10002 | 4566 |
-| Language | Python | Python | Node.js | Go |
+| Language | Python | Python | Node.js | **Go** |
 | Auth required | No (free tier) | No | No | No |
-| Docker image | ~1GB | ~200MB | ~300MB | ~15MB |
+| Docker image | ~1GB | ~200MB | ~300MB | **~8MB (scratch)** |
+| Startup time | ~10s | ~5s | ~3s | **<1s** |
 | CLI wrapper | awslocal | awslocal | N/A | azlocal |
+| Real backends | DynamoDB Local | No | No | **Postgres, Redis, Docker** |
+| Terraform | N/A (AWS) | N/A (AWS) | No | **Yes (5 resource types)** |
+| Persistent storage | Pro only | No | Volume mount | **Postgres backend** |
 | License | BSL (was Apache) | MIT | MIT | MIT |
-| ARM API support | N/A (AWS) | N/A (AWS) | No | Yes |
+| ARM API support | N/A (AWS) | N/A (AWS) | No | **Yes** |
 
 ### Why has no one built this before?
 
