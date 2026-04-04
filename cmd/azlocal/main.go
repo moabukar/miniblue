@@ -124,8 +124,19 @@ func sub(args []string) string {
 	return s
 }
 
+// armPath appends api-version for ARM endpoints
+func armPath(path string) string {
+	if strings.Contains(path, "/subscriptions/") {
+		if strings.Contains(path, "?") {
+			return path + "&api-version=2023-01-01"
+		}
+		return path + "?api-version=2023-01-01"
+	}
+	return path
+}
+
 func doGet(path string) {
-	resp, err := http.Get(baseURL + path)
+	resp, err := http.Get(baseURL + armPath(path))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
@@ -136,7 +147,7 @@ func doGet(path string) {
 
 func doPut(path string, body interface{}) {
 	data, _ := json.Marshal(body)
-	req, _ := http.NewRequest("PUT", baseURL+path, bytes.NewReader(data))
+	req, _ := http.NewRequest("PUT", baseURL+armPath(path), bytes.NewReader(data))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -148,7 +159,7 @@ func doPut(path string, body interface{}) {
 }
 
 func doPutRaw(path string, contentType string, data []byte) {
-	req, _ := http.NewRequest("PUT", baseURL+path, bytes.NewReader(data))
+	req, _ := http.NewRequest("PUT", baseURL+armPath(path), bytes.NewReader(data))
 	req.Header.Set("Content-Type", contentType)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -164,7 +175,7 @@ func doPutRaw(path string, contentType string, data []byte) {
 }
 
 func doDelete(path string) {
-	req, _ := http.NewRequest("DELETE", baseURL+path, nil)
+	req, _ := http.NewRequest("DELETE", baseURL+armPath(path), nil)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -180,7 +191,7 @@ func doDelete(path string) {
 
 func doPost(path string, body interface{}) {
 	data, _ := json.Marshal(body)
-	resp, err := http.Post(baseURL+path, "application/json", bytes.NewReader(data))
+	resp, err := http.Post(baseURL+armPath(path), "application/json", bytes.NewReader(data))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
