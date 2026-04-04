@@ -24,7 +24,7 @@ What actually happened.
 **Environment**
 - OS: [e.g. macOS, Ubuntu]
 - Go version: [e.g. 1.23]
-- local-azure version: [e.g. v0.1.0]
+- miniblue version: [e.g. v0.1.0]
 - Running via: [Docker / binary]
 
 **Additional context**
