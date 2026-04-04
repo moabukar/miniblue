@@ -40,14 +40,6 @@ func (h *Handler) Register(r chi.Router) {
 	r.Get("/{tenantId}/discovery/instance", h.DiscoveryInstance)
 }
 
-func httpBase() string {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "4566"
-	}
-	return "http://localhost:" + port
-}
-
 func baseFromRequest(r *http.Request) string {
 	scheme := "http"
 	if r.TLS != nil {
