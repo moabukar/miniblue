@@ -6,7 +6,6 @@ linters:
     - staticcheck
     - unused
     - ineffassign
-    - gosimple
   disable:
     - errcheck
   settings:
