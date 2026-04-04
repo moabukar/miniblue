@@ -14,8 +14,10 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -79,6 +81,9 @@ func main() {
 		}
 	}()
 
+	// Run init hooks
+	go runInitHooks()
+
 	// Block until shutdown signal
 	<-stop
 	log.Println("miniblue shutting down gracefully...")
@@ -87,6 +92,31 @@ func main() {
 	httpServer.Shutdown(ctx)
 	tlsServer.Shutdown(ctx)
 	log.Println("miniblue stopped")
+}
+
+func runInitHooks() {
+	initDir := os.Getenv("MINIBLUE_INIT_DIR")
+	if initDir == "" {
+		initDir = "/etc/miniblue/init/ready.d"
+	}
+	entries, err := os.ReadDir(initDir)
+	if err != nil {
+		return // no init dir, skip silently
+	}
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sh") {
+			continue
+		}
+		path := filepath.Join(initDir, e.Name())
+		log.Printf("running init hook: %s", e.Name())
+		cmd := exec.Command("sh", path)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Run(); err != nil {
+			log.Printf("init hook %s failed: %v", e.Name(), err)
+		}
+	}
+	log.Println("init hooks complete")
 }
 
 func certDirectory() string {

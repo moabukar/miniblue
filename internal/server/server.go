@@ -55,6 +55,7 @@ func (s *Server) Handler() http.Handler {
 }
 
 func (s *Server) setupMiddleware() {
+	s.router.Use(CORS)
 	s.router.Use(StructuredLogger)
 	s.router.Use(safeRecover)
 	s.router.Use(middleware.RequestID)
@@ -85,6 +86,7 @@ func safeRecover(next http.Handler) http.Handler {
 func (s *Server) setupRoutes() {
 	s.router.Get("/health", s.healthHandler)
 	s.router.Get("/metrics", s.metricsHandler)
+	s.router.Post("/_miniblue/reset", s.resetHandler)
 
 	// Cloud metadata + auth
 	metadata.NewHandler(s.store).Register(s.router)
@@ -140,6 +142,14 @@ func storeBackendName(st *store.Store) string {
 		return "postgres"
 	}
 	return "memory"
+}
+
+func (s *Server) resetHandler(w http.ResponseWriter, r *http.Request) {
+	s.store.Reset()
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "reset",
+		"message": "All state cleared",
+	})
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {

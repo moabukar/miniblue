@@ -1,0 +1,35 @@
+name: Setup miniblue
+description: Start miniblue Azure emulator for testing
+inputs:
+  version:
+    description: miniblue version
+    default: latest
+  wait:
+    description: Wait for miniblue to be ready
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Start miniblue
+      shell: bash
+      run: |
+        docker run -d --name miniblue \
+          -p 4566:4566 -p 4567:4567 \
+          moabukar/miniblue:${{ inputs.version }}
+
+    - name: Wait for ready
+      if: inputs.wait == 'true'
+      shell: bash
+      run: |
+        echo "Waiting for miniblue..."
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:4566/health > /dev/null 2>&1; then
+            echo "miniblue is ready"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "miniblue failed to start"
+        docker logs miniblue
+        exit 1

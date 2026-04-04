@@ -10,4 +10,5 @@ type Backend interface {
 	CountByPrefix(prefix string) int
 	Exists(key string) bool
 	DeleteByPrefix(prefix string) int
+	Reset()
 }

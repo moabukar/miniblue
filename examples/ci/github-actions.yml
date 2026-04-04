@@ -1,0 +1,39 @@
+# Example GitHub Actions workflow using miniblue for testing
+name: Test with miniblue
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      miniblue:
+        image: moabukar/miniblue:latest
+        ports:
+          - 4566:4566
+          - 4567:4567
+        options: --health-cmd="/healthcheck" --health-interval=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for miniblue
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4566/health && break
+            sleep 1
+          done
+
+      - name: Create resources
+        run: |
+          curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/test-rg?api-version=2020-06-01" \
+            -H "Content-Type: application/json" \
+            -d '{"location":"eastus"}'
+
+      - name: Run your tests
+        run: |
+          # Your test commands here
+          echo "Tests would run against http://localhost:4566"
+
+      - name: Reset state between test suites
+        run: curl -X POST http://localhost:4566/_miniblue/reset

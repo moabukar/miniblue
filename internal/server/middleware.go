@@ -8,6 +8,22 @@ import (
 	"github.com/moabukar/miniblue/internal/azerr"
 )
 
+// CORS adds permissive CORS headers for local development.
+func CORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, x-ms-version, x-ms-date, x-ms-client-request-id")
+		w.Header().Set("Access-Control-Max-Age", "86400")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // AzureHeaders adds standard Azure response headers to every request.
 func AzureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
