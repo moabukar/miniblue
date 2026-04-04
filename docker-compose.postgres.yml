@@ -10,7 +10,7 @@ services:
       postgres:
         condition: service_healthy
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: miniblue
       POSTGRES_PASSWORD: miniblue
