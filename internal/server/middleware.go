@@ -2,10 +2,8 @@ package server
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
-	"github.com/moabukar/miniblue/internal/azerr"
 )
 
 // CORS adds permissive CORS headers for local development.
@@ -40,35 +38,13 @@ func AzureHeaders(next http.Handler) http.Handler {
 	})
 }
 
-// apiVersionPrefixes are ARM paths that require api-version in real Azure.
-var apiVersionPrefixes = []string{
-	"/subscriptions/",
-}
-
-// APIVersionCheck validates that ARM requests include ?api-version= parameter.
+// APIVersionCheck stores the api-version if provided but does not reject requests without it.
+// Real Azure requires api-version on ARM calls but miniblue is lenient for local development.
 func APIVersionCheck(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-
-		needsVersion := false
-		for _, prefix := range apiVersionPrefixes {
-			if strings.HasPrefix(path, prefix) {
-				needsVersion = true
-				break
-			}
-		}
-
-		if needsVersion {
-			apiVersion := r.URL.Query().Get("api-version")
-			if apiVersion == "" {
-				azerr.WriteError(w, http.StatusBadRequest,
-					"MissingApiVersionParameter",
-					"The api-version query parameter (?api-version=) is required for all API calls.")
-				return
-			}
+		if apiVersion := r.URL.Query().Get("api-version"); apiVersion != "" {
 			w.Header().Set("x-ms-api-version", apiVersion)
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
