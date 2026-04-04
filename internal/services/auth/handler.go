@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -54,10 +56,35 @@ func baseFromRequest(r *http.Request) string {
 	return scheme + "://" + r.Host
 }
 
+func mockJWT(tenantId, clientId string) string {
+	header := `{"typ":"JWT","alg":"none"}`
+	now := time.Now()
+	claims := map[string]interface{}{
+		"aud": "https://management.azure.com/",
+		"iss": fmt.Sprintf("https://sts.windows.net/%s/", tenantId),
+		"iat": now.Unix(),
+		"nbf": now.Unix(),
+		"exp": now.Add(24 * time.Hour).Unix(),
+		"oid": "00000000-0000-0000-0000-000000000002",
+		"sub": "00000000-0000-0000-0000-000000000002",
+		"tid": tenantId,
+		"appid": clientId,
+	}
+	claimsJSON, _ := json.Marshal(claims)
+	h := base64.RawURLEncoding.EncodeToString([]byte(header))
+	p := base64.RawURLEncoding.EncodeToString(claimsJSON)
+	return h + "." + p + ".mock-signature"
+}
+
 func (h *Handler) Token(w http.ResponseWriter, r *http.Request) {
 	tenantId := chi.URLParam(r, "tenantId")
+	clientId := r.FormValue("client_id")
+	if clientId == "" {
+		clientId = "local-azure"
+	}
+	accessToken := mockJWT(tenantId, clientId)
 	token := map[string]interface{}{
-		"access_token":   "local-azure-mock-access-token",
+		"access_token":   accessToken,
 		"token_type":     "Bearer",
 		"expires_in":     86400,
 		"expires_on":     time.Now().Add(24 * time.Hour).Unix(),
@@ -67,7 +94,7 @@ func (h *Handler) Token(w http.ResponseWriter, r *http.Request) {
 		"scope":          r.FormValue("scope"),
 		"ext_expires_in": 86400,
 		"foci":           "1",
-		"id_token":       "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJhdWQiOiJsb2NhbC1henVyZSIsImlzcyI6Imh0dHBzOi8vc3RzLndpbmRvd3MubmV0LyIsInRpZCI6IiIsInN1YiI6ImxvY2FsLWF6dXJlLXVzZXIifQ.",
+		"id_token":       accessToken,
 		"client_info":    "eyJ1aWQiOiJsb2NhbC1henVyZS11c2VyIiwidXRpZCI6IiJ9",
 		"tenant_id":      tenantId,
 	}
