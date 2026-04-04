@@ -2,33 +2,31 @@ package dns
 
 import (
 	"encoding/json"
-	"github.com/moabukar/local-azure/internal/azerr"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/moabukar/local-azure/internal/azerr"
 	"github.com/moabukar/local-azure/internal/store"
 )
 
 type Zone struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	Type       string `json:"type"`
-	Location   string `json:"location"`
-	Properties struct {
-		NumberOfRecordSets int `json:"numberOfRecordSets"`
-	} `json:"properties"`
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	Type       string    `json:"type"`
+	Location   string    `json:"location"`
+	Properties ZoneProps `json:"properties"`
+}
+
+type ZoneProps struct {
+	NumberOfRecordSets int      `json:"numberOfRecordSets"`
+	NameServers        []string `json:"nameServers"`
 }
 
 type RecordSet struct {
-	ID         string `json:"id"`
-	Name       string `json:"name"`
-	Type       string `json:"type"`
-	Properties struct {
-		TTL     int      `json:"TTL"`
-		ARecords []struct {
-			IPv4Address string `json:"ipv4Address"`
-		} `json:"ARecords,omitempty"`
-	} `json:"properties"`
+	ID         string          `json:"id"`
+	Name       string          `json:"name"`
+	Type       string          `json:"type"`
+	Properties json.RawMessage `json:"properties"`
 }
 
 type Handler struct {
@@ -59,20 +57,36 @@ func (h *Handler) zoneKey(sub, rg, name string) string {
 	return "dns:zone:" + sub + ":" + rg + ":" + name
 }
 
+func (h *Handler) recordKey(sub, rg, zone, rtype, name string) string {
+	return "dns:record:" + sub + ":" + rg + ":" + zone + ":" + rtype + ":" + name
+}
+
 func (h *Handler) CreateOrUpdateZone(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "zoneName")
-	
+
 	var zone Zone
 	json.NewDecoder(r.Body).Decode(&zone)
 	zone.ID = "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.Network/dnsZones/" + name
 	zone.Name = name
 	zone.Type = "Microsoft.Network/dnsZones"
 	zone.Location = "global"
-	
-	h.store.Set(h.zoneKey(sub, rg, name), zone)
-	w.WriteHeader(http.StatusCreated)
+	zone.Properties.NameServers = []string{"ns1-01.azure-dns.com.", "ns2-01.azure-dns.net."}
+
+	k := h.zoneKey(sub, rg, name)
+	_, exists := h.store.Get(k)
+
+	// Count records for this zone
+	zone.Properties.NumberOfRecordSets = h.store.CountByPrefix("dns:record:" + sub + ":" + rg + ":" + name + ":")
+
+	h.store.Set(k, zone)
+
+	if exists {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+	}
 	json.NewEncoder(w).Encode(zone)
 }
 
@@ -80,10 +94,10 @@ func (h *Handler) GetZone(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "zoneName")
-	
+
 	v, ok := h.store.Get(h.zoneKey(sub, rg, name))
 	if !ok {
-		azerr.NotFound(w, "Microsoft.Network/dnsZones", "resource")
+		azerr.NotFound(w, "Microsoft.Network/dnsZones", name)
 		return
 	}
 	json.NewEncoder(w).Encode(v)
@@ -93,8 +107,14 @@ func (h *Handler) DeleteZone(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "zoneName")
-	h.store.Delete(h.zoneKey(sub, rg, name))
-	w.WriteHeader(http.StatusOK)
+
+	if !h.store.Delete(h.zoneKey(sub, rg, name)) {
+		azerr.NotFound(w, "Microsoft.Network/dnsZones", name)
+		return
+	}
+	// Clean up all records in the zone
+	h.store.DeleteByPrefix("dns:record:" + sub + ":" + rg + ":" + name + ":")
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (h *Handler) ListZones(w http.ResponseWriter, r *http.Request) {
@@ -110,16 +130,33 @@ func (h *Handler) CreateOrUpdateRecordSet(w http.ResponseWriter, r *http.Request
 	zoneName := chi.URLParam(r, "zoneName")
 	recordType := chi.URLParam(r, "recordType")
 	recordName := chi.URLParam(r, "recordName")
-	
-	var rs RecordSet
-	json.NewDecoder(r.Body).Decode(&rs)
-	rs.ID = "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.Network/dnsZones/" + zoneName + "/" + recordType + "/" + recordName
-	rs.Name = recordName
-	rs.Type = "Microsoft.Network/dnsZones/" + recordType
-	
-	key := "dns:record:" + sub + ":" + rg + ":" + zoneName + ":" + recordType + ":" + recordName
-	h.store.Set(key, rs)
-	w.WriteHeader(http.StatusCreated)
+
+	// Verify parent zone exists
+	if !h.store.Exists(h.zoneKey(sub, rg, zoneName)) {
+		azerr.NotFound(w, "Microsoft.Network/dnsZones", zoneName)
+		return
+	}
+
+	// Read raw properties to support any record type
+	var raw map[string]json.RawMessage
+	json.NewDecoder(r.Body).Decode(&raw)
+
+	rs := RecordSet{
+		ID:         "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.Network/dnsZones/" + zoneName + "/" + recordType + "/" + recordName,
+		Name:       recordName,
+		Type:       "Microsoft.Network/dnsZones/" + recordType,
+		Properties: raw["properties"],
+	}
+
+	k := h.recordKey(sub, rg, zoneName, recordType, recordName)
+	_, exists := h.store.Get(k)
+	h.store.Set(k, rs)
+
+	if exists {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+	}
 	json.NewEncoder(w).Encode(rs)
 }
 
@@ -129,11 +166,10 @@ func (h *Handler) GetRecordSet(w http.ResponseWriter, r *http.Request) {
 	zoneName := chi.URLParam(r, "zoneName")
 	recordType := chi.URLParam(r, "recordType")
 	recordName := chi.URLParam(r, "recordName")
-	
-	key := "dns:record:" + sub + ":" + rg + ":" + zoneName + ":" + recordType + ":" + recordName
-	v, ok := h.store.Get(key)
+
+	v, ok := h.store.Get(h.recordKey(sub, rg, zoneName, recordType, recordName))
 	if !ok {
-		azerr.NotFound(w, "Microsoft.Network/dnsZones", "resource")
+		azerr.NotFound(w, "Microsoft.Network/dnsZones/"+recordType, recordName)
 		return
 	}
 	json.NewEncoder(w).Encode(v)
@@ -145,8 +181,10 @@ func (h *Handler) DeleteRecordSet(w http.ResponseWriter, r *http.Request) {
 	zoneName := chi.URLParam(r, "zoneName")
 	recordType := chi.URLParam(r, "recordType")
 	recordName := chi.URLParam(r, "recordName")
-	
-	key := "dns:record:" + sub + ":" + rg + ":" + zoneName + ":" + recordType + ":" + recordName
-	h.store.Delete(key)
+
+	if !h.store.Delete(h.recordKey(sub, rg, zoneName, recordType, recordName)) {
+		azerr.NotFound(w, "Microsoft.Network/dnsZones/"+recordType, recordName)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }

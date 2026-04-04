@@ -50,6 +50,7 @@ func (s *Server) setupMiddleware() {
 	s.router.Use(middleware.Recoverer)
 	s.router.Use(middleware.RequestID)
 	s.router.Use(AzureHeaders)
+	s.router.Use(APIVersionCheck)
 }
 
 func (s *Server) setupRoutes() {
