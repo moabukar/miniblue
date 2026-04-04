@@ -210,3 +210,35 @@ Inspired by [LocalStack](https://github.com/localstack/localstack) and [MiniStac
 ---
 
 Made with ❤️ for the Azure developer community
+
+## az CLI Setup
+
+The `az` CLI uses MSAL for authentication which requires HTTPS and validates authority endpoints against Microsoft's servers. To use `az` CLI with local-azure, use the helper script:
+
+```bash
+# One-time setup
+./scripts/az-login-local.sh
+
+# Now use az CLI normally
+az group create --name myRG --location eastus
+az group list
+
+# Switch back to real Azure when done
+az cloud set --name AzureCloud
+az login
+```
+
+### What the script does
+
+1. Registers `local-azure` as a custom cloud pointing to `http://localhost:4566`
+2. Writes a mock authentication profile so `az` CLI thinks you are logged in
+3. All ARM API calls go to your local server
+
+### Ports
+
+| Port | Protocol | Purpose |
+|------|----------|---------|
+| 4566 | HTTP | Resource Manager API, SDKs, curl, Terraform |
+| 4567 | HTTPS | Auth endpoints (self-signed cert) |
+
+Both ports serve the same API. HTTPS is needed for tools that require TLS for auth.
