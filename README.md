@@ -4,7 +4,9 @@
 
 [![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![CI](https://github.com/moabukar/miniblue/actions/workflows/ci.yml/badge.svg)](https://github.com/moabukar/miniblue/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/miniblue)](https://hub.docker.com/r/moabukar/miniblue)
+[![Docs](https://img.shields.io/badge/docs-moabukar.github.io%2Fminiblue-blue)](https://moabukar.github.io/miniblue)
 
 Every Azure service. One binary. Zero config.
 
