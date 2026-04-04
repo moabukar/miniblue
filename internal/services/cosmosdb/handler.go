@@ -8,12 +8,6 @@ import (
 	"github.com/moabukar/local-azure/internal/store"
 )
 
-type Document struct {
-	ID         string                 `json:"id"`
-	PartitionKey string               `json:"partitionKey,omitempty"`
-	Properties map[string]interface{} `json:"properties,omitempty"`
-}
-
 type Handler struct {
 	store *store.Store
 }
@@ -42,11 +36,17 @@ func (h *Handler) CreateDocument(w http.ResponseWriter, r *http.Request) {
 	account := chi.URLParam(r, "accountName")
 	db := chi.URLParam(r, "dbName")
 	coll := chi.URLParam(r, "collName")
-	
-	var doc Document
+
+	var doc map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&doc)
-	
-	h.store.Set(h.key(account, db, coll, doc.ID), doc)
+
+	id, _ := doc["id"].(string)
+	if id == "" {
+		http.Error(w, "document must have an id field", http.StatusBadRequest)
+		return
+	}
+
+	h.store.Set(h.key(account, db, coll, id), doc)
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(doc)
 }
@@ -56,7 +56,7 @@ func (h *Handler) GetDocument(w http.ResponseWriter, r *http.Request) {
 	db := chi.URLParam(r, "dbName")
 	coll := chi.URLParam(r, "collName")
 	docId := chi.URLParam(r, "docId")
-	
+
 	v, ok := h.store.Get(h.key(account, db, coll, docId))
 	if !ok {
 		http.Error(w, "DocumentNotFound", http.StatusNotFound)
@@ -70,11 +70,11 @@ func (h *Handler) ReplaceDocument(w http.ResponseWriter, r *http.Request) {
 	db := chi.URLParam(r, "dbName")
 	coll := chi.URLParam(r, "collName")
 	docId := chi.URLParam(r, "docId")
-	
-	var doc Document
+
+	var doc map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&doc)
-	doc.ID = docId
-	
+	doc["id"] = docId
+
 	h.store.Set(h.key(account, db, coll, docId), doc)
 	json.NewEncoder(w).Encode(doc)
 }
@@ -84,7 +84,7 @@ func (h *Handler) DeleteDocument(w http.ResponseWriter, r *http.Request) {
 	db := chi.URLParam(r, "dbName")
 	coll := chi.URLParam(r, "collName")
 	docId := chi.URLParam(r, "docId")
-	
+
 	h.store.Delete(h.key(account, db, coll, docId))
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -94,5 +94,5 @@ func (h *Handler) QueryDocuments(w http.ResponseWriter, r *http.Request) {
 	db := chi.URLParam(r, "dbName")
 	coll := chi.URLParam(r, "collName")
 	items := h.store.ListByPrefix("cosmos:" + account + ":" + db + ":" + coll + ":")
-	json.NewEncoder(w).Encode(map[string]interface{}{"Documents": items})
+	json.NewEncoder(w).Encode(map[string]interface{}{"Documents": items, "_count": len(items)})
 }
