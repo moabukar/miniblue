@@ -23,7 +23,6 @@ import (
 	"github.com/moabukar/local-azure/internal/services/servicebus"
 	"github.com/moabukar/local-azure/internal/services/subscriptions"
 	"github.com/moabukar/local-azure/internal/services/table"
-	"github.com/moabukar/local-azure/internal/services/tenants"
 	"github.com/moabukar/local-azure/internal/store"
 )
 
@@ -61,13 +60,14 @@ func (s *Server) setupMiddleware() {
 func (s *Server) setupRoutes() {
 	s.router.Get("/health", s.healthHandler)
 
-	// Cloud metadata + auth (needed for az CLI custom cloud)
+	// Cloud metadata + auth
 	metadata.NewHandler(s.store).Register(s.router)
 	auth.NewHandler(s.store).Register(s.router)
 
-	// ARM core (subscriptions, tenants, resource groups)
+	// Subscriptions + tenants
 	subscriptions.NewHandler(s.store).Register(s.router)
-	tenants.NewHandler(s.store).Register(s.router)
+
+	// Azure services
 	resourcegroups.NewHandler(s.store).Register(s.router)
 	blob.NewHandler(s.store).Register(s.router)
 	table.NewHandler(s.store).Register(s.router)
@@ -90,6 +90,7 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 		"cosmosdb", "servicebus", "functions", "network", "dns",
 		"acr", "eventgrid", "appconfig", "identity",
 	}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":   "running",
 		"services": services,

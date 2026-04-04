@@ -2,6 +2,7 @@ package blob
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -93,7 +94,7 @@ func (h *Handler) UploadBlob(w http.ResponseWriter, r *http.Request) {
 		Name: blobName,
 		Properties: map[string]string{
 			"lastModified":  time.Now().UTC().Format(time.RFC1123),
-			"contentLength": string(rune(len(data))),
+			"contentLength": fmt.Sprintf("%d", len(data)),
 			"contentType":   r.Header.Get("Content-Type"),
 		},
 		Content: data,

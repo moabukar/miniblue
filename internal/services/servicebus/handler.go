@@ -2,6 +2,7 @@ package servicebus
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -67,7 +68,7 @@ func (h *Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	
 	h.msgId++
 	msg := Message{
-		MessageId:    string(rune(h.msgId)),
+		MessageId:    fmt.Sprintf("%d", h.msgId),
 		Body:         body.Body,
 		EnqueuedTime: time.Now().UTC().Format(time.RFC3339),
 	}
@@ -99,7 +100,7 @@ func (h *Handler) PublishMessage(w http.ResponseWriter, r *http.Request) {
 	
 	h.msgId++
 	msg := Message{
-		MessageId:    string(rune(h.msgId)),
+		MessageId:    fmt.Sprintf("%d", h.msgId),
 		Body:         body.Body,
 		EnqueuedTime: time.Now().UTC().Format(time.RFC3339),
 	}

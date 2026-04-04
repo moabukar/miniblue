@@ -2,6 +2,7 @@ package queue
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -58,7 +59,7 @@ func (h *Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	
 	h.msgId++
 	msg := Message{
-		MessageId:      string(rune(h.msgId)),
+		MessageId:      fmt.Sprintf("%d", h.msgId),
 		MessageText:    body.MessageText,
 		InsertionTime:  time.Now().UTC().Format(time.RFC3339),
 		ExpirationTime: time.Now().Add(7 * 24 * time.Hour).UTC().Format(time.RFC3339),
