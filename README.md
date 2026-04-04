@@ -2,31 +2,73 @@
 
 **The free, open-source Azure emulator. Develop and test your Azure apps locally.**
 
-[![Go Version](https://img.shields.io/badge/go-1.22+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/moabukar/local-azure)](https://hub.docker.com/r/moabukar/local-azure)
 
-Single port · No account · No license key · No telemetry · Just Azure APIs, locally.
+Single port. No account. No license key. No telemetry. Just Azure APIs, locally.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Azure-Emulator-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="Azure Emulator"/>
-</p>
+---
+
+## Why local-azure?
+
+**AWS has LocalStack and MiniStack. Azure has... nothing unified.**
+
+The Azure ecosystem today forces developers to cobble together individual emulators:
+
+| Tool | Services covered | Maintained by |
+|------|-----------------|---------------|
+| Azurite | Blob, Queue, Table storage only | Microsoft |
+| Cosmos DB Emulator | Cosmos DB only | Microsoft |
+| Azure Functions Core Tools | Functions only | Microsoft |
+| Service Bus Emulator | Service Bus only | Microsoft |
+| App Configuration Emulator | App Config only | Microsoft |
+
+That is 5 separate tools, 5 different Docker images, 5 different ports and configs - just to get basic local dev working. And you still have no local emulation for Resource Groups, Key Vault, DNS, VNets, Event Grid, ACR, or Managed Identity.
+
+**local-azure gives you 14+ Azure services on a single port.** One binary, one Docker image, zero config.
+
+### How it compares
+
+| | LocalStack (AWS) | MiniStack (AWS) | Azurite (Azure) | local-azure |
+|---|---|---|---|---|
+| Services | 80+ | 36 | 3 (storage only) | 14+ |
+| Single port | 4566 | 4566 | 10000-10002 | 4566 |
+| Language | Python | Python | Node.js | Go |
+| Auth required | No (free tier) | No | No | No |
+| Docker image | ~1GB | ~200MB | ~300MB | ~15MB |
+| CLI wrapper | awslocal | awslocal | N/A | azlocal |
+| License | BSL (was Apache) | MIT | MIT | Apache 2.0 |
+| ARM API support | N/A (AWS) | N/A (AWS) | No | Yes |
+
+### Why has no one built this before?
+
+1. **Microsoft ships individual emulators** - so the pain is spread across tools rather than being a single obvious gap
+2. **Azure's API surface is huge** - ARM (resource management) + data plane APIs per service means a lot of surface area
+3. **MSAL auth is complex** - Azure CLI requires HTTPS + Microsoft identity validation, making local dev harder than `aws --endpoint-url`
+4. **LocalStack had first-mover advantage** - AWS developers hit the "I need local dev" wall first and built solutions
+5. **GCP has the same gap** - Google also only ships per-service emulators (Spanner, Pub/Sub, Firestore, etc.) with no unified tool
+
+local-azure fills this gap for Azure developers.
+
+---
 
 ## Features
 
 - **14 Azure services** emulated on a single port (4566)
-- **Drop-in compatible** with Azure SDKs, Azure CLI, Terraform, Pulumi
+- **Drop-in compatible** with Azure SDKs, Terraform, Pulumi
 - **In-memory storage** by default (fast, ephemeral)
 - **Docker-first** deployment
 - **Zero configuration** required
 - **ARM API compatible** responses
+- **azlocal CLI** included (like awslocal for LocalStack)
 
 ## Quick Start
 
 ### Docker Run
 
 ```bash
-docker run -p 4566:4566 moabukar/local-azure:latest
+docker run -p 4566:4566 -p 4567:4567 moabukar/local-azure:latest
 ```
 
 ### Docker Compose
@@ -38,6 +80,7 @@ services:
     image: moabukar/local-azure:latest
     ports:
       - "4566:4566"
+      - "4567:4567"
 ```
 
 ```bash
@@ -53,38 +96,69 @@ make build
 ./bin/local-azure
 ```
 
+## azlocal CLI
+
+Just like `awslocal` for LocalStack, `azlocal` wraps HTTP calls to local-azure. No auth needed.
+
+```bash
+# Build
+make build
+
+# Install globally (optional)
+sudo make install
+
+# Usage
+azlocal health
+azlocal group create --name myRG --location eastus
+azlocal group list
+azlocal keyvault secret set --vault myvault --name db-pass --value secret123
+azlocal storage container create --account myaccount --name mycontainer
+azlocal storage blob upload --account myaccount --container mycontainer --name file.txt --data "Hello!"
+```
+
 ## Supported Services
 
 | Service | Status | Description |
 |---------|--------|-------------|
-| Resource Groups | ✅ | ARM resource group management |
-| Blob Storage | ✅ | Containers, blobs, upload/download |
-| Table Storage | ✅ | Entity CRUD operations |
-| Queue Storage | ✅ | Send/receive/peek messages |
-| Key Vault | ✅ | Secrets management |
-| Cosmos DB | ✅ | Document CRUD (SQL API) |
-| Service Bus | ✅ | Queues, topics, messaging |
-| Azure Functions | ✅ | Function app registration (stub) |
-| Virtual Networks | ✅ | VNets and subnets |
-| DNS Zones | ✅ | Zone and record management |
-| Container Registry | ✅ | Registry management, manifest listing |
-| Event Grid | ✅ | Topics, subscriptions, event publish |
-| App Configuration | ✅ | Key-value configuration store |
-| Managed Identity | ✅ | Token endpoint (IMDS) |
+| Resource Groups | Done | ARM resource group management |
+| Blob Storage | Done | Containers, blobs, upload/download |
+| Table Storage | Done | Entity CRUD operations |
+| Queue Storage | Done | Send/receive/peek messages |
+| Key Vault | Done | Secrets management |
+| Cosmos DB | Done | Document CRUD (SQL API) |
+| Service Bus | Done | Queues, topics, messaging |
+| Azure Functions | Done | Function app registration (stub) |
+| Virtual Networks | Done | VNets and subnets |
+| DNS Zones | Done | Zone and record management |
+| Container Registry | Done | Registry management, manifest listing |
+| Event Grid | Done | Topics, subscriptions, event publish |
+| App Configuration | Done | Key-value configuration store |
+| Managed Identity | Done | Token endpoint (IMDS) |
 
 ## Usage Examples
 
-### Azure CLI
+### curl
 
 ```bash
-# Configure Azure CLI to use local-azure
-export AZURE_RESOURCE_MANAGER_ENDPOINT=http://localhost:4566
+# Health check
+curl http://localhost:4566/health
 
 # Create a resource group
-az group create --name myResourceGroup --location eastus
+curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG" \
+  -H "Content-Type: application/json" \
+  -d '{"location": "eastus"}'
 
-# List resource groups
-az group list
+# Set a Key Vault secret
+curl -X PUT "http://localhost:4566/keyvault/myvault/secrets/mysecret" \
+  -H "Content-Type: application/json" \
+  -d '{"value": "supersecret"}'
+
+# Upload a blob
+curl -X PUT "http://localhost:4566/blob/myaccount/mycontainer"
+curl -X PUT "http://localhost:4566/blob/myaccount/mycontainer/hello.txt" \
+  -H "Content-Type: text/plain" \
+  -d "Hello from local-azure!"
+curl "http://localhost:4566/blob/myaccount/mycontainer/hello.txt"
 ```
 
 ### Terraform
@@ -92,8 +166,6 @@ az group list
 ```hcl
 provider "azurerm" {
   features {}
-  
-  # Point to local-azure
   resource_manager_endpoint = "http://localhost:4566"
   skip_provider_registration = true
 }
@@ -107,119 +179,17 @@ resource "azurerm_resource_group" "example" {
 ### Go SDK
 
 ```go
-import (
-    "github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-    "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
-)
-
 // Override the endpoint
 endpoint := "http://localhost:4566"
 ```
 
-### curl
-
-```bash
-# Health check
-curl http://localhost:4566/health
-
-# Create a resource group
-curl -X PUT "http://localhost:4566/subscriptions/sub1/resourcegroups/myRG" \
-  -H "Content-Type: application/json" \
-  -d '{"location": "eastus"}'
-
-# Create a blob container
-curl -X PUT "http://localhost:4566/blob/myaccount/mycontainer"
-
-# Set a Key Vault secret
-curl -X PUT "http://localhost:4566/keyvault/myvault/secrets/mysecret" \
-  -H "Content-Type: application/json" \
-  -d '{"value": "supersecret"}'
-```
-
-## Configuration
-
-| Environment Variable | Default | Description |
-|---------------------|---------|-------------|
-| `PORT` | `4566` | HTTP server port |
-| `LOG_LEVEL` | `info` | Log level (debug, info, warn, error) |
-
-## API Reference
-
-### Health Endpoint
-
-```
-GET /health
-```
-
-Returns service status and list of available services.
-
-### Resource Groups (ARM)
-
-```
-PUT    /subscriptions/{sub}/resourcegroups/{name}
-GET    /subscriptions/{sub}/resourcegroups/{name}
-DELETE /subscriptions/{sub}/resourcegroups/{name}
-GET    /subscriptions/{sub}/resourcegroups
-```
-
-### Blob Storage
-
-```
-PUT    /blob/{account}/{container}
-DELETE /blob/{account}/{container}
-GET    /blob/{account}/{container}
-PUT    /blob/{account}/{container}/{blob}
-GET    /blob/{account}/{container}/{blob}
-DELETE /blob/{account}/{container}/{blob}
-```
-
-### Key Vault
-
-```
-PUT    /keyvault/{vault}/secrets/{name}
-GET    /keyvault/{vault}/secrets/{name}
-DELETE /keyvault/{vault}/secrets/{name}
-GET    /keyvault/{vault}/secrets
-```
-
-### Managed Identity (IMDS)
-
-```
-GET /metadata/identity/oauth2/token?resource=https://management.azure.com/
-GET /metadata/instance
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-Inspired by [LocalStack](https://github.com/localstack/localstack) and [MiniStack](https://github.com/moabukar/ministack).
-
----
-
-Made with ❤️ for the Azure developer community
-
 ## az CLI Setup
 
-The `az` CLI uses MSAL for authentication which requires HTTPS and validates authority endpoints against Microsoft's servers. To use `az` CLI with local-azure, use the helper script:
+The az CLI uses MSAL for authentication which requires HTTPS and validates authority endpoints against Microsoft's servers. To use az CLI with local-azure, use the helper script:
 
 ```bash
-# One-time setup
 ./scripts/az-login-local.sh
 
-# Now use az CLI normally
 az group create --name myRG --location eastus
 az group list
 
@@ -228,17 +198,45 @@ az cloud set --name AzureCloud
 az login
 ```
 
-### What the script does
+## Configuration
 
-1. Registers `local-azure` as a custom cloud pointing to `http://localhost:4566`
-2. Writes a mock authentication profile so `az` CLI thinks you are logged in
-3. All ARM API calls go to your local server
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `PORT` | `4566` | HTTP server port |
+| `TLS_PORT` | `4567` | HTTPS server port (self-signed cert) |
+| `LOG_LEVEL` | `info` | Log level (debug, info, warn, error) |
+| `LOCAL_AZURE_ENDPOINT` | `http://localhost:4566` | azlocal CLI endpoint override |
 
-### Ports
+## Ports
 
 | Port | Protocol | Purpose |
 |------|----------|---------|
 | 4566 | HTTP | Resource Manager API, SDKs, curl, Terraform |
-| 4567 | HTTPS | Auth endpoints (self-signed cert) |
+| 4567 | HTTPS | Auth endpoints (self-signed cert for MSAL) |
 
-Both ports serve the same API. HTTPS is needed for tools that require TLS for auth.
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+Adding a new service is straightforward - each service is its own Go package under `internal/services/`. See the contributing guide for the pattern.
+
+## Roadmap
+
+- [ ] Persistent storage (file-backed)
+- [ ] Azure SDK wire-compatibility improvements
+- [ ] More services (Redis Cache, App Service, AKS, etc.)
+- [ ] Terraform provider integration tests
+- [ ] Web UI for visualising resources
+- [ ] Pulumi integration
+
+## License
+
+Apache 2.0 - see [LICENSE](LICENSE).
+
+## Acknowledgments
+
+Inspired by [LocalStack](https://github.com/localstack/localstack) and [MiniStack](https://github.com/Nahuel990/ministack).
+
+---
+
+Made with care for the Azure developer community.
