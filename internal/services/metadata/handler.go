@@ -38,7 +38,7 @@ func (h *Handler) Endpoints(w http.ResponseWriter, r *http.Request) {
 		"authentication": map[string]interface{}{
 			"loginEndpoint":    httpBase + "/",
 			"audiences":        []string{httpBase + "/"},
-			"tenant":           "00000000-0000-0000-0000-000000000001",
+			"tenant":           "common",
 			"identityProvider": "AAD",
 		},
 		"media":         httpBase + "/",
