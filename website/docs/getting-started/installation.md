@@ -41,7 +41,7 @@ curl http://localhost:4566/health
 
 ## Binary
 
-### From source (Go 1.25+)
+### From source (Go 1.26+)
 
 ```bash
 git clone https://github.com/moabukar/miniblue.git
@@ -81,7 +81,7 @@ go install github.com/moabukar/miniblue/cmd/azlocal@latest
 
 Requirements:
 
-- Go 1.25 or later
+- Go 1.26 or later
 - Make (optional)
 
 ```bash

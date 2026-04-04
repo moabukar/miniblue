@@ -7,7 +7,7 @@
 <p align="center"><strong>The free, open-source Azure emulator. Develop and test your Azure apps locally.</strong></p>
 
 <p align="center">
-  <a href="https://golang.org"><img src="https://img.shields.io/badge/go-1.25+-blue.svg" alt="Go Version"></a>
+  <a href="https://golang.org"><img src="https://img.shields.io/badge/go-1.26+-blue.svg" alt="Go Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <a href="https://github.com/moabukar/miniblue/actions/workflows/ci.yml"><img src="https://github.com/moabukar/miniblue/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://hub.docker.com/r/moabukar/miniblue"><img src="https://img.shields.io/badge/docker-moabukar%2Fminiblue-blue?logo=docker" alt="Docker"></a>
