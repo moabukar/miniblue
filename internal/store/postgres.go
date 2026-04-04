@@ -149,3 +149,7 @@ func (p *PostgresBackend) DeleteByPrefix(prefix string) int {
 	n, _ := result.RowsAffected()
 	return int(n)
 }
+
+func (p *PostgresBackend) Reset() {
+	_, _ = p.db.Exec(`TRUNCATE miniblue_store`)
+}

@@ -94,6 +94,12 @@ func (m *MemoryBackend) DeleteByPrefix(prefix string) int {
 	return count
 }
 
+func (m *MemoryBackend) Reset() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data = make(map[string]interface{})
+}
+
 // Store wraps a Backend and provides the public API used by all handlers.
 // It preserves backward compatibility -- handlers continue to use *store.Store.
 type Store struct {
@@ -151,4 +157,8 @@ func (s *Store) CountByPrefix(prefix string) int {
 
 func (s *Store) DeleteByPrefix(prefix string) int {
 	return s.backend.DeleteByPrefix(prefix)
+}
+
+func (s *Store) Reset() {
+	s.backend.Reset()
 }

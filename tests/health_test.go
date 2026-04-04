@@ -63,3 +63,22 @@ func TestAPIVersionAccepted(t *testing.T) {
 	defer resp.Body.Close()
 	expectStatus(t, resp, 200)
 }
+
+func TestResetEndpoint(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+
+	// Create a resource
+	doRequest(t, "PUT", ts.URL+"/subscriptions/sub1/resourcegroups/rg1?api-version=2023-01-01",
+		`{"location":"eastus"}`).Body.Close()
+
+	// Reset
+	resp := doRequest(t, "POST", ts.URL+"/_miniblue/reset", "")
+	defer resp.Body.Close()
+	expectStatus(t, resp, 200)
+
+	// Resource should be gone
+	resp2 := doRequest(t, "GET", ts.URL+"/subscriptions/sub1/resourcegroups/rg1?api-version=2023-01-01", "")
+	defer resp2.Body.Close()
+	expectStatus(t, resp2, 404)
+}
