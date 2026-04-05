@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -146,7 +147,7 @@ func (h *Handler) SendMessage(w http.ResponseWriter, r *http.Request) {
 
 	h.msgId++
 	msg := Message{
-		MessageId:    fmt.Sprintf("%d", h.msgId),
+		MessageId:    fmt.Sprintf("%010d", h.msgId),
 		Body:         body.Body,
 		EnqueuedTime: time.Now().UTC().Format(time.RFC3339),
 	}
@@ -165,12 +166,17 @@ func (h *Handler) ReceiveMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	items := h.store.ListByPrefix(h.msgPrefix(ns, queue))
-	if len(items) > 0 {
-		json.NewEncoder(w).Encode(items[0])
-	} else {
-		w.WriteHeader(http.StatusNoContent)
+	// Get messages sorted by key (zero-padded IDs ensure FIFO order)
+	prefix := h.msgPrefix(ns, queue)
+	keys := h.store.ListKeysByPrefix(prefix)
+	if len(keys) > 0 {
+		sort.Strings(keys)
+		if v, ok := h.store.Get(keys[0]); ok {
+			json.NewEncoder(w).Encode(v)
+			return
+		}
 	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {

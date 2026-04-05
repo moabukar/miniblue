@@ -62,6 +62,18 @@ func (m *MemoryBackend) ListByPrefix(prefix string) []interface{} {
 	return results
 }
 
+func (m *MemoryBackend) ListKeysByPrefix(prefix string) []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	results := make([]string, 0)
+	for k := range m.data {
+		if strings.HasPrefix(k, prefix) {
+			results = append(results, k)
+		}
+	}
+	return results
+}
+
 func (m *MemoryBackend) CountByPrefix(prefix string) int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -149,6 +161,13 @@ func (s *Store) List() []string {
 
 func (s *Store) ListByPrefix(prefix string) []interface{} {
 	return s.backend.ListByPrefix(prefix)
+}
+
+func (s *Store) ListKeysByPrefix(prefix string) []string {
+	if mb, ok := s.backend.(*MemoryBackend); ok {
+		return mb.ListKeysByPrefix(prefix)
+	}
+	return s.backend.List()
 }
 
 func (s *Store) CountByPrefix(prefix string) int {
