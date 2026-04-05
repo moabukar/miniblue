@@ -42,6 +42,7 @@ Environment variables:
   LOG_LEVEL              Log level: debug, info, warn, error (default: info)
   DATABASE_URL           PostgreSQL URL for persistent storage
   PERSISTENCE            Set to 1 to enable file-based state persistence (~/.miniblue/state.json)
+  MINIBLUE_SAVE_INTERVAL Auto-save interval for file persistence (default: 30s, e.g. 10s, 1m)
   SERVICES               Comma-separated list of services to enable (default: all)
   POSTGRES_URL           Real PostgreSQL for DB for PostgreSQL service
   REDIS_URL              Real Redis for Azure Cache for Redis service
@@ -122,11 +123,30 @@ Documentation: https://moabukar.github.io/miniblue`)
 	// Run init hooks
 	go runInitHooks()
 
+	// Start periodic auto-save for file persistence
+	var stopAutoSave func()
+	if os.Getenv("PERSISTENCE") == "1" {
+		interval := 30 * time.Second
+		if v := os.Getenv("MINIBLUE_SAVE_INTERVAL"); v != "" {
+			if d, err := time.ParseDuration(v); err == nil {
+				interval = d
+			} else {
+				log.Printf("invalid MINIBLUE_SAVE_INTERVAL %q, using default 30s", v)
+			}
+		}
+		stopAutoSave = srv.StartAutoSave(interval)
+	}
+
 	// Block until shutdown signal
 	<-stop
 	log.Println("miniblue shutting down gracefully...")
 
-	// Save state on shutdown if using file persistence
+	// Stop auto-save ticker
+	if stopAutoSave != nil {
+		stopAutoSave()
+	}
+
+	// Final save on shutdown if using file persistence
 	if os.Getenv("PERSISTENCE") == "1" {
 		log.Println("saving state to disk...")
 		if err := srv.SaveState(); err != nil {
