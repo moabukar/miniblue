@@ -186,7 +186,7 @@ func requireFlag(args []string, name string) string {
 func sub(args []string) string {
 	s := getFlag(args, "subscription")
 	if s == "" {
-		s = "default"
+		s = "00000000-0000-0000-0000-000000000000"
 	}
 	return s
 }
