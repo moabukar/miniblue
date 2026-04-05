@@ -1,0 +1,31 @@
+name: Helm Chart
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Login to GHCR
+        run: echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Package chart
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          helm package charts/miniblue --version $VERSION --app-version $VERSION
+
+      - name: Push chart
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          helm push miniblue-${VERSION}.tgz oci://ghcr.io/moabukar/charts
