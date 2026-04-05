@@ -4,6 +4,15 @@
 # Usage:
 #   export SSL_CERT_FILE=~/.miniblue/cert.pem
 #   terraform init && terraform apply -auto-approve
+#
+# Test with azlocal after apply:
+#   azlocal group list
+#   azlocal network vnet show --name main-vnet --resource-group three-tier-rg
+#   azlocal dns zone show --name three-tier.local --resource-group three-tier-rg
+#   azlocal acr show --name threetieracr --resource-group three-tier-rg
+#
+# Destroy:
+#   terraform destroy -auto-approve
 
 # --- Foundation ---
 

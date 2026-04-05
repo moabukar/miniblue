@@ -4,6 +4,16 @@
 # Usage:
 #   export SSL_CERT_FILE=~/.miniblue/cert.pem
 #   terraform init && terraform apply -auto-approve
+#
+# Test with azlocal after apply:
+#   azlocal group list
+#   azlocal network vnet show --name microservices-vnet --resource-group shared-infra-rg
+#   azlocal acr show --name sharedmicroacr --resource-group shared-infra-rg
+#   azlocal dns zone show --name svc.internal --resource-group shared-infra-rg
+#   azlocal eventgrid topic show --name notification-events --resource-group svc-notify-rg
+#
+# Destroy:
+#   terraform destroy -auto-approve
 
 # --- Shared Infrastructure ---
 
