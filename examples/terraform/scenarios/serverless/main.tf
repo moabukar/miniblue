@@ -4,6 +4,14 @@
 # Usage:
 #   export SSL_CERT_FILE=~/.miniblue/cert.pem
 #   terraform init && terraform apply -auto-approve
+#
+# Test with azlocal after apply:
+#   azlocal group list
+#   azlocal eventgrid topic show --name order-events --resource-group serverless-rg
+#   azlocal dns zone show --name api.serverless.local --resource-group serverless-rg
+#
+# Destroy:
+#   terraform destroy -auto-approve
 
 resource "azurerm_resource_group" "serverless" {
   name     = "serverless-rg"
