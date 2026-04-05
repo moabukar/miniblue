@@ -23,7 +23,7 @@ What actually happened.
 
 **Environment**
 - OS: [e.g. macOS, Ubuntu]
-- Go version: [e.g. 1.25]
+- Go version: [e.g. 1.26]
 - miniblue version: [e.g. v0.1.0]
 - Running via: [Docker / binary]
 
