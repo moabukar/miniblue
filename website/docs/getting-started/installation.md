@@ -35,7 +35,7 @@ curl http://localhost:4566/health
 {
   "services": ["subscriptions","tenants","resourcegroups","blob","table","queue","keyvault","cosmosdb","servicebus","functions","network","dns","acr","eventgrid","appconfig","identity"],
   "status": "running",
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
 ```
 
