@@ -16,8 +16,11 @@ func TestHealthEndpoint(t *testing.T) {
 	if m["status"] != "running" {
 		t.Fatalf("expected status=running, got %v", m["status"])
 	}
-	if m["version"] != "0.2.2" {
-		t.Fatalf("expected version=0.2.2, got %v", m["version"])
+	if m["version"] == nil || m["version"] == "" {
+		t.Fatal("expected version to be set")
+	}
+	if m["service_count"] == nil {
+		t.Fatal("expected service_count to be set")
 	}
 }
 

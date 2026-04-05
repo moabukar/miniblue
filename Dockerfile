@@ -3,7 +3,8 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /miniblue ./cmd/miniblue
+ARG VERSION=dev
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w -X github.com/moabukar/miniblue/internal/server.Version=${VERSION}" -o /miniblue ./cmd/miniblue
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /azlocal ./cmd/azlocal
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /healthcheck ./cmd/healthcheck
 
