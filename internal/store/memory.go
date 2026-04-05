@@ -162,3 +162,12 @@ func (s *Store) DeleteByPrefix(prefix string) int {
 func (s *Store) Reset() {
 	s.backend.Reset()
 }
+
+// Save persists state to disk if the backend supports it (e.g. FileBackend).
+// Returns nil if the backend does not support persistence.
+func (s *Store) Save() error {
+	if fb, ok := s.backend.(*FileBackend); ok {
+		return fb.Save()
+	}
+	return nil
+}

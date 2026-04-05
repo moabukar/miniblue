@@ -41,6 +41,8 @@ Environment variables:
   TLS_PORT               HTTPS port (default: 4567)
   LOG_LEVEL              Log level: debug, info, warn, error (default: info)
   DATABASE_URL           PostgreSQL URL for persistent storage
+  PERSISTENCE            Set to 1 to enable file-based state persistence (~/.miniblue/state.json)
+  SERVICES               Comma-separated list of services to enable (default: all)
   POSTGRES_URL           Real PostgreSQL for DB for PostgreSQL service
   REDIS_URL              Real Redis for Azure Cache for Redis service
   LOCAL_AZURE_CERT_DIR   TLS certificate directory (default: ~/.miniblue)
@@ -123,6 +125,17 @@ Documentation: https://moabukar.github.io/miniblue`)
 	// Block until shutdown signal
 	<-stop
 	log.Println("miniblue shutting down gracefully...")
+
+	// Save state on shutdown if using file persistence
+	if os.Getenv("PERSISTENCE") == "1" {
+		log.Println("saving state to disk...")
+		if err := srv.SaveState(); err != nil {
+			log.Printf("failed to save state: %v", err)
+		} else {
+			log.Println("state saved")
+		}
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	httpServer.Shutdown(ctx)

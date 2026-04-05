@@ -1,0 +1,27 @@
+replicaCount: 1
+
+image:
+  repository: moabukar/miniblue
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  httpPort: 4566
+  httpsPort: 4567
+
+persistence:
+  enabled: false
+
+env:
+  PORT: "4566"
+  TLS_PORT: "4567"
+  LOG_LEVEL: "info"
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
