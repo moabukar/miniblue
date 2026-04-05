@@ -37,8 +37,9 @@ import (
 )
 
 type Server struct {
-	router *chi.Mux
-	store  *store.Store
+	router   *chi.Mux
+	store    *store.Store
+	services []string
 }
 
 func New() *Server {
@@ -163,9 +164,12 @@ func (s *Server) setupRoutes() {
 		{"sqldb", func() { sqldb.NewHandler(s.store).Register(s.router) }},
 		{"dbmysql", func() { dbmysql.NewHandler(s.store).Register(s.router) }},
 	}
+	// Always include core infrastructure in service list
+	s.services = []string{"subscriptions", "tenants"}
 	for _, svc := range services {
 		if serviceEnabled(svc.name, allowed) {
 			svc.register()
+			s.services = append(s.services, svc.name)
 		}
 	}
 }
@@ -208,17 +212,14 @@ func (s *Server) resetHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Version is set at build time via ldflags.
+var Version = "dev"
+
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
-	services := []string{
-		"subscriptions", "tenants", "resourcegroups", "blob", "table", "queue", "keyvault",
-		"cosmosdb", "servicebus", "functions", "network", "dns",
-		"aci", "acr", "eventgrid", "appconfig", "identity", "dbpostgres", "redis",
-		"sqldb", "dbmysql",
-	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":        "running",
-		"services":      services,
-		"service_count": len(services),
-		"version":       "0.2.2",
+		"services":      s.services,
+		"service_count": len(s.services),
+		"version":       Version,
 	})
 }

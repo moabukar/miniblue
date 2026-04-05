@@ -58,7 +58,7 @@ Endpoints:
 Documentation: https://moabukar.github.io/miniblue`)
 			return
 		case "--version", "-v", "version":
-			fmt.Println("miniblue v0.2.2")
+			fmt.Printf("miniblue %s\n", server.Version)
 			return
 		}
 	}
