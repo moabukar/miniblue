@@ -216,8 +216,9 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 		"sqldb", "dbmysql",
 	}
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status":   "running",
-		"services": services,
-		"version":  "0.2.0",
+		"status":        "running",
+		"services":      services,
+		"service_count": len(services),
+		"version":       "0.2.2",
 	})
 }
