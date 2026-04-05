@@ -1,0 +1,36 @@
+name: Fix History
+on:
+  workflow_dispatch:
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Install git-filter-repo
+        run: pip install git-filter-repo
+      
+      - name: Rewrite history
+        run: |
+          git config user.email "mo-abukar10@hotmail.com"
+          git config user.name "Mo Abukar"
+          git filter-repo --commit-callback '
+import re
+commit.author_name = b"Mo Abukar"
+commit.author_email = b"mo-abukar10@hotmail.com"
+commit.committer_name = b"Mo Abukar"
+commit.committer_email = b"mo-abukar10@hotmail.com"
+msg = commit.message.decode("utf-8", errors="replace")
+msg = re.sub(r"\nCo-[Aa]uthored-[Bb]y:.*", "", msg)
+msg = re.sub(r"\n🤖 Generated with.*", "", msg)
+msg = re.sub(r"\nGenerated with.*", "", msg)
+commit.message = msg.strip().encode("utf-8") + b"\n"
+' --force
+          git remote add origin2 https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/moabukar/miniblue.git
+          git push origin2 HEAD:main --force
