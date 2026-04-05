@@ -1,0 +1,3 @@
+name: miniblue-pulumi-python
+runtime: python
+description: Pulumi Python example for miniblue (local Azure emulator)
