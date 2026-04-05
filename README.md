@@ -284,6 +284,7 @@ For Terraform, use the `metadata_host` provider config (see Terraform section ab
 | `POSTGRES_URL` | (none) | Real PostgreSQL for DB for PostgreSQL service |
 | `REDIS_URL` | (none) | Real Redis for Azure Cache for Redis service |
 | `LOCAL_AZURE_ENDPOINT` | `http://localhost:4566` | azlocal CLI endpoint override |
+| `MINIBLUE_SAVE_INTERVAL` | `30s` | Interval for auto-saving state when `PERSISTENCE=1` (e.g. `10s`, `1m`) |
 | `LOCAL_AZURE_CERT_DIR` | `~/.miniblue` | Directory for TLS certificate storage |
 
 ## Ports
