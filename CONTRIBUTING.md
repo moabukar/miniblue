@@ -12,6 +12,20 @@ Thanks for your interest in contributing! Here is how you can help.
 6. Commit and push
 7. Open a Pull Request
 
+## Prerequisites for Python Examples
+
+On Debian/Ubuntu you need `python3-venv` (or the version-specific variant) before creating a virtualenv:
+
+```bash
+# Debian/Ubuntu
+sudo apt install python3.12-venv   # or python3-venv for the system default
+
+# Then create a venv as normal
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
 ## Adding a New Azure Service
 
 Each service lives in its own package under `internal/services/`. Follow the existing pattern:
