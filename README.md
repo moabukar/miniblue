@@ -308,7 +308,6 @@ For Terraform, use the `metadata_host` provider config (see Terraform section ab
 | `MINIBLUE_SAVE_INTERVAL` | `30s` | Auto-save interval when `PERSISTENCE=1` |
 | `SERVICES` | (all) | Comma-separated list of services to enable |
 | `LOCAL_AZURE_ENDPOINT` | `http://localhost:4566` | azlocal CLI endpoint override |
-| `MINIBLUE_SAVE_INTERVAL` | `30s` | Interval for auto-saving state when `PERSISTENCE=1` (e.g. `10s`, `1m`) |
 | `LOCAL_AZURE_CERT_DIR` | `~/.miniblue` | Directory for TLS certificate storage |
 | `MINIBLUE_INIT_DIR` | `/etc/miniblue/init/ready.d` | Init hook scripts directory |
 
