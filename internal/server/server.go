@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -54,6 +55,11 @@ func (s *Server) Handler() http.Handler {
 	return s.router
 }
 
+// SaveState persists the store to disk if file-based persistence is active.
+func (s *Server) SaveState() error {
+	return s.store.Save()
+}
+
 func (s *Server) setupMiddleware() {
 	s.router.Use(CORS)
 	s.router.Use(StructuredLogger)
@@ -83,38 +89,85 @@ func safeRecover(next http.Handler) http.Handler {
 	})
 }
 
+// serviceEnabled checks if a service should be registered based on the SERVICES env var.
+// If SERVICES is empty, all services are enabled. Otherwise only listed ones are.
+func serviceEnabled(name string, allowed map[string]bool) bool {
+	if allowed == nil {
+		return true // no filter, enable all
+	}
+	return allowed[name]
+}
+
+// parseServicesFilter reads the SERVICES env var and returns a set of enabled service names.
+// Returns nil if SERVICES is empty (meaning all services are enabled).
+func parseServicesFilter() map[string]bool {
+	env := os.Getenv("SERVICES")
+	if env == "" {
+		return nil
+	}
+	parts := strings.Split(env, ",")
+	allowed := make(map[string]bool, len(parts))
+	for _, p := range parts {
+		name := strings.TrimSpace(p)
+		if name != "" {
+			allowed[name] = true
+		}
+	}
+	if len(allowed) > 0 {
+		names := make([]string, 0, len(allowed))
+		for k := range allowed {
+			names = append(names, k)
+		}
+		log.Printf("SERVICES filter active: %v", names)
+	}
+	return allowed
+}
+
 func (s *Server) setupRoutes() {
 	s.router.Get("/health", s.healthHandler)
 	s.router.Get("/metrics", s.metricsHandler)
 	s.router.Post("/_miniblue/reset", s.resetHandler)
 
-	// Cloud metadata + auth
+	allowed := parseServicesFilter()
+
+	// Cloud metadata + auth (always registered -- core infrastructure)
 	metadata.NewHandler(s.store).Register(s.router)
 	auth.NewHandler(s.store).Register(s.router)
 
-	// Subscriptions + tenants
+	// Subscriptions + tenants (always registered -- core infrastructure)
 	subscriptions.NewHandler(s.store).Register(s.router)
 
-	// Azure services
-	resourcegroups.NewHandler(s.store).Register(s.router)
-	blob.NewHandler(s.store).Register(s.router)
-	table.NewHandler(s.store).Register(s.router)
-	queue.NewHandler(s.store).Register(s.router)
-	keyvault.NewHandler(s.store).Register(s.router)
-	cosmosdb.NewHandler(s.store).Register(s.router)
-	servicebus.NewHandler(s.store).Register(s.router)
-	functions.NewHandler(s.store).Register(s.router)
-	network.NewHandler(s.store).Register(s.router)
-	dns.NewHandler(s.store).Register(s.router)
-	aci.NewHandler(s.store).Register(s.router)
-	acr.NewHandler(s.store).Register(s.router)
-	eventgrid.NewHandler(s.store).Register(s.router)
-	appconfig.NewHandler(s.store).Register(s.router)
-	identity.NewHandler(s.store).Register(s.router)
-	dbpostgres.NewHandler(s.store).Register(s.router)
-	redis.NewHandler(s.store).Register(s.router)
-	sqldb.NewHandler(s.store).Register(s.router)
-	dbmysql.NewHandler(s.store).Register(s.router)
+	// Azure services (filterable via SERVICES env var)
+	type namedService struct {
+		name     string
+		register func()
+	}
+	services := []namedService{
+		{"resourcegroups", func() { resourcegroups.NewHandler(s.store).Register(s.router) }},
+		{"blob", func() { blob.NewHandler(s.store).Register(s.router) }},
+		{"table", func() { table.NewHandler(s.store).Register(s.router) }},
+		{"queue", func() { queue.NewHandler(s.store).Register(s.router) }},
+		{"keyvault", func() { keyvault.NewHandler(s.store).Register(s.router) }},
+		{"cosmosdb", func() { cosmosdb.NewHandler(s.store).Register(s.router) }},
+		{"servicebus", func() { servicebus.NewHandler(s.store).Register(s.router) }},
+		{"functions", func() { functions.NewHandler(s.store).Register(s.router) }},
+		{"network", func() { network.NewHandler(s.store).Register(s.router) }},
+		{"dns", func() { dns.NewHandler(s.store).Register(s.router) }},
+		{"aci", func() { aci.NewHandler(s.store).Register(s.router) }},
+		{"acr", func() { acr.NewHandler(s.store).Register(s.router) }},
+		{"eventgrid", func() { eventgrid.NewHandler(s.store).Register(s.router) }},
+		{"appconfig", func() { appconfig.NewHandler(s.store).Register(s.router) }},
+		{"identity", func() { identity.NewHandler(s.store).Register(s.router) }},
+		{"dbpostgres", func() { dbpostgres.NewHandler(s.store).Register(s.router) }},
+		{"redis", func() { redis.NewHandler(s.store).Register(s.router) }},
+		{"sqldb", func() { sqldb.NewHandler(s.store).Register(s.router) }},
+		{"dbmysql", func() { dbmysql.NewHandler(s.store).Register(s.router) }},
+	}
+	for _, svc := range services {
+		if serviceEnabled(svc.name, allowed) {
+			svc.register()
+		}
+	}
 }
 
 func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +191,9 @@ func errorRate(m *Metrics) float64 {
 }
 
 func storeBackendName(st *store.Store) string {
+	if os.Getenv("PERSISTENCE") == "1" {
+		return "file"
+	}
 	if os.Getenv("DATABASE_URL") != "" {
 		return "postgres"
 	}
