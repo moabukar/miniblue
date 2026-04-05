@@ -34,13 +34,13 @@ The Azure ecosystem today forces developers to cobble together individual emulat
 
 That is 5 separate tools, 5 different Docker images, 5 different ports and configs - just to get basic local dev working. And you still have no local emulation for Resource Groups, Key Vault, DNS, VNets, Event Grid, ACR, or Managed Identity.
 
-**miniblue gives you 19 Azure services on a single port.** One binary, one Docker image, zero config.
+**miniblue gives you 21 Azure services on a single port.** One binary, one Docker image, zero config.
 
 ### How it compares
 
 | | LocalStack (AWS) | MiniStack (AWS) | Azurite (Azure) | miniblue |
 |---|---|---|---|---|
-| Services | 80+ | 36 | 3 (storage only) | **19** |
+| Services | 80+ | 36 | 3 (storage only) | **21** |
 | Single port | 4566 | 4566 | 10000-10002 | 4566 |
 | Language | Python | Python | Node.js | **Go** |
 | Auth required | No (free tier) | No | No | No |
@@ -67,7 +67,7 @@ miniblue fills this gap for Azure developers.
 
 ## What miniblue is
 
-- **19 Azure services** emulated behind a single port (4566)
+- **21 Azure services** emulated behind a single port (4566)
 - **Drop-in compatible** with Azure SDKs, Terraform, Pulumi
 - **In-memory storage** by default (fast, ephemeral)
 - **Docker-first** deployment
@@ -306,7 +306,7 @@ Adding a new service is straightforward - each service is its own Go package und
 - [ ] More services (Redis Cache, App Service, AKS, etc.)
 - [ ] Terraform provider integration tests
 - [ ] Web UI for visualising resources
-- [ ] Pulumi integration
+- [x] Pulumi integration (see [examples/pulumi-python/](examples/pulumi-python/))
 
 ## License
 
