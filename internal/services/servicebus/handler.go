@@ -42,6 +42,33 @@ func NewHandler(s *store.Store) *Handler {
 }
 
 func (h *Handler) Register(r chi.Router) {
+	// ARM-style paths: used by Azure SDKs to enumerate and manage resources
+	r.Route("/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ServiceBus/namespaces", func(r chi.Router) {
+		r.Get("/", h.ListNamespaces)
+		r.Route("/{namespaceName}", func(r chi.Router) {
+			r.Put("/", h.CreateOrUpdateNamespace)
+			r.Get("/", h.GetNamespace)
+			r.Delete("/", h.DeleteNamespace)
+			r.Route("/queues", func(r chi.Router) {
+				r.Get("/", h.ListQueuesARM)
+				r.Route("/{queueName}", func(r chi.Router) {
+					r.Put("/", h.CreateQueueARM)
+					r.Get("/", h.GetQueueARM)
+					r.Delete("/", h.DeleteQueueARM)
+				})
+			})
+			r.Route("/topics", func(r chi.Router) {
+				r.Get("/", h.ListTopicsARM)
+				r.Route("/{topicName}", func(r chi.Router) {
+					r.Put("/", h.CreateTopicARM)
+					r.Get("/", h.GetTopicARM)
+					r.Delete("/", h.DeleteTopicARM)
+				})
+			})
+		})
+	})
+
+	// Data-plane paths: used for messaging operations (send/receive)
 	r.Route("/servicebus/{namespace}", func(r chi.Router) {
 		r.Route("/queues", func(r chi.Router) {
 			r.Get("/", h.ListQueues)
@@ -178,6 +205,233 @@ func (h *Handler) ReceiveMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// --- ARM namespace handlers ---
+
+func (h *Handler) namespaceKey(sub, rg, name string) string {
+	return "sb:namespace:" + sub + ":" + rg + ":" + name
+}
+
+func (h *Handler) buildNamespaceResponse(sub, rg, name string) map[string]interface{} {
+	return map[string]interface{}{
+		"id":       "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.ServiceBus/namespaces/" + name,
+		"name":     name,
+		"type":     "Microsoft.ServiceBus/namespaces",
+		"location": "eastus",
+		"sku": map[string]interface{}{
+			"name": "Standard",
+			"tier": "Standard",
+		},
+		"properties": map[string]interface{}{
+			"provisioningState":       "Succeeded",
+			"status":                  "Active",
+			"serviceBusEndpoint":      "https://" + name + ".servicebus.windows.net:443/",
+			"metricId":                sub + ":" + name,
+			"createdAt":               "2026-01-01T00:00:00Z",
+			"updatedAt":               "2026-01-01T00:00:00Z",
+			"disableLocalAuth":        false,
+			"zoneRedundant":           false,
+		},
+	}
+}
+
+func (h *Handler) CreateOrUpdateNamespace(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	name := chi.URLParam(r, "namespaceName")
+
+	k := h.namespaceKey(sub, rg, name)
+	_, exists := h.store.Get(k)
+
+	ns := h.buildNamespaceResponse(sub, rg, name)
+	h.store.Set(k, ns)
+
+	if exists {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+	}
+	json.NewEncoder(w).Encode(ns)
+}
+
+func (h *Handler) GetNamespace(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	name := chi.URLParam(r, "namespaceName")
+
+	v, ok := h.store.Get(h.namespaceKey(sub, rg, name))
+	if !ok {
+		azerr.NotFound(w, "Microsoft.ServiceBus/namespaces", name)
+		return
+	}
+	json.NewEncoder(w).Encode(v)
+}
+
+func (h *Handler) DeleteNamespace(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	name := chi.URLParam(r, "namespaceName")
+
+	if !h.store.Delete(h.namespaceKey(sub, rg, name)) {
+		azerr.NotFound(w, "Microsoft.ServiceBus/namespaces", name)
+		return
+	}
+	h.store.DeleteByPrefix("sb:queue:" + name + ":")
+	h.store.DeleteByPrefix("sb:topic:" + name + ":")
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func (h *Handler) ListNamespaces(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	items := h.store.ListByPrefix("sb:namespace:" + sub + ":" + rg + ":")
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
+}
+
+func (h *Handler) armQueueKey(sub, rg, ns, name string) string {
+	return "sb:armqueue:" + sub + ":" + rg + ":" + ns + ":" + name
+}
+
+func (h *Handler) buildARMQueueResponse(sub, rg, ns, name string) map[string]interface{} {
+	return map[string]interface{}{
+		"id":   "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.ServiceBus/namespaces/" + ns + "/queues/" + name,
+		"name": name,
+		"type": "Microsoft.ServiceBus/namespaces/queues",
+		"properties": map[string]interface{}{
+			"status":                  "Active",
+			"messageCount":            0,
+			"maxDeliveryCount":        10,
+			"defaultMessageTimeToLive": "P14D",
+			"lockDuration":            "PT1M",
+			"createdAt":               "2026-01-01T00:00:00Z",
+		},
+	}
+}
+
+func (h *Handler) CreateQueueARM(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	ns := chi.URLParam(r, "namespaceName")
+	name := chi.URLParam(r, "queueName")
+
+	k := h.armQueueKey(sub, rg, ns, name)
+	_, exists := h.store.Get(k)
+
+	q := h.buildARMQueueResponse(sub, rg, ns, name)
+	h.store.Set(k, q)
+
+	if exists {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+	}
+	json.NewEncoder(w).Encode(q)
+}
+
+func (h *Handler) GetQueueARM(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	ns := chi.URLParam(r, "namespaceName")
+	name := chi.URLParam(r, "queueName")
+
+	v, ok := h.store.Get(h.armQueueKey(sub, rg, ns, name))
+	if !ok {
+		azerr.NotFound(w, "Microsoft.ServiceBus/namespaces/queues", name)
+		return
+	}
+	json.NewEncoder(w).Encode(v)
+}
+
+func (h *Handler) DeleteQueueARM(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	ns := chi.URLParam(r, "namespaceName")
+	name := chi.URLParam(r, "queueName")
+
+	if !h.store.Delete(h.armQueueKey(sub, rg, ns, name)) {
+		azerr.NotFound(w, "Microsoft.ServiceBus/namespaces/queues", name)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) ListQueuesARM(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	ns := chi.URLParam(r, "namespaceName")
+	items := h.store.ListByPrefix("sb:armqueue:" + sub + ":" + rg + ":" + ns + ":")
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
+}
+
+func (h *Handler) armTopicKey(sub, rg, ns, name string) string {
+	return "sb:armtopic:" + sub + ":" + rg + ":" + ns + ":" + name
+}
+
+func (h *Handler) CreateTopicARM(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	ns := chi.URLParam(r, "namespaceName")
+	name := chi.URLParam(r, "topicName")
+
+	k := h.armTopicKey(sub, rg, ns, name)
+	_, exists := h.store.Get(k)
+
+	t := map[string]interface{}{
+		"id":   "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.ServiceBus/namespaces/" + ns + "/topics/" + name,
+		"name": name,
+		"type": "Microsoft.ServiceBus/namespaces/topics",
+		"properties": map[string]interface{}{
+			"status":                  "Active",
+			"defaultMessageTimeToLive": "P14D",
+			"createdAt":               "2026-01-01T00:00:00Z",
+		},
+	}
+	h.store.Set(k, t)
+
+	if exists {
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusCreated)
+	}
+	json.NewEncoder(w).Encode(t)
+}
+
+func (h *Handler) GetTopicARM(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	ns := chi.URLParam(r, "namespaceName")
+	name := chi.URLParam(r, "topicName")
+
+	v, ok := h.store.Get(h.armTopicKey(sub, rg, ns, name))
+	if !ok {
+		azerr.NotFound(w, "Microsoft.ServiceBus/namespaces/topics", name)
+		return
+	}
+	json.NewEncoder(w).Encode(v)
+}
+
+func (h *Handler) DeleteTopicARM(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	ns := chi.URLParam(r, "namespaceName")
+	name := chi.URLParam(r, "topicName")
+
+	if !h.store.Delete(h.armTopicKey(sub, rg, ns, name)) {
+		azerr.NotFound(w, "Microsoft.ServiceBus/namespaces/topics", name)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) ListTopicsARM(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	ns := chi.URLParam(r, "namespaceName")
+	items := h.store.ListByPrefix("sb:armtopic:" + sub + ":" + rg + ":" + ns + ":")
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
+}
+
+// --- Data-plane topic handlers (legacy) ---
 
 func (h *Handler) CreateTopic(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
