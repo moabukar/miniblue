@@ -37,6 +37,7 @@ func (h *Handler) Register(r chi.Router) {
 			r.Put("/", h.CreateOrUpdateTopic)
 			r.Get("/", h.GetTopic)
 			r.Delete("/", h.DeleteTopic)
+			r.Post("/listKeys", h.ListKeys)
 		})
 	})
 	r.Post("/eventgrid/{topicName}/events", h.PublishEvents)
@@ -100,6 +101,20 @@ func (h *Handler) ListTopics(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	items := h.store.ListByPrefix("eg:topic:" + sub + ":" + rg + ":")
 	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
+}
+
+func (h *Handler) ListKeys(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	name := chi.URLParam(r, "topicName")
+	if !h.store.Exists(h.topicKey(sub, rg, name)) {
+		azerr.NotFound(w, "Microsoft.EventGrid/topics", name)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"key1": "miniblue-eventgrid-key1",
+		"key2": "miniblue-eventgrid-key2",
+	})
 }
 
 func (h *Handler) PublishEvents(w http.ResponseWriter, r *http.Request) {
