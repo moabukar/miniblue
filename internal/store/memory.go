@@ -3,6 +3,7 @@ package store
 import (
 	"strings"
 	"sync"
+	"time"
 )
 
 // MemoryBackend is an in-memory implementation of the Backend interface.
@@ -189,4 +190,13 @@ func (s *Store) Save() error {
 		return fb.Save()
 	}
 	return nil
+}
+
+// StartAutoSave starts periodic auto-save if the backend is a FileBackend.
+// Returns a no-op stop function for other backends.
+func (s *Store) StartAutoSave(interval time.Duration) func() {
+	if fb, ok := s.backend.(*FileBackend); ok {
+		return fb.StartAutoSave(interval)
+	}
+	return func() {}
 }

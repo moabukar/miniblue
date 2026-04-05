@@ -61,6 +61,12 @@ func (s *Server) SaveState() error {
 	return s.store.Save()
 }
 
+// StartAutoSave starts periodic background saves for file-based persistence.
+// Returns a stop function that must be called on shutdown.
+func (s *Server) StartAutoSave(interval time.Duration) func() {
+	return s.store.StartAutoSave(interval)
+}
+
 func (s *Server) setupMiddleware() {
 	s.router.Use(CORS)
 	s.router.Use(StructuredLogger)
