@@ -1,13 +1,23 @@
 package dbmysql
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"regexp"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/moabukar/miniblue/internal/azerr"
 	"github.com/moabukar/miniblue/internal/store"
 )
+
+var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 type Handler struct {
 	store *store.Store
@@ -44,6 +54,55 @@ func (h *Handler) dbKey(sub, rg, server, db string) string {
 	return "dbmysql:db:" + sub + ":" + rg + ":" + server + ":" + db
 }
 
+func mysqlURL() string {
+	return os.Getenv("MYSQL_URL")
+}
+
+func openAdmin() (*sql.DB, error) {
+	return sql.Open("mysql", mysqlURL())
+}
+
+func hostPort() (string, string) {
+	raw := mysqlURL()
+	if raw == "" {
+		return "localhost", "3306"
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "localhost", "3306"
+	}
+	host := u.Hostname()
+	port := u.Port()
+	if host == "" {
+		host = "localhost"
+	}
+	if port == "" {
+		port = "3306"
+	}
+	return host, port
+}
+
+func execDDL(stmt string) error {
+	db, err := openAdmin()
+	if err != nil {
+		return fmt.Errorf("connect: %w", err)
+	}
+	defer db.Close()
+	_, err = db.Exec(stmt)
+	return err
+}
+
+func dbExists(name string) (bool, error) {
+	db, err := openAdmin()
+	if err != nil {
+		return false, err
+	}
+	defer db.Close()
+	var exists bool
+	err = db.QueryRow("SELECT EXISTS(SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?)", name).Scan(&exists)
+	return exists, err
+}
+
 func buildServerResponse(sub, rg, name string, input map[string]interface{}) map[string]interface{} {
 	id := "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.DBforMySQL/flexibleServers/" + name
 
@@ -59,13 +118,19 @@ func buildServerResponse(sub, rg, name string, input map[string]interface{}) map
 		}
 	}
 
+	host, port := hostPort()
+	fqdn := host
+	if port != "3306" {
+		fqdn = fmt.Sprintf("%s:%s", host, port)
+	}
+
 	return map[string]interface{}{
 		"id":       id,
 		"name":     name,
 		"type":     "Microsoft.DBforMySQL/flexibleServers",
 		"location": location,
 		"properties": map[string]interface{}{
-			"fullyQualifiedDomainName": "localhost",
+			"fullyQualifiedDomainName": fqdn,
 			"state":                    "Ready",
 			"version":                  "8.0",
 			"administratorLogin":       adminLogin,
@@ -112,6 +177,11 @@ func (h *Handler) CreateOrUpdateServer(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "serverName")
 
+	if !validName.MatchString(name) {
+		azerr.BadRequest(w, "Invalid server name.")
+		return
+	}
+
 	var input map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&input)
 
@@ -146,11 +216,26 @@ func (h *Handler) DeleteServer(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "serverName")
 
-	if !h.store.Delete(h.serverKey(sub, rg, name)) {
+	k := h.serverKey(sub, rg, name)
+	if !h.store.Delete(k) {
 		azerr.NotFound(w, "Microsoft.DBforMySQL/flexibleServers", name)
 		return
 	}
-	// Clean up databases under this server
+
+	if mysqlURL() != "" {
+		prefix := h.dbKey(sub, rg, name, "")
+		items := h.store.ListByPrefix(prefix)
+		for _, item := range items {
+			if db, ok := item.(map[string]interface{}); ok {
+				if dbName, ok := db["name"].(string); ok {
+					if err := execDDL(fmt.Sprintf("DROP DATABASE IF EXISTS %s", quoteIdent(dbName))); err != nil {
+						log.Printf("dbmysql: warning: failed to drop database %s: %v", dbName, err)
+					}
+				}
+			}
+		}
+	}
+
 	h.store.DeleteByPrefix(h.dbKey(sub, rg, name, ""))
 	w.WriteHeader(http.StatusAccepted)
 }
@@ -168,6 +253,11 @@ func (h *Handler) CreateOrUpdateDatabase(w http.ResponseWriter, r *http.Request)
 	server := chi.URLParam(r, "serverName")
 	dbName := chi.URLParam(r, "dbName")
 
+	if !validName.MatchString(dbName) {
+		azerr.BadRequest(w, "Invalid database name.")
+		return
+	}
+
 	if !h.store.Exists(h.serverKey(sub, rg, server)) {
 		azerr.NotFound(w, "Microsoft.DBforMySQL/flexibleServers", server)
 		return
@@ -176,9 +266,24 @@ func (h *Handler) CreateOrUpdateDatabase(w http.ResponseWriter, r *http.Request)
 	var input map[string]interface{}
 	json.NewDecoder(r.Body).Decode(&input)
 
-	db := buildDatabaseResponse(sub, rg, server, dbName, input)
 	k := h.dbKey(sub, rg, server, dbName)
 	_, exists := h.store.Get(k)
+
+	if mysqlURL() != "" && !exists {
+		already, err := dbExists(dbName)
+		if err != nil {
+			log.Printf("dbmysql: warning: could not check existence of %s: %v", dbName, err)
+		}
+		if !already {
+			if err := execDDL(fmt.Sprintf("CREATE DATABASE %s", quoteIdent(dbName))); err != nil {
+				azerr.WriteError(w, http.StatusInternalServerError, "InternalError",
+					fmt.Sprintf("Failed to create database: %v", err))
+				return
+			}
+		}
+	}
+
+	db := buildDatabaseResponse(sub, rg, server, dbName, input)
 	h.store.Set(k, db)
 
 	if exists {
@@ -209,10 +314,18 @@ func (h *Handler) DeleteDatabase(w http.ResponseWriter, r *http.Request) {
 	server := chi.URLParam(r, "serverName")
 	dbName := chi.URLParam(r, "dbName")
 
-	if !h.store.Delete(h.dbKey(sub, rg, server, dbName)) {
+	k := h.dbKey(sub, rg, server, dbName)
+	if !h.store.Delete(k) {
 		azerr.NotFound(w, "Microsoft.DBforMySQL/flexibleServers/databases", dbName)
 		return
 	}
+
+	if mysqlURL() != "" {
+		if err := execDDL(fmt.Sprintf("DROP DATABASE IF EXISTS %s", quoteIdent(dbName))); err != nil {
+			log.Printf("dbmysql: warning: failed to drop database %s: %v", dbName, err)
+		}
+	}
+
 	w.WriteHeader(http.StatusAccepted)
 }
 
@@ -222,4 +335,8 @@ func (h *Handler) ListDatabases(w http.ResponseWriter, r *http.Request) {
 	server := chi.URLParam(r, "serverName")
 	items := h.store.ListByPrefix(h.dbKey(sub, rg, server, ""))
 	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
+}
+
+func quoteIdent(s string) string {
+	return "`" + strings.ReplaceAll(s, "`", "``") + "`"
 }
