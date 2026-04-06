@@ -1,0 +1,61 @@
+<mxfile>
+  <diagram name="miniblue Architecture" id="arch">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="700">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="miniblue Architecture" style="text;html=1;align=center;verticalAlign=middle;fontSize=20;fontStyle=1;fillColor=none;" vertex="1" parent="1"><mxGeometry x="400" y="10" width="300" height="30" as="geometry"/></mxCell>
+
+        <!-- Clients -->
+        <mxCell id="c1" value="curl / SDKs" style="rounded=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontStyle=1;fontColor=#1E40AF;" vertex="1" parent="1"><mxGeometry x="30" y="60" width="120" height="40" as="geometry"/></mxCell>
+        <mxCell id="c2" value="azlocal CLI" style="rounded=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontStyle=1;fontColor=#1E40AF;" vertex="1" parent="1"><mxGeometry x="170" y="60" width="120" height="40" as="geometry"/></mxCell>
+        <mxCell id="c3" value="Terraform" style="rounded=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontStyle=1;fontColor=#1E40AF;" vertex="1" parent="1"><mxGeometry x="310" y="60" width="120" height="40" as="geometry"/></mxCell>
+        <mxCell id="c4" value="Pulumi" style="rounded=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontStyle=1;fontColor=#1E40AF;" vertex="1" parent="1"><mxGeometry x="450" y="60" width="120" height="40" as="geometry"/></mxCell>
+        <mxCell id="c5" value="Azure SDKs" style="rounded=1;fillColor=#DBEAFE;strokeColor=#3B82F6;fontStyle=1;fontColor=#1E40AF;" vertex="1" parent="1"><mxGeometry x="590" y="60" width="120" height="40" as="geometry"/></mxCell>
+
+        <!-- Ports -->
+        <mxCell id="p1" value="HTTP :4566" style="rounded=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontStyle=1;fontColor=#92400E;" vertex="1" parent="1"><mxGeometry x="150" y="130" width="200" height="35" as="geometry"/></mxCell>
+        <mxCell id="p2" value="HTTPS :4567 (TLS)" style="rounded=1;fillColor=#FEF3C7;strokeColor=#F59E0B;fontStyle=1;fontColor=#92400E;" vertex="1" parent="1"><mxGeometry x="400" y="130" width="200" height="35" as="geometry"/></mxCell>
+
+        <!-- Middleware -->
+        <mxCell id="mw" value="Middleware: CORS → JSON Logger → Panic Recovery → RequestID → Azure Headers → API Version" style="rounded=1;fillColor=#F1F5F9;strokeColor=#94A3B8;fontColor=#475569;fontSize=11;" vertex="1" parent="1"><mxGeometry x="80" y="190" width="590" height="35" as="geometry"/></mxCell>
+
+        <!-- Router -->
+        <mxCell id="router" value="Chi Router (route matching)" style="rounded=1;fillColor=#E0E7FF;strokeColor=#6366F1;fontStyle=1;fontColor=#4338CA;" vertex="1" parent="1"><mxGeometry x="80" y="245" width="590" height="30" as="geometry"/></mxCell>
+
+        <!-- ARM Services -->
+        <mxCell id="arm" value="ARM Services&#xa;&#xa;Resource Groups&#xa;Virtual Networks + Subnets&#xa;DNS Zones + Records&#xa;Container Registry&#xa;Event Grid Topics&#xa;Azure Functions&#xa;DB for PostgreSQL / MySQL / SQL&#xa;Azure Cache for Redis&#xa;Container Instances (ACI)" style="rounded=1;fillColor=#ECFDF5;strokeColor=#10B981;fontColor=#047857;align=left;spacingLeft=8;fontSize=11;verticalAlign=top;spacingTop=2;" vertex="1" parent="1"><mxGeometry x="20" y="295" width="230" height="180" as="geometry"/></mxCell>
+
+        <!-- Data Plane -->
+        <mxCell id="data" value="Data Plane Services&#xa;&#xa;Blob Storage&#xa;Table Storage&#xa;Queue Storage&#xa;Key Vault Secrets&#xa;Cosmos DB Documents&#xa;Service Bus Queues/Topics&#xa;App Configuration" style="rounded=1;fillColor=#FFF7ED;strokeColor=#F97316;fontColor=#C2410C;align=left;spacingLeft=8;fontSize=11;verticalAlign=top;spacingTop=2;" vertex="1" parent="1"><mxGeometry x="270" y="295" width="210" height="180" as="geometry"/></mxCell>
+
+        <!-- Infrastructure -->
+        <mxCell id="infra" value="Infrastructure&#xa;&#xa;OAuth2 / OIDC (mock JWT)&#xa;Cloud Metadata Endpoint&#xa;Subscriptions + Tenants&#xa;Provider Registration&#xa;Managed Identity (IMDS)&#xa;&#xa;/health  /metrics  /_miniblue/reset" style="rounded=1;fillColor=#F5F3FF;strokeColor=#8B5CF6;fontColor=#6D28D9;align=left;spacingLeft=8;fontSize=11;verticalAlign=top;spacingTop=2;" vertex="1" parent="1"><mxGeometry x="500" y="295" width="240" height="180" as="geometry"/></mxCell>
+
+        <!-- Store -->
+        <mxCell id="store" value="Store (Backend Interface)" style="rounded=1;fillColor=#FEE2E2;strokeColor=#EF4444;fontStyle=1;fontColor=#991B1B;" vertex="1" parent="1"><mxGeometry x="80" y="500" width="590" height="35" as="geometry"/></mxCell>
+
+        <!-- Backends -->
+        <mxCell id="b1" value="MemoryBackend&#xa;(default)" style="rounded=1;fillColor=#FFF1F2;strokeColor=#FB7185;fontColor=#9F1239;fontSize=11;" vertex="1" parent="1"><mxGeometry x="30" y="560" width="150" height="45" as="geometry"/></mxCell>
+        <mxCell id="b2" value="FileBackend&#xa;(PERSISTENCE=1)" style="rounded=1;fillColor=#FFF1F2;strokeColor=#FB7185;fontColor=#9F1239;fontSize=11;" vertex="1" parent="1"><mxGeometry x="200" y="560" width="150" height="45" as="geometry"/></mxCell>
+        <mxCell id="b3" value="PostgresBackend&#xa;(DATABASE_URL)" style="rounded=1;fillColor=#FFF1F2;strokeColor=#FB7185;fontColor=#9F1239;fontSize=11;" vertex="1" parent="1"><mxGeometry x="370" y="560" width="150" height="45" as="geometry"/></mxCell>
+        <mxCell id="b4" value="Real Backends&#xa;Postgres / Redis / Docker" style="rounded=1;fillColor=#E0F2FE;strokeColor=#0EA5E9;fontColor=#0C4A6E;fontSize=11;" vertex="1" parent="1"><mxGeometry x="540" y="560" width="170" height="45" as="geometry"/></mxCell>
+
+        <!-- Arrows -->
+        <mxCell id="a1" edge="1" source="c1" target="p1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a2" edge="1" source="c2" target="p1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a3" edge="1" source="c3" target="p2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a4" edge="1" source="c4" target="p1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a5" edge="1" source="c5" target="p1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a6" edge="1" source="p1" target="mw" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a7" edge="1" source="p2" target="mw" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a8" edge="1" source="mw" target="router" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a9" edge="1" source="arm" target="store" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a10" edge="1" source="data" target="store" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a11" edge="1" source="infra" target="store" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

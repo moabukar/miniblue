@@ -1,8 +1,12 @@
 # Architecture
 
+*Last updated: April 2026*
+
 ## Diagram
 
-<img src="diagram.svg" alt="miniblue architecture" width="100%" />
+![miniblue architecture](miniblue-architecture.png)
+
+[Download .drawio source](miniblue-architecture.drawio)
 
 ## Request Flow
 
