@@ -1,5 +1,32 @@
 # Installation
 
+## Prerequisites
+
+**To run miniblue (basic):**
+
+- Docker **or** Go 1.26+ (for building from source)
+- That's it. No Azure account, no credentials, no config.
+
+**For real backends (optional):**
+
+| Feature | Requires | Env var |
+|---------|----------|---------|
+| Real PostgreSQL databases | PostgreSQL server (or Docker) | `POSTGRES_URL=postgres://user:pass@host:5432/db?sslmode=disable` |
+| Real Redis connectivity | Redis server (or Docker) | `REDIS_URL=redis://host:6379` |
+| Real Docker containers (ACI) | Docker daemon running | Docker socket available at `/var/run/docker.sock` |
+| Persistent storage (Postgres) | PostgreSQL server | `DATABASE_URL=postgres://...` |
+| Persistent storage (file) | Nothing extra | `PERSISTENCE=1` |
+
+**For Terraform:**
+
+- Terraform 1.5+
+- Trust the self-signed cert: `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/.miniblue/cert.pem` (macOS, one-time)
+
+**For Pulumi:**
+
+- Pulumi CLI
+- Python 3.9+ with `requests` package
+
 ## Homebrew (macOS / Linux)
 
 ```bash

@@ -88,6 +88,20 @@ miniblue is an **API emulator** for local development and testing. It does not r
 
 miniblue is designed for **CI pipelines, integration tests, and local development** where you need Azure API compatibility without an Azure account.
 
+## Prerequisites
+
+- **Docker** or **Go 1.26+** (to build from source)
+- No Azure account, credentials, or internet connection needed
+
+For real backends (optional):
+
+| Feature | Requires |
+|---------|----------|
+| Real PostgreSQL databases | `POSTGRES_URL` + Postgres server |
+| Real Redis connectivity | `REDIS_URL` + Redis server |
+| Real Docker containers (ACI) | Docker daemon running |
+| Terraform | Trust cert: `bash scripts/trust-cert.sh` |
+
 ## Quick Start
 
 ### Homebrew (macOS / Linux)
