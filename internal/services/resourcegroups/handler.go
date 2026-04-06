@@ -156,6 +156,14 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	h.store.DeleteByPrefix("eg:topic:" + sub + ":" + name + ":")
 	h.store.DeleteByPrefix("dns:zone:" + sub + ":" + name + ":")
 	h.store.DeleteByPrefix("dns:record:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("redis:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("pgflex:server:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("pgflex:db:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("dbmysql:server:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("dbmysql:db:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("sqldb:server:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("sqldb:db:" + sub + ":" + name + ":")
+	h.store.DeleteByPrefix("aci:containergroup:" + sub + ":" + name + ":")
 
 	// Async operation - return Location header for polling (Terraform requires this on 202)
 	scheme := "http"
