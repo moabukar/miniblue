@@ -186,7 +186,7 @@ func TestMySQLRealDatabaseServerDeletion(t *testing.T) {
 		t.Fatalf("expected server delete to succeed, got %d", resp.StatusCode)
 	}
 
-	exists1, err = dbExistsInMySQL("srvtest1")
+	exists1, _ = dbExistsInMySQL("srvtest1")
 	exists2, err = dbExistsInMySQL("srvtest2")
 	if err != nil {
 		t.Fatalf("failed to check database existence: %v", err)
