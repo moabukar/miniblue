@@ -6,23 +6,17 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      miniblue:
-        image: moabukar/miniblue:latest
-        ports:
-          - 4566:4566
-          - 4567:4567
-        options: --health-cmd="/healthcheck" --health-interval=5s --health-retries=12 --health-start-period=15s
-
     steps:
       - uses: actions/checkout@v6
 
-      - name: Wait for miniblue
+      - name: Start miniblue
         run: |
+          docker run -d --name miniblue -p 4566:4566 -p 4567:4567 moabukar/miniblue:latest
           for i in $(seq 1 30); do
             curl -sf http://localhost:4566/health && break
             sleep 1
           done
+          curl -sf http://localhost:4566/health
 
       - name: Health check
         run: |
