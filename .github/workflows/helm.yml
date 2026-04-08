@@ -1,4 +1,4 @@
-name: Helm Chart
+name: Publish Helm Chart (GHCR)
 
 on:
   push:

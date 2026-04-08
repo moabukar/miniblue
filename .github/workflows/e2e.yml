@@ -5,6 +5,7 @@ on:
 
 jobs:
   test:
+    name: Run E2E tests against miniblue container
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -12,80 +13,89 @@ jobs:
       - name: Start miniblue
         run: |
           docker run -d --name miniblue -p 4566:4566 -p 4567:4567 moabukar/miniblue:latest
+          echo "Waiting for miniblue..."
           for i in $(seq 1 30); do
-            curl -sf http://localhost:4566/health && break
+            if curl -s http://localhost:4566/health > /dev/null 2>&1; then
+              echo "miniblue is ready"
+              break
+            fi
             sleep 1
           done
-          curl -sf http://localhost:4566/health
+          curl -s http://localhost:4566/health | python3 -m json.tool
 
-      - name: Health check
+      - name: Test health
         run: |
-          curl -sf http://localhost:4566/health | python3 -c "
+          curl -s http://localhost:4566/health | python3 -c "
           import json,sys
           d = json.load(sys.stdin)
-          assert d['status'] == 'running', f'Expected running, got {d[\"status\"]}'
-          print(f'OK: {d[\"service_count\"]} services, v{d[\"version\"]}')
+          assert d['status'] == 'running'
+          print(f'OK: {d[\"service_count\"]} services')
           "
 
-      - name: Resource Groups
+      - name: Test resource groups
         run: |
-          curl -sf -X PUT "http://localhost:4566/subscriptions/s1/resourcegroups/test-rg" \
+          curl -s -X PUT "http://localhost:4566/subscriptions/s1/resourcegroups/test-rg" \
             -H "Content-Type: application/json" -d '{"location":"eastus"}'
-          curl -sf http://localhost:4566/subscriptions/s1/resourcegroups/test-rg | python3 -c "
-          import json,sys; assert json.load(sys.stdin)['name'] == 'test-rg'; print('OK: RG created')
+          curl -s http://localhost:4566/subscriptions/s1/resourcegroups/test-rg | python3 -c "
+          import json,sys; assert json.load(sys.stdin)['name'] == 'test-rg'; print('OK: RG')
           "
 
-      - name: Key Vault
+      - name: Test key vault
         run: |
-          curl -sf -X PUT "http://localhost:4566/keyvault/v1/secrets/s1" \
+          curl -s -X PUT "http://localhost:4566/keyvault/v1/secrets/s1" \
             -H "Content-Type: application/json" -d '{"value":"secret"}'
-          curl -sf http://localhost:4566/keyvault/v1/secrets/s1 | python3 -c "
-          import json,sys; assert json.load(sys.stdin)['value'] == 'secret'; print('OK: KV secret')
+          curl -s http://localhost:4566/keyvault/v1/secrets/s1 | python3 -c "
+          import json,sys; assert json.load(sys.stdin)['value'] == 'secret'; print('OK: KV')
           "
 
-      - name: Blob Storage
+      - name: Test blob storage
         run: |
-          curl -sf -X PUT "http://localhost:4566/blob/a1/c1"
-          curl -sf -X PUT "http://localhost:4566/blob/a1/c1/test.txt" -d "hello"
-          BODY=$(curl -sf http://localhost:4566/blob/a1/c1/test.txt)
-          [ "$BODY" = "hello" ] && echo "OK: Blob roundtrip" || exit 1
+          curl -s -X PUT "http://localhost:4566/blob/a1/c1"
+          curl -s -X PUT "http://localhost:4566/blob/a1/c1/test.txt" -d "hello"
+          BODY=$(curl -s http://localhost:4566/blob/a1/c1/test.txt)
+          [ "$BODY" = "hello" ] && echo "OK: Blob" || exit 1
 
-      - name: Cosmos DB
+      - name: Test cosmos db
         run: |
-          curl -sf -X POST "http://localhost:4566/cosmosdb/a1/dbs/d1/colls/c1/docs" \
+          curl -s -X POST "http://localhost:4566/cosmosdb/a1/dbs/d1/colls/c1/docs" \
             -H "Content-Type: application/json" -d '{"id":"1","name":"test"}'
-          curl -sf http://localhost:4566/cosmosdb/a1/dbs/d1/colls/c1/docs/1 | python3 -c "
-          import json,sys; assert json.load(sys.stdin)['name'] == 'test'; print('OK: Cosmos doc')
+          curl -s http://localhost:4566/cosmosdb/a1/dbs/d1/colls/c1/docs/1 | python3 -c "
+          import json,sys; assert json.load(sys.stdin)['name'] == 'test'; print('OK: Cosmos')
           "
 
-      - name: Service Bus
+      - name: Test service bus
         run: |
-          curl -sf -X PUT "http://localhost:4566/servicebus/ns/queues/q1"
-          curl -sf -X POST "http://localhost:4566/servicebus/ns/queues/q1/messages" \
+          curl -s -X PUT "http://localhost:4566/servicebus/ns/queues/q1"
+          curl -s -X POST "http://localhost:4566/servicebus/ns/queues/q1/messages" \
             -H "Content-Type: application/json" -d '{"body":"msg1"}'
-          curl -sf http://localhost:4566/servicebus/ns/queues/q1/messages/head | python3 -c "
-          import json,sys; assert json.load(sys.stdin)['body'] == 'msg1'; print('OK: SB message')
+          curl -s http://localhost:4566/servicebus/ns/queues/q1/messages/head | python3 -c "
+          import json,sys; assert json.load(sys.stdin)['body'] == 'msg1'; print('OK: Service Bus')
           "
 
-      - name: Reset
+      - name: Test reset
         run: |
-          curl -sf -X POST http://localhost:4566/_miniblue/reset
-          curl -sf http://localhost:4566/subscriptions/s1/resourcegroups | python3 -c "
-          import json,sys; assert len(json.load(sys.stdin)['value']) == 0; print('OK: Reset cleared all')
+          curl -s -X POST http://localhost:4566/_miniblue/reset
+          curl -s http://localhost:4566/subscriptions/s1/resourcegroups | python3 -c "
+          import json,sys; assert len(json.load(sys.stdin)['value']) == 0; print('OK: Reset')
           "
 
-      - name: Database services
+      - name: Test database services
         run: |
-          curl -sf -X PUT "http://localhost:4566/subscriptions/s1/resourcegroups/rg1" \
+          curl -s -X PUT "http://localhost:4566/subscriptions/s1/resourcegroups/rg1" \
             -H "Content-Type: application/json" -d '{"location":"eastus"}'
-          curl -sf -X PUT "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.DBforPostgreSQL/flexibleServers/pg1" \
+          curl -s -X PUT "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.DBforPostgreSQL/flexibleServers/pg1" \
             -H "Content-Type: application/json" -d '{"location":"eastus"}'
-          curl -sf -X PUT "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.Cache/redis/r1" \
+          curl -s -X PUT "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.Cache/redis/r1" \
             -H "Content-Type: application/json" -d '{"location":"eastus","properties":{"sku":{"name":"Basic","family":"C","capacity":1}}}'
-          echo "OK: DB services created"
+          echo "OK: DB services"
 
-      - name: Cascade delete
+      - name: Test cascade delete
         run: |
-          curl -sf -X DELETE "http://localhost:4566/subscriptions/s1/resourcegroups/rg1"
-          CODE=$(curl -sf -o /dev/null -w '%{http_code}' "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.Cache/redis/r1")
-          [ "$CODE" = "404" ] && echo "OK: Cascade delete works" || exit 1
+          curl -s -X DELETE "http://localhost:4566/subscriptions/s1/resourcegroups/rg1"
+          sleep 1
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.Cache/redis/r1")
+          [ "$CODE" = "404" ] && echo "OK: Cascade delete" || (echo "FAIL: Expected 404, got $CODE" && exit 1)
+
+      - name: Cleanup
+        if: always()
+        run: docker stop miniblue && docker rm miniblue

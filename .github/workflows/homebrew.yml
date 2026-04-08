@@ -1,4 +1,4 @@
-name: Update Homebrew
+name: Update Homebrew Formula
 
 on:
   push:

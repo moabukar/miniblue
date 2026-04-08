@@ -1,4 +1,4 @@
-name: Release Binaries
+name: Release Binaries (5 platforms)
 
 on:
   push:
