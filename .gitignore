@@ -43,6 +43,7 @@ docker-compose.override.yml
 *.tfstate
 *.tfstate.backup
 .terraform.lock.hcl
+.terraform.tfstate.lock.hcl
 
 # Python
 .venv/

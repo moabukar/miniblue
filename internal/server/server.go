@@ -31,6 +31,7 @@ import (
 	"github.com/moabukar/miniblue/internal/services/resourcegroups"
 	"github.com/moabukar/miniblue/internal/services/sqldb"
 	"github.com/moabukar/miniblue/internal/services/servicebus"
+	"github.com/moabukar/miniblue/internal/services/storageaccounts"
 	"github.com/moabukar/miniblue/internal/services/subscriptions"
 	"github.com/moabukar/miniblue/internal/services/table"
 	"github.com/moabukar/miniblue/internal/store"
@@ -176,6 +177,14 @@ func (s *Server) setupRoutes() {
 		if serviceEnabled(svc.name, allowed) {
 			svc.register()
 			s.services = append(s.services, svc.name)
+		}
+	}
+	// ARM storage accounts (and nested blob container resources). Registered with blob for
+	// backward compatibility when SERVICES=blob; also available via SERVICES=storageaccounts.
+	if serviceEnabled("blob", allowed) || serviceEnabled("storageaccounts", allowed) {
+		storageaccounts.NewHandler(s.store).Register(s.router)
+		if allowed == nil || serviceEnabled("storageaccounts", allowed) {
+			s.services = append(s.services, "storageaccounts")
 		}
 	}
 }
