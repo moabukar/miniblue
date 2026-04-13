@@ -5,7 +5,7 @@ using System.Text.Json;
 // Azure.Storage.Blobs v12 interprets path-style URIs as
 // http://{host}/{accountName}/... — "blob" would be parsed as the account name
 // when the service URI is http://localhost:4566/blob/dotnetaccount, which
-// generates wrong blob URLs. miniblue''s blob API uses simple path-based routing,
+// generates wrong blob URLs. miniblue's blob API uses simple path-based routing,
 // so HttpClient is used directly here.
 sealed class BlobStorageExample
 {
