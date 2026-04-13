@@ -28,6 +28,7 @@ What's implemented, stubbed, and unsupported in miniblue compared to real Azure 
 | Public IP Addresses | Full | Full | Full | Full | - | Static/dynamic allocation, auto-generated IPs |
 | Network Security Groups | Full | Full | Full | Full | - | Security rules, default rules, cascade delete |
 | Load Balancer | Full | Full | Full | Full | - | Frontends, backends, rules, probes, NAT |
+| Application Gateway | Full | Full | Full | Full | - | SKU, frontends, backends, listeners, rules, probes, WAF |
 | Subscriptions | Full | Full | - | - | - | Mock subscription |
 | Tenants | - | - | Full | - | - | Mock tenant |
 | Providers | Full | Full | Full | - | - | Registration always succeeds |
@@ -55,7 +56,7 @@ What's implemented, stubbed, and unsupported in miniblue compared to real Azure 
 | Instance discovery | Full | Authority validation (internal) |
 | Managed Identity (IMDS) | Full | Token endpoint for workload identity |
 | Cloud metadata | Full | Terraform provider metadata |
-| /health | Full | 24 services listed |
+| /health | Full | 25 services listed |
 | /metrics | Full | Uptime, request count, error rate |
 
 ## Not Implemented

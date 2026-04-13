@@ -1,6 +1,6 @@
 # Services Overview
 
-miniblue emulates 24 Azure services on a single port. All services use in-memory storage and require no authentication.
+miniblue emulates 25 Azure services on a single port. All services use in-memory storage and require no authentication.
 
 ## Service status
 
@@ -28,6 +28,7 @@ miniblue emulates 24 Azure services on a single port. All services use in-memory
 | Public IP Addresses | `Microsoft.Network` | Done | Yes | -- |
 | Network Security Groups | `Microsoft.Network` | Done | Yes | -- |
 | Load Balancer | `Microsoft.Network` | Done | Yes | -- |
+| Application Gateway | `Microsoft.Network` | Done | Yes | -- |
 
 ### What "ARM API" and "Data Plane" mean
 
@@ -52,6 +53,7 @@ The following resources work with `hashicorp/azurerm` provider v3.x:
 | `azurerm_lb_backend_address_pool` | Load Balancer |
 | `azurerm_lb_probe` | Load Balancer |
 | `azurerm_lb_rule` | Load Balancer |
+| `azurerm_application_gateway` | Application Gateway |
 
 See the [Terraform guide](../guides/terraform.md) for a full working example.
 

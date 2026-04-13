@@ -11,6 +11,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions follow 
 - Network Security Groups service (`Microsoft.Network/networkSecurityGroups`) with security rules and cascade delete
 - Azure Load Balancer service (`Microsoft.Network/loadBalancers`) with frontend IPs, backend pools, rules and probes
 - Terraform example for load balancer (`examples/terraform/loadbalancer.tf`)
+- Application Gateway service (`Microsoft.Network/applicationGateways`) with full L7 config
+- Terraform example for application gateway (`examples/terraform/appgateway.tf`)
 
 ## [0.2.0] - 2026-04-04
 
