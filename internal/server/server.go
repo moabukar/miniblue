@@ -14,6 +14,7 @@ import (
 	"github.com/moabukar/miniblue/internal/services/aci"
 	"github.com/moabukar/miniblue/internal/services/acr"
 	"github.com/moabukar/miniblue/internal/services/appconfig"
+	"github.com/moabukar/miniblue/internal/services/appgw"
 	"github.com/moabukar/miniblue/internal/services/auth"
 	"github.com/moabukar/miniblue/internal/services/blob"
 	"github.com/moabukar/miniblue/internal/services/cosmosdb"
@@ -175,6 +176,7 @@ func (s *Server) setupRoutes() {
 		{"publicip", func() { publicip.NewHandler(s.store).Register(s.router) }},
 		{"nsg", func() { nsg.NewHandler(s.store).Register(s.router) }},
 		{"loadbalancer", func() { loadbalancer.NewHandler(s.store).Register(s.router) }},
+		{"appgw", func() { appgw.NewHandler(s.store).Register(s.router) }},
 	}
 	// Always include core infrastructure in service list
 	s.services = []string{"subscriptions", "tenants"}
