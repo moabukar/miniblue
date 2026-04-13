@@ -9,6 +9,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions follow 
 ### Added
 - Public IP Addresses service (`Microsoft.Network/publicIPAddresses`) with full CRUD, static/dynamic allocation
 - Network Security Groups service (`Microsoft.Network/networkSecurityGroups`) with security rules and cascade delete
+- Azure Load Balancer service (`Microsoft.Network/loadBalancers`) with frontend IPs, backend pools, rules and probes
+- Terraform example for load balancer (`examples/terraform/loadbalancer.tf`)
 
 ## [0.2.0] - 2026-04-04
 
