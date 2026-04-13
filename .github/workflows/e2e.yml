@@ -97,7 +97,7 @@ jobs:
           [ "$CODE" = "404" ] && echo "OK: Cascade delete" || (echo "FAIL: Expected 404, got $CODE" && exit 1)
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.21'
 
