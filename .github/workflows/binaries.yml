@@ -43,7 +43,7 @@ jobs:
           go build -ldflags="-s -w" -o azlocal-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} ./cmd/azlocal
 
       - name: Upload to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             miniblue-*
