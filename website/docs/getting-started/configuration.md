@@ -130,7 +130,8 @@ curl http://localhost:4566/health
   "services": [
     "subscriptions", "tenants", "resourcegroups", "blob", "table",
     "queue", "keyvault", "cosmosdb", "servicebus", "functions",
-    "network", "dns", "acr", "eventgrid", "appconfig", "identity"
+    "network", "dns", "acr", "eventgrid", "appconfig", "identity",
+    "dbpostgres", "redis", "sqldb", "dbmysql", "publicip"
   ],
   "status": "running",
   "version": "0.2.5"

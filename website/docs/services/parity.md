@@ -25,6 +25,7 @@ What's implemented, stubbed, and unsupported in miniblue compared to real Azure 
 | Azure SQL Database | Stub | Stub | Stub | Stub | - | ARM only, no real SQL Server |
 | Azure Cache for Redis | Full | Full | Full | Full | - | Real connectivity check via REDIS_URL |
 | Container Instances | Full | Full | Full | Full | - | Real Docker containers when available |
+| Public IP Addresses | Full | Full | Full | Full | - | Static/dynamic allocation, auto-generated IPs |
 | Subscriptions | Full | Full | - | - | - | Mock subscription |
 | Tenants | - | - | Full | - | - | Mock tenant |
 | Providers | Full | Full | Full | - | - | Registration always succeeds |
@@ -52,7 +53,7 @@ What's implemented, stubbed, and unsupported in miniblue compared to real Azure 
 | Instance discovery | Full | Authority validation (internal) |
 | Managed Identity (IMDS) | Full | Token endpoint for workload identity |
 | Cloud metadata | Full | Terraform provider metadata |
-| /health | Full | 21 services listed |
+| /health | Full | 22 services listed |
 | /metrics | Full | Uptime, request count, error rate |
 
 ## Not Implemented

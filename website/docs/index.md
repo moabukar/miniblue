@@ -16,7 +16,7 @@ Azure developers have to juggle 5+ separate emulators (Azurite, Cosmos DB Emulat
 docker run -p 4566:4566 -p 4567:4567 moabukar/miniblue:latest
 ```
 
-That's it. 21 Azure services are now running locally.
+That's it. 22 Azure services are now running locally.
 
 ## What's included
 
@@ -41,6 +41,7 @@ That's it. 21 Azure services are now running locally.
 | Azure SQL Database | Server + database management |
 | Azure Cache for Redis | Cache management + key listing |
 | Container Instances | Container group lifecycle |
+| Public IP Addresses | Static/dynamic IP allocation |
 
 ## Works with your tools
 
