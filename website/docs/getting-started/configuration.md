@@ -12,6 +12,9 @@ miniblue works with zero configuration out of the box. This page covers everythi
 | `LOCAL_AZURE_ENDPOINT` | `http://localhost:4566` | Endpoint used by the `azlocal` CLI |
 | `LOCAL_AZURE_CERT_DIR` | `~/.miniblue` | Directory for TLS certificate and key |
 | `DATABASE_URL` | _(unset)_ | PostgreSQL connection string for persistent storage |
+| `MINIBLUE_STORAGE_ENDPOINT` | _(unset)_ | Overrides storage account data-plane endpoints to point to local server (enables SDK/data-plane testing) |
+
+When set, storage accounts return local endpoints (e.g., `http://localhost:4566/blob/{accountName}/`) instead of real Azure endpoints (e.g., `https://{accountName}.blob.core.windows.net/`). This allows SDKs and tools to connect directly to miniblue's local blob/queue/table/file services for data-plane testing.
 
 Example -- run on custom ports:
 
