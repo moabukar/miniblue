@@ -26,6 +26,7 @@ import (
 	"github.com/moabukar/miniblue/internal/services/keyvault"
 	"github.com/moabukar/miniblue/internal/services/metadata"
 	"github.com/moabukar/miniblue/internal/services/network"
+	"github.com/moabukar/miniblue/internal/services/publicip"
 	"github.com/moabukar/miniblue/internal/services/queue"
 	"github.com/moabukar/miniblue/internal/services/redis"
 	"github.com/moabukar/miniblue/internal/services/resourcegroups"
@@ -169,6 +170,7 @@ func (s *Server) setupRoutes() {
 		{"redis", func() { redis.NewHandler(s.store).Register(s.router) }},
 		{"sqldb", func() { sqldb.NewHandler(s.store).Register(s.router) }},
 		{"dbmysql", func() { dbmysql.NewHandler(s.store).Register(s.router) }},
+		{"publicip", func() { publicip.NewHandler(s.store).Register(s.router) }},
 	}
 	// Always include core infrastructure in service list
 	s.services = []string{"subscriptions", "tenants"}
