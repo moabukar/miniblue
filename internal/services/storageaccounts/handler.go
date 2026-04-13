@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	envStorageLocalEndpoints = "MINIBLUE_STORAGE_LOCAL_ENDPOINTS"
+	envStorageEndpoint = "MINIBLUE_STORAGE_ENDPOINT"
 )
 
 // Store key prefixes match the historical blob handler so existing persisted state stays valid.
@@ -149,10 +149,6 @@ func (h *Handler) storageAccountKey(sub, rg, name string) string {
 	return "blob:account:" + sub + ":" + rg + ":" + name
 }
 
-func useLocalEndpoints() bool {
-	return os.Getenv(envStorageLocalEndpoints) == "true"
-}
-
 func writeServiceNotFound(w http.ResponseWriter, resourceType, name string) {
 	azerr.NotFound(w, resourceType, name)
 }
@@ -192,12 +188,13 @@ func (h *Handler) buildServicePropertiesResponse(sub, rg, account, serviceType s
 
 func (h *Handler) buildStorageAccountResponse(sub, rg, name string) map[string]interface{} {
 	var blobEndpoint, queueEndpoint, tableEndpoint, fileEndpoint string
-	var port = os.Getenv("TLS_PORT")
-	if useLocalEndpoints() {
-		blobEndpoint = "https://localhost:" + port + "/blob/" + name + "/"
-		queueEndpoint = "https://localhost:" + port + "/queue/" + name + "/"
-		tableEndpoint = "https://localhost:" + port + "/table/" + name + "/"
-		fileEndpoint = "https://localhost:" + port + "/file/" + name + "/"
+	var localEndpoint = os.Getenv(envStorageEndpoint)
+
+	if localEndpoint != "" {
+		blobEndpoint = localEndpoint + "/blob/" + name + "/"
+		queueEndpoint = localEndpoint + "/queue/" + name + "/"
+		tableEndpoint = localEndpoint + "/table/" + name + "/"
+		fileEndpoint = localEndpoint + "/file/" + name + "/"
 	} else {
 		blobEndpoint = "https://" + name + ".blob.core.windows.net/"
 		queueEndpoint = "https://" + name + ".queue.core.windows.net/"

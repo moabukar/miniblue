@@ -96,6 +96,25 @@ jobs:
           CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.Cache/redis/r1")
           [ "$CODE" = "404" ] && echo "OK: Cascade delete" || (echo "FAIL: Expected 404, got $CODE" && exit 1)
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build CLI
+        run: |
+          go build -ldflags="-s -w" -o bin/azlocal ./cmd/azlocal
+
+      - name: Test storage account operations
+        env:
+          LOCAL_AZURE_ENDPOINT: http://localhost:4566
+        run: |
+          ./bin/azlocal storage account create --resource-group testRG --name testacct
+          ./bin/azlocal storage account list --resource-group testRG | grep -q "testacct" && echo "OK: List accounts"
+          ./bin/azlocal storage account show --resource-group testRG --name testacct | grep -q "testacct" && echo "OK: Show account"
+          ./bin/azlocal storage account list-keys --resource-group testRG --name testacct | grep -q "key1" && echo "OK: List keys"
+          ./bin/azlocal storage account delete --resource-group testRG --name testacct | grep -qi "deleted" && echo "OK: Delete account"
+
       - name: Cleanup
         if: always()
         run: docker stop miniblue && docker rm miniblue

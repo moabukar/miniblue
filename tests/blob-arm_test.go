@@ -394,7 +394,7 @@ func TestStorageAccountsServiceWithoutBlobDataPlane(t *testing.T) {
 }
 
 func TestStorageLocalEndpointsDisabled(t *testing.T) {
-	t.Setenv("MINIBLUE_STORAGE_LOCAL_ENDPOINTS", "")
+	t.Setenv("MINIBLUE_STORAGE_ENDPOINTS", "")
 	ts := setupServer()
 	defer ts.Close()
 	acctName := "azureendpointsacct"
@@ -425,7 +425,7 @@ func TestStorageLocalEndpointsDisabled(t *testing.T) {
 }
 
 func TestStorageLocalEndpointsEnabled(t *testing.T) {
-	t.Setenv("MINIBLUE_STORAGE_LOCAL_ENDPOINTS", "true")
+	t.Setenv("MINIBLUE_STORAGE_ENDPOINT", "http://localhost:4566")
 	ts := setupServer()
 	defer ts.Close()
 	acctName := "localendpointsacct"
@@ -437,40 +437,21 @@ func TestStorageLocalEndpointsEnabled(t *testing.T) {
 	props := m["properties"].(map[string]interface{})
 	endpoints := props["primaryEndpoints"].(map[string]interface{})
 
-	expectedBlob := "https://localhost:4566/blob/" + acctName + "/"
+	expectedBlob := "http://localhost:4566/blob/" + acctName + "/"
 	if endpoints["blob"] != expectedBlob {
 		t.Fatalf("expected blob endpoint=%s, got %v", expectedBlob, endpoints["blob"])
 	}
-	expectedQueue := "https://localhost:4566/queue/" + acctName + "/"
+	expectedQueue := "http://localhost:4566/queue/" + acctName + "/"
 	if endpoints["queue"] != expectedQueue {
 		t.Fatalf("expected queue endpoint=%s, got %v", expectedQueue, endpoints["queue"])
 	}
-	expectedTable := "https://localhost:4566/table/" + acctName + "/"
+	expectedTable := "http://localhost:4566/table/" + acctName + "/"
 	if endpoints["table"] != expectedTable {
 		t.Fatalf("expected table endpoint=%s, got %v", expectedTable, endpoints["table"])
 	}
-	expectedFile := "https://localhost:4566/file/" + acctName + "/"
+	expectedFile := "http://localhost:4566/file/" + acctName + "/"
 	if endpoints["file"] != expectedFile {
 		t.Fatalf("expected file endpoint=%s, got %v", expectedFile, endpoints["file"])
-	}
-}
-
-func TestStorageLocalEndpointsExplicitFalse(t *testing.T) {
-	t.Setenv("MINIBLUE_STORAGE_LOCAL_ENDPOINTS", "false")
-	ts := setupServer()
-	defer ts.Close()
-	acctName := "explicitfalseacct"
-	base := blobARMBase(ts) + "/" + acctName
-
-	resp := doRequest(t, "PUT", base, `{}`)
-	defer resp.Body.Close()
-	m := decodeJSON(t, resp)
-	props := m["properties"].(map[string]interface{})
-	endpoints := props["primaryEndpoints"].(map[string]interface{})
-
-	expectedBlob := "https://" + acctName + ".blob.core.windows.net/"
-	if endpoints["blob"] != expectedBlob {
-		t.Fatalf("expected blob endpoint=%s (explicit false should use Azure endpoints), got %v", expectedBlob, endpoints["blob"])
 	}
 }
 

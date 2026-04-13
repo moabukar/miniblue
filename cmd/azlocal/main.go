@@ -115,6 +115,12 @@ Examples:
   azlocal keyvault secret show --vault myvault --name dbpass
   azlocal keyvault secret list --vault myvault
 
+  azlocal storage account create --resource-group myRG --name myaccount
+  azlocal storage account list --resource-group myRG
+  azlocal storage account show --resource-group myRG --name myaccount
+  azlocal storage account list-keys --resource-group myRG --name myaccount
+  azlocal storage account delete --resource-group myRG --name myaccount
+
   azlocal storage container create --account myaccount --name mycontainer
   azlocal storage blob upload --account myaccount --container mycontainer --name hello.txt --data "Hello!"
   azlocal storage blob download --account myaccount --container mycontainer --name hello.txt
@@ -351,10 +357,12 @@ func handleKeyVault(args []string) {
 
 func handleStorage(args []string) {
 	if len(args) < 2 {
-		fmt.Println("Usage: azlocal storage <container|blob> <subcommand> [flags]")
+		fmt.Println(`Usage: azlocal storage <account|container|blob> <subcommand> [flags]`)
 		return
 	}
 	switch args[0] {
+	case "account":
+		handleStorageAccount(args[1:])
 	case "container":
 		handleStorageContainer(args[1:])
 	case "blob":
@@ -417,6 +425,49 @@ func handleStorageBlob(args []string) {
 		container := requireFlag(args, "container")
 		name := requireFlag(args, "name")
 		doDelete("/blob/" + account + "/" + container + "/" + name)
+	}
+}
+
+func handleStorageAccount(args []string) {
+	if len(args) == 0 {
+		fmt.Println(`Usage: azlocal storage account <create|list|show|delete|list-keys> [flags]`)
+		return
+	}
+	rg := requireFlag(args, "resource-group")
+	s := sub(args)
+	base := "/subscriptions/" + s + "/resourceGroups/" + rg + "/providers/Microsoft.Storage/storageAccounts"
+
+	switch args[0] {
+	case "create":
+		name := requireFlag(args, "name")
+		location := getFlag(args, "location")
+		if location == "" {
+			location = "eastus"
+		}
+		sku := getFlag(args, "sku")
+		if sku == "" {
+			sku = "Standard_LRS"
+		}
+		doPut(base+"/"+name, map[string]interface{}{
+			"location": location,
+			"sku": map[string]string{
+				"name": sku,
+			},
+			"kind": "StorageV2",
+		})
+	case "list":
+		doGet(base)
+	case "show":
+		name := requireFlag(args, "name")
+		doGet(base + "/" + name)
+	case "delete":
+		name := requireFlag(args, "name")
+		doDelete(base + "/" + name)
+	case "list-keys":
+		name := requireFlag(args, "name")
+		doPost(base+"/"+name+"/listKeys", nil)
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown subcommand: storage account %s\n", args[0])
 	}
 }
 
