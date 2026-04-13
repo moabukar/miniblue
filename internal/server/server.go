@@ -24,6 +24,7 @@ import (
 	"github.com/moabukar/miniblue/internal/services/functions"
 	"github.com/moabukar/miniblue/internal/services/identity"
 	"github.com/moabukar/miniblue/internal/services/keyvault"
+	"github.com/moabukar/miniblue/internal/services/loadbalancer"
 	"github.com/moabukar/miniblue/internal/services/metadata"
 	"github.com/moabukar/miniblue/internal/services/network"
 	"github.com/moabukar/miniblue/internal/services/nsg"
@@ -173,6 +174,7 @@ func (s *Server) setupRoutes() {
 		{"dbmysql", func() { dbmysql.NewHandler(s.store).Register(s.router) }},
 		{"publicip", func() { publicip.NewHandler(s.store).Register(s.router) }},
 		{"nsg", func() { nsg.NewHandler(s.store).Register(s.router) }},
+		{"loadbalancer", func() { loadbalancer.NewHandler(s.store).Register(s.router) }},
 	}
 	// Always include core infrastructure in service list
 	s.services = []string{"subscriptions", "tenants"}
