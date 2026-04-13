@@ -16,7 +16,7 @@ Azure developers have to juggle 5+ separate emulators (Azurite, Cosmos DB Emulat
 docker run -p 4566:4566 -p 4567:4567 moabukar/miniblue:latest
 ```
 
-That's it. 25 Azure services are now running locally.
+That's it. 26 Azure services are now running locally.
 
 ## What's included
 
@@ -45,6 +45,7 @@ That's it. 25 Azure services are now running locally.
 | Network Security Groups | NSGs with security rules |
 | Load Balancer | Frontend IPs, backend pools, rules, probes |
 | Application Gateway | L7 load balancing, WAF, routing rules |
+| Storage Accounts | ARM management with shared key auth |
 
 ## Works with your tools
 
