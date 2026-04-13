@@ -107,7 +107,8 @@ func (h *Handler) CreateOrUpdate(w http.ResponseWriter, r *http.Request) {
 
 	var existingIP string
 	k := h.key(sub, rg, name)
-	if existing, ok := h.store.Get(k); ok {
+	existing, exists := h.store.Get(k)
+	if exists {
 		if m, ok := existing.(map[string]interface{}); ok {
 			if p, ok := m["properties"].(map[string]interface{}); ok {
 				existingIP, _ = p["ipAddress"].(string)
@@ -116,7 +117,6 @@ func (h *Handler) CreateOrUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pip := buildResponse(sub, rg, name, input, existingIP)
-	_, exists := h.store.Get(k)
 	h.store.Set(k, pip)
 
 	if exists {
