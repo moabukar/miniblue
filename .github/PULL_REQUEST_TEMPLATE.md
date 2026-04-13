@@ -16,12 +16,17 @@ Brief description of the changes.
 - [ ] Blob Storage
 - [ ] Table Storage
 - [ ] Queue Storage
+- [ ] Storage Accounts
 - [ ] Key Vault
 - [ ] Cosmos DB
 - [ ] Service Bus
 - [ ] Functions
 - [ ] Virtual Networks
 - [ ] DNS Zones
+- [ ] Public IP Addresses
+- [ ] Network Security Groups
+- [ ] Load Balancer
+- [ ] Application Gateway
 - [ ] Container Registry
 - [ ] Event Grid
 - [ ] App Configuration
