@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/). Versions follow 
 
 ### Added
 - Public IP Addresses service (`Microsoft.Network/publicIPAddresses`) with full CRUD, static/dynamic allocation
+- Network Security Groups service (`Microsoft.Network/networkSecurityGroups`) with security rules and cascade delete
 
 ## [0.2.0] - 2026-04-04
 

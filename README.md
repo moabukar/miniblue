@@ -43,7 +43,7 @@ No Azure account or credentials needed.
 
 ## What it does
 
-22 Azure services emulated behind a single port. Works with Terraform, Pulumi, Azure SDKs, and curl.
+23 Azure services emulated behind a single port. Works with Terraform, Pulumi, Azure SDKs, and curl.
 
 | Service | Service | Service |
 |---------|---------|---------|
@@ -53,13 +53,13 @@ No Azure account or credentials needed.
 | DNS Zones | Container Registry | Event Grid |
 | App Configuration | Managed Identity | DB for PostgreSQL |
 | DB for MySQL | Azure SQL Database | Azure Cache for Redis |
-| Container Instances | Public IP Addresses | Subscriptions |
+| Container Instances | Public IP Addresses | Network Security Groups |
 
 ## How it compares
 
 | | LocalStack (AWS) | MiniStack (AWS) | Azurite (Azure) | miniblue |
 |---|---|---|---|---|
-| Services | 80+ | 36 | 3 (storage only) | **22** |
+| Services | 80+ | 36 | 3 (storage only) | **23** |
 | Docker image | ~1GB | ~200MB | ~300MB | **~8MB** |
 | Startup | ~10s | ~5s | ~3s | **<1s** |
 | Real backends | DynamoDB Local | RDS, S3, SQS | No | **Postgres, Redis, Docker** |
