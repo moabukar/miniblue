@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"net/http/httptest"
 	"testing"
 )
 
@@ -8,7 +9,7 @@ const sbSub = "sub1"
 const sbRG = "rg1"
 const sbNS = "mynamespace"
 
-func sbARMBase(ts interface{ URL string }) string {
+func sbARMBase(ts *httptest.Server) string {
 	return ts.URL + "/subscriptions/" + sbSub + "/resourceGroups/" + sbRG + "/providers/Microsoft.ServiceBus/namespaces"
 }
 

@@ -105,6 +105,9 @@ var supportedProviders = []string{
 	"Microsoft.AppConfiguration",
 	"Microsoft.Sql",
 	"Microsoft.DBforMySQL",
+	"Microsoft.DBforPostgreSQL",
+	"Microsoft.Cache",
+	"Microsoft.ContainerInstance",
 }
 
 func providerEntry(namespace string) map[string]interface{} {
