@@ -30,14 +30,17 @@ func NewHandler(s *store.Store) *Handler {
 }
 
 func (h *Handler) Register(r chi.Router) {
-	r.Route("/queue/{accountName}/{queueName}", func(r chi.Router) {
-		r.Put("/", h.CreateQueue)
-		r.Get("/", h.GetQueue)
-		r.Delete("/", h.DeleteQueue)
-		r.Route("/messages", func(r chi.Router) {
-			r.Post("/", h.SendMessage)
-			r.Get("/", h.ReceiveMessages)
-			r.Delete("/", h.ClearMessages)
+	r.Route("/queue/{accountName}", func(r chi.Router) {
+		r.Get("/", h.ListQueues)
+		r.Route("/{queueName}", func(r chi.Router) {
+			r.Put("/", h.CreateQueue)
+			r.Get("/", h.GetQueue)
+			r.Delete("/", h.DeleteQueue)
+			r.Route("/messages", func(r chi.Router) {
+				r.Post("/", h.SendMessage)
+				r.Get("/", h.ReceiveMessages)
+				r.Delete("/", h.ClearMessages)
+			})
 		})
 	})
 }
@@ -78,9 +81,15 @@ func (h *Handler) GetQueue(w http.ResponseWriter, r *http.Request) {
 	}
 	count := h.store.CountByPrefix(h.msgPrefix(account, name))
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"name":                name,
+		"name":                    name,
 		"approximateMessageCount": count,
 	})
+}
+
+func (h *Handler) ListQueues(w http.ResponseWriter, r *http.Request) {
+	account := chi.URLParam(r, "accountName")
+	items := h.store.ListByPrefix(h.queueKey(account, ""))
+	json.NewEncoder(w).Encode(map[string]interface{}{"queueUrls": items})
 }
 
 func (h *Handler) DeleteQueue(w http.ResponseWriter, r *http.Request) {

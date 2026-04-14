@@ -11,11 +11,11 @@ import (
 )
 
 type VNet struct {
-	ID         string     `json:"id"`
-	Name       string     `json:"name"`
-	Type       string     `json:"type"`
-	Location   string     `json:"location"`
-	Properties VNetProps  `json:"properties"`
+	ID         string    `json:"id"`
+	Name       string    `json:"name"`
+	Type       string    `json:"type"`
+	Location   string    `json:"location"`
+	Properties VNetProps `json:"properties"`
 }
 
 type VNetProps struct {
@@ -33,15 +33,15 @@ type SubnetRef struct {
 }
 
 type SubnetProps struct {
-	ProvisioningState              string              `json:"provisioningState"`
-	AddressPrefix                  string              `json:"addressPrefix"`
-	AddressPrefixes                []string            `json:"addressPrefixes"`
-	NetworkSecurityGroup           *SubResourceRef     `json:"networkSecurityGroup,omitempty"`
-	RouteTable                     *SubResourceRef     `json:"routeTable,omitempty"`
-	ServiceEndpoints               []interface{}       `json:"serviceEndpoints"`
-	Delegations                    []interface{}       `json:"delegations"`
-	PrivateEndpointNetworkPolicies string              `json:"privateEndpointNetworkPolicies"`
-	PrivateLinkServiceNetworkPolicies string           `json:"privateLinkServiceNetworkPolicies"`
+	ProvisioningState                 string          `json:"provisioningState"`
+	AddressPrefix                     string          `json:"addressPrefix"`
+	AddressPrefixes                   []string        `json:"addressPrefixes"`
+	NetworkSecurityGroup              *SubResourceRef `json:"networkSecurityGroup,omitempty"`
+	RouteTable                        *SubResourceRef `json:"routeTable,omitempty"`
+	ServiceEndpoints                  []interface{}   `json:"serviceEndpoints"`
+	Delegations                       []interface{}   `json:"delegations"`
+	PrivateEndpointNetworkPolicies    string          `json:"privateEndpointNetworkPolicies"`
+	PrivateLinkServiceNetworkPolicies string          `json:"privateLinkServiceNetworkPolicies"`
 }
 
 type SubResourceRef struct {
@@ -107,11 +107,11 @@ func buildVNetResponse(sub, rg, name string, input map[string]interface{}) map[s
 		"location": location,
 		"etag":     "W/\"miniblue\"",
 		"properties": map[string]interface{}{
-			"provisioningState":  "Succeeded",
-			"resourceGuid":      uuid.New().String(),
-			"addressSpace":      addrSpace,
-			"dhcpOptions":       map[string]interface{}{"dnsServers": []interface{}{}},
-			"subnets":           []interface{}{},
+			"provisioningState":      "Succeeded",
+			"resourceGuid":           uuid.New().String(),
+			"addressSpace":           addrSpace,
+			"dhcpOptions":            map[string]interface{}{"dnsServers": []interface{}{}},
+			"subnets":                []interface{}{},
 			"virtualNetworkPeerings": []interface{}{},
 			"enableDdosProtection":   false,
 			"enableVmProtection":     false,
@@ -207,23 +207,33 @@ func buildSubnetResponse(sub, rg, vnetName, subnetName string, input map[string]
 		prefixes = []interface{}{prefix}
 	}
 
+	subnetProps := map[string]interface{}{
+		"provisioningState":                 "Succeeded",
+		"addressPrefix":                     prefix,
+		"addressPrefixes":                   prefixes,
+		"serviceEndpoints":                  []interface{}{},
+		"serviceEndpointPolicies":           []interface{}{},
+		"ipConfigurations":                  []interface{}{},
+		"delegations":                       []interface{}{},
+		"privateEndpointNetworkPolicies":    "Disabled",
+		"privateLinkServiceNetworkPolicies": "Enabled",
+		"defaultOutboundAccess":             true,
+	}
+
+	if nsg, ok := props["networkSecurityGroup"]; ok {
+		subnetProps["networkSecurityGroup"] = nsg
+	}
+
+	if rt, ok := props["routeTable"]; ok {
+		subnetProps["routeTable"] = rt
+	}
+
 	return map[string]interface{}{
-		"id":   id,
-		"name": subnetName,
-		"etag": "W/\"miniblue\"",
-		"type": "Microsoft.Network/virtualNetworks/subnets",
-		"properties": map[string]interface{}{
-			"provisioningState":                 "Succeeded",
-			"addressPrefix":                     prefix,
-			"addressPrefixes":                   prefixes,
-			"serviceEndpoints":                  []interface{}{},
-			"serviceEndpointPolicies":           []interface{}{},
-			"ipConfigurations":                  []interface{}{},
-			"delegations":                       []interface{}{},
-			"privateEndpointNetworkPolicies":    "Disabled",
-			"privateLinkServiceNetworkPolicies": "Enabled",
-			"defaultOutboundAccess":             true,
-		},
+		"id":         id,
+		"name":       subnetName,
+		"etag":       "W/\"miniblue\"",
+		"type":       "Microsoft.Network/virtualNetworks/subnets",
+		"properties": subnetProps,
 	}
 }
 

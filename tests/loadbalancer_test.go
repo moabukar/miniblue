@@ -213,3 +213,283 @@ func TestLoadBalancerMultiple(t *testing.T) {
 		t.Fatalf("expected 1 LB after delete, got %d", len(items))
 	}
 }
+
+func TestBackendAddressPoolLifecycle(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers"
+	av := "?api-version=2023-09-01"
+
+	doRequest(t, "PUT", base+"/lb1"+av, `{"location":"eastus"}`).Body.Close()
+	defer doRequest(t, "DELETE", base+"/lb1"+av, "").Body.Close()
+
+	poolBase := base + "/lb1/backendAddressPools"
+
+	resp := doRequest(t, "PUT", poolBase+"/pool1"+av, `{
+		"properties":{
+			"backendAddresses":[{"virtualMachine":{"id":"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1"},"ipAddress":"10.0.0.4"}]
+		}
+	}`)
+	expectStatus(t, resp, 201)
+	m := decodeJSON(t, resp)
+	resp.Body.Close()
+	if m["name"] != "pool1" {
+		t.Fatalf("expected name=pool1, got %v", m["name"])
+	}
+	if m["type"] != "Microsoft.Network/loadBalancers/backendAddressPools" {
+		t.Fatalf("expected correct type, got %v", m["type"])
+	}
+	expectedID := "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers/lb1/backendAddressPools/pool1"
+	if m["id"] != expectedID {
+		t.Fatalf("expected id=%s, got %v", expectedID, m["id"])
+	}
+
+	resp = doRequest(t, "GET", poolBase+"/pool1"+av, "")
+	expectStatus(t, resp, 200)
+	got := decodeJSON(t, resp)
+	resp.Body.Close()
+	if got["name"] != "pool1" {
+		t.Fatalf("GET: expected name=pool1, got %v", got["name"])
+	}
+
+	resp = doRequest(t, "GET", poolBase+av, "")
+	expectStatus(t, resp, 200)
+	list := decodeJSON(t, resp)
+	resp.Body.Close()
+	items := list["value"].([]interface{})
+	if len(items) != 1 {
+		t.Fatalf("expected 1 pool, got %d", len(items))
+	}
+
+	resp = doRequest(t, "PUT", poolBase+"/pool1"+av, `{"properties":{}}`)
+	expectStatus(t, resp, 200)
+	resp.Body.Close()
+
+	resp = doRequest(t, "DELETE", poolBase+"/pool1"+av, "")
+	expectStatus(t, resp, 200)
+	resp.Body.Close()
+
+	resp = doRequest(t, "GET", poolBase+"/pool1"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+}
+
+func TestBackendAddressPoolNotFound(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers"
+	av := "?api-version=2023-09-01"
+
+	resp := doRequest(t, "GET", base+"/lb1/backendAddressPools/nonexistent"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+
+	resp = doRequest(t, "DELETE", base+"/lb1/backendAddressPools/nonexistent"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+}
+
+func TestProbeLifecycle(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers"
+	av := "?api-version=2023-09-01"
+
+	doRequest(t, "PUT", base+"/lb1"+av, `{"location":"eastus"}`).Body.Close()
+	defer doRequest(t, "DELETE", base+"/lb1"+av, "").Body.Close()
+
+	probeBase := base + "/lb1/probes"
+
+	resp := doRequest(t, "PUT", probeBase+"/probe1"+av, `{
+		"properties":{"protocol":"Http","port":8080,"intervalInSeconds":30,"numberOfProbes":3}
+	}`)
+	expectStatus(t, resp, 201)
+	m := decodeJSON(t, resp)
+	resp.Body.Close()
+	if m["name"] != "probe1" {
+		t.Fatalf("expected name=probe1, got %v", m["name"])
+	}
+	if m["type"] != "Microsoft.Network/loadBalancers/probes" {
+		t.Fatalf("expected correct type, got %v", m["type"])
+	}
+	props := m["properties"].(map[string]interface{})
+	if props["protocol"] != "Http" {
+		t.Fatalf("expected protocol=Http, got %v", props["protocol"])
+	}
+	if props["port"] != float64(8080) {
+		t.Fatalf("expected port=8080, got %v", props["port"])
+	}
+
+	resp = doRequest(t, "GET", probeBase+"/probe1"+av, "")
+	expectStatus(t, resp, 200)
+	got := decodeJSON(t, resp)
+	resp.Body.Close()
+	if got["name"] != "probe1" {
+		t.Fatalf("GET: expected name=probe1, got %v", got["name"])
+	}
+
+	resp = doRequest(t, "GET", probeBase+av, "")
+	expectStatus(t, resp, 200)
+	list := decodeJSON(t, resp)
+	resp.Body.Close()
+	items := list["value"].([]interface{})
+	if len(items) != 1 {
+		t.Fatalf("expected 1 probe, got %d", len(items))
+	}
+
+	resp = doRequest(t, "DELETE", probeBase+"/probe1"+av, "")
+	expectStatus(t, resp, 200)
+	resp.Body.Close()
+
+	resp = doRequest(t, "GET", probeBase+"/probe1"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+}
+
+func TestProbeDefaults(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers"
+	av := "?api-version=2023-09-01"
+
+	doRequest(t, "PUT", base+"/lb1"+av, `{"location":"eastus"}`).Body.Close()
+	defer doRequest(t, "DELETE", base+"/lb1"+av, "").Body.Close()
+
+	resp := doRequest(t, "PUT", base+"/lb1/probes/probe1"+av, `{}`)
+	expectStatus(t, resp, 201)
+	m := decodeJSON(t, resp)
+	resp.Body.Close()
+	props := m["properties"].(map[string]interface{})
+	if props["protocol"] != "Tcp" {
+		t.Fatalf("expected default protocol=Tcp, got %v", props["protocol"])
+	}
+	if props["port"] != float64(80) {
+		t.Fatalf("expected default port=80, got %v", props["port"])
+	}
+	if props["intervalInSeconds"] != float64(15) {
+		t.Fatalf("expected intervalInSeconds=15, got %v", props["intervalInSeconds"])
+	}
+	if props["numberOfProbes"] != float64(4) {
+		t.Fatalf("expected numberOfProbes=4, got %v", props["numberOfProbes"])
+	}
+}
+
+func TestProbeNotFound(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers"
+	av := "?api-version=2023-09-01"
+
+	resp := doRequest(t, "GET", base+"/lb1/probes/nonexistent"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+
+	resp = doRequest(t, "DELETE", base+"/lb1/probes/nonexistent"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+}
+
+func TestLoadBalancingRuleLifecycle(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers"
+	av := "?api-version=2023-09-01"
+
+	doRequest(t, "PUT", base+"/lb1"+av, `{"location":"eastus"}`).Body.Close()
+	defer doRequest(t, "DELETE", base+"/lb1"+av, "").Body.Close()
+
+	ruleBase := base + "/lb1/loadBalancingRules"
+
+	resp := doRequest(t, "PUT", ruleBase+"/rule1"+av, `{
+		"properties":{"protocol":"Tcp","frontendPort":443,"backendPort":443}
+	}`)
+	expectStatus(t, resp, 201)
+	m := decodeJSON(t, resp)
+	resp.Body.Close()
+	if m["name"] != "rule1" {
+		t.Fatalf("expected name=rule1, got %v", m["name"])
+	}
+	if m["type"] != "Microsoft.Network/loadBalancers/loadBalancingRules" {
+		t.Fatalf("expected correct type, got %v", m["type"])
+	}
+	expectedID := "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers/lb1/loadBalancingRules/rule1"
+	if m["id"] != expectedID {
+		t.Fatalf("expected id=%s, got %v", expectedID, m["id"])
+	}
+
+	resp = doRequest(t, "GET", ruleBase+"/rule1"+av, "")
+	expectStatus(t, resp, 200)
+	got := decodeJSON(t, resp)
+	resp.Body.Close()
+	if got["name"] != "rule1" {
+		t.Fatalf("GET: expected name=rule1, got %v", got["name"])
+	}
+
+	resp = doRequest(t, "GET", ruleBase+av, "")
+	expectStatus(t, resp, 200)
+	list := decodeJSON(t, resp)
+	resp.Body.Close()
+	items := list["value"].([]interface{})
+	if len(items) != 1 {
+		t.Fatalf("expected 1 rule, got %d", len(items))
+	}
+
+	resp = doRequest(t, "DELETE", ruleBase+"/rule1"+av, "")
+	expectStatus(t, resp, 200)
+	resp.Body.Close()
+
+	resp = doRequest(t, "GET", ruleBase+"/rule1"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+}
+
+func TestLoadBalancingRuleNotFound(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers"
+	av := "?api-version=2023-09-01"
+
+	resp := doRequest(t, "GET", base+"/lb1/loadBalancingRules/nonexistent"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+
+	resp = doRequest(t, "DELETE", base+"/lb1/loadBalancingRules/nonexistent"+av, "")
+	expectStatus(t, resp, 404)
+	resp.Body.Close()
+}
+
+func TestLoadBalancerSubResourcesMultiple(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Network/loadBalancers"
+	av := "?api-version=2023-09-01"
+
+	doRequest(t, "PUT", base+"/lb1"+av, `{"location":"eastus"}`).Body.Close()
+	defer doRequest(t, "DELETE", base+"/lb1"+av, "").Body.Close()
+
+	doRequest(t, "PUT", base+"/lb1/backendAddressPools/pool1"+av, `{}`).Body.Close()
+	doRequest(t, "PUT", base+"/lb1/backendAddressPools/pool2"+av, `{}`).Body.Close()
+	doRequest(t, "PUT", base+"/lb1/probes/probe1"+av, `{}`).Body.Close()
+	doRequest(t, "PUT", base+"/lb1/loadBalancingRules/rule1"+av, `{}`).Body.Close()
+
+	resp := doRequest(t, "GET", base+"/lb1/backendAddressPools"+av, "")
+	list := decodeJSON(t, resp)
+	resp.Body.Close()
+	if len(list["value"].([]interface{})) != 2 {
+		t.Fatalf("expected 2 pools, got %d", len(list["value"].([]interface{})))
+	}
+
+	resp = doRequest(t, "GET", base+"/lb1/probes"+av, "")
+	list = decodeJSON(t, resp)
+	resp.Body.Close()
+	if len(list["value"].([]interface{})) != 1 {
+		t.Fatalf("expected 1 probe, got %d", len(list["value"].([]interface{})))
+	}
+
+	resp = doRequest(t, "GET", base+"/lb1/loadBalancingRules"+av, "")
+	list = decodeJSON(t, resp)
+	resp.Body.Close()
+	if len(list["value"].([]interface{})) != 1 {
+		t.Fatalf("expected 1 rule, got %d", len(list["value"].([]interface{})))
+	}
+}
