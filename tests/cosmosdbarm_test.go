@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"net/http/httptest"
 	"testing"
 )
 
@@ -8,7 +9,7 @@ const cosmosSub = "sub1"
 const cosmosRG = "rg1"
 const cosmosAcct = "mycosmosacct"
 
-func cosmosARMBase(ts interface{ URL string }) string {
+func cosmosARMBase(ts *httptest.Server) string {
 	return ts.URL + "/subscriptions/" + cosmosSub + "/resourceGroups/" + cosmosRG + "/providers/Microsoft.DocumentDB/databaseAccounts"
 }
 

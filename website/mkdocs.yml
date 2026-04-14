@@ -52,18 +52,28 @@ nav:
     - Overview: services/overview.md
     - API Parity Matrix: services/parity.md
     - Resource Groups: services/resource-groups.md
+    - Storage Accounts: services/storage-accounts.md
     - Blob Storage: services/blob-storage.md
+    - Table Storage: services/table-storage.md
+    - Queue Storage: services/queue-storage.md
     - Key Vault: services/key-vault.md
-    - Virtual Networks: services/virtual-networks.md
-    - DNS Zones: services/dns-zones.md
-    - Container Registry: services/container-registry.md
     - Cosmos DB: services/cosmos-db.md
     - Service Bus: services/service-bus.md
+    - Event Grid: services/event-grid.md
+    - App Configuration: services/app-configuration.md
+    - Azure Functions: services/functions.md
+    - Virtual Networks: services/virtual-networks.md
+    - Public IP Addresses: services/public-ip-addresses.md
+    - Network Security Groups: services/network-security-groups.md
+    - Load Balancer: services/load-balancer.md
+    - Application Gateway: services/application-gateway.md
+    - DNS Zones: services/dns-zones.md
+    - Container Registry: services/container-registry.md
+    - Container Instances: services/container-instances.md
     - DB for PostgreSQL: services/database-postgresql.md
     - DB for MySQL: services/database-mysql.md
     - Azure SQL Database: services/database-sql.md
     - Azure Cache for Redis: services/redis.md
-    - Container Instances: services/container-instances.md
   - Architecture: architecture/overview.md
   - Contributing: contributing.md
 

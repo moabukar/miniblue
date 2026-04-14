@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"net/http/httptest"
 	"testing"
 )
 
@@ -8,7 +9,7 @@ const appConfigSub = "sub1"
 const appConfigRG = "rg1"
 const appConfigStore = "myappconfig"
 
-func appConfigARMBase(ts interface{ URL string }) string {
+func appConfigARMBase(ts *httptest.Server) string {
 	return ts.URL + "/subscriptions/" + appConfigSub + "/resourceGroups/" + appConfigRG + "/providers/Microsoft.AppConfiguration/configurationStores"
 }
 
