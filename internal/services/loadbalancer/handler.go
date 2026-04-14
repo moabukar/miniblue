@@ -79,12 +79,12 @@ func getArray(props map[string]interface{}, field string) []interface{} {
 	return []interface{}{}
 }
 
-func getMap(props map[string]interface{}, field string) map[string]interface{} {
-	if v, ok := props[field].(map[string]interface{}); ok {
-		return v
-	}
-	return nil
-}
+// func getMap(props map[string]interface{}, field string) map[string]interface{} {
+// 	if v, ok := props[field].(map[string]interface{}); ok {
+// 		return v
+// 	}
+// 	return nil
+// }
 
 func buildResponse(sub, rg, name string, input map[string]interface{}) map[string]interface{} {
 	id := "/subscriptions/" + sub + "/resourceGroups/" + rg + "/providers/Microsoft.Network/loadBalancers/" + name
