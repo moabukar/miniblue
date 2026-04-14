@@ -69,6 +69,8 @@ No Azure account or credentials needed.
 
 ## Terraform
 
+<video src="assets/miniblue-terraform-hands-on.mp4" width="320" height="240" controls></video>
+
 ```bash
 bash scripts/trust-cert.sh  # one-time cert trust
 ```
