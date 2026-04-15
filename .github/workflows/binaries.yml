@@ -39,8 +39,10 @@ jobs:
         run: |
           EXT=""
           if [ "$GOOS" = "windows" ]; then EXT=".exe"; fi
-          go build -ldflags="-s -w" -o miniblue-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} ./cmd/miniblue
-          go build -ldflags="-s -w" -o azlocal-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} ./cmd/azlocal
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          LDFLAGS="-s -w -X github.com/moabukar/miniblue/internal/server.Version=${VERSION}"
+          go build -ldflags="${LDFLAGS}" -o miniblue-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} ./cmd/miniblue
+          go build -ldflags="${LDFLAGS}" -o azlocal-${{ matrix.goos }}-${{ matrix.goarch }}${EXT} ./cmd/azlocal
 
       - name: Upload to release
         uses: softprops/action-gh-release@v3

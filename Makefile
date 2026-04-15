@@ -16,7 +16,7 @@ lint:
 	golangci-lint run
 
 docker-build:
-	docker build -t $(DOCKER_IMAGE):latest .
+	docker build --build-arg VERSION=$(VERSION) -t $(DOCKER_IMAGE):latest .
 
 docker-run:
 	docker run -p 4566:4566 -p 4567:4567 $(DOCKER_IMAGE):latest
