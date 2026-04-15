@@ -35,6 +35,13 @@ func (h *Handler) Register(r chi.Router) {
 			})
 		})
 	})
+	r.Get("/subscriptions/{subscriptionId}/providers/Microsoft.Network/networkSecurityGroups", h.ListNSGsInSubscription)
+}
+
+func (h *Handler) ListNSGsInSubscription(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	items := h.store.ListByPrefix("nsg:" + sub + ":")
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
 }
 
 func (h *Handler) nsgKey(sub, rg, name string) string {

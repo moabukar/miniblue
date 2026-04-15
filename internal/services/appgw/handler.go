@@ -27,10 +27,17 @@ func (h *Handler) Register(r chi.Router) {
 			r.Delete("/", h.Delete)
 		})
 	})
+	r.Get("/subscriptions/{subscriptionId}/providers/Microsoft.Network/applicationGateways", h.ListInSubscription)
 }
 
 func (h *Handler) key(sub, rg, name string) string {
 	return "appgw:" + sub + ":" + rg + ":" + name
+}
+
+func (h *Handler) ListInSubscription(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	items := h.store.ListByPrefix("appgw:" + sub + ":")
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
 }
 
 func getArray(props map[string]interface{}, field string) []interface{} {

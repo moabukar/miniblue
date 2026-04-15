@@ -73,6 +73,13 @@ func (h *Handler) Register(r chi.Router) {
 			})
 		})
 	})
+	r.Get("/subscriptions/{subscriptionId}/providers/Microsoft.Network/virtualNetworks", h.ListVNetsInSubscription)
+}
+
+func (h *Handler) ListVNetsInSubscription(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	items := h.store.ListByPrefix("vnet:" + sub + ":")
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
 }
 
 func (h *Handler) vnetKey(sub, rg, name string) string {

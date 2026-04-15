@@ -54,10 +54,17 @@ func (h *Handler) Register(r chi.Router) {
 			})
 		})
 	})
+	r.Get("/subscriptions/{subscriptionId}/providers/Microsoft.Network/loadBalancers", h.ListInSubscription)
 }
 
 func (h *Handler) key(sub, rg, name string) string {
 	return "lb:" + sub + ":" + rg + ":" + name
+}
+
+func (h *Handler) ListInSubscription(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	items := h.store.ListByPrefix("lb:" + sub + ":")
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
 }
 
 func (h *Handler) backendPoolKey(sub, rg, lb, pool string) string {

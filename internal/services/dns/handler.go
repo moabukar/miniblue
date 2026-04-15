@@ -51,6 +51,13 @@ func (h *Handler) Register(r chi.Router) {
 			})
 		})
 	})
+	r.Get("/subscriptions/{subscriptionId}/providers/Microsoft.Network/dnsZones", h.ListZonesInSubscription)
+}
+
+func (h *Handler) ListZonesInSubscription(w http.ResponseWriter, r *http.Request) {
+	sub := chi.URLParam(r, "subscriptionId")
+	items := h.store.ListByPrefix("dns:zone:" + sub + ":")
+	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
 }
 
 func (h *Handler) zoneKey(sub, rg, name string) string {
