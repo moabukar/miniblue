@@ -79,11 +79,17 @@ func buildResponse(sub, rg, name string, input map[string]interface{}, existingI
 		sku = map[string]interface{}{"name": "Standard", "tier": "Regional"}
 	}
 
+	tags, _ := input["tags"].(map[string]interface{})
+	if tags == nil {
+		tags = map[string]interface{}{}
+	}
+
 	return map[string]interface{}{
 		"id":       id,
 		"name":     name,
 		"type":     "Microsoft.Network/publicIPAddresses",
 		"location": location,
+		"tags":     tags,
 		"sku":      sku,
 		"properties": map[string]interface{}{
 			"provisioningState":       "Succeeded",

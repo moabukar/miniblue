@@ -104,11 +104,17 @@ func buildResponse(sub, rg, name string, input map[string]interface{}) map[strin
 		sku = map[string]interface{}{"name": "Standard", "tier": "Regional"}
 	}
 
+	tags, _ := input["tags"].(map[string]interface{})
+	if tags == nil {
+		tags = map[string]interface{}{}
+	}
+
 	return map[string]interface{}{
 		"id":       id,
 		"name":     name,
 		"type":     "Microsoft.Network/loadBalancers",
 		"location": location,
+		"tags":     tags,
 		"etag":     "W/\"miniblue\"",
 		"sku":      sku,
 		"properties": map[string]interface{}{

@@ -146,11 +146,17 @@ func buildNSGResponse(sub, rg, name string, input map[string]interface{}, securi
 		securityRules = []interface{}{}
 	}
 
+	tags, _ := input["tags"].(map[string]interface{})
+	if tags == nil {
+		tags = map[string]interface{}{}
+	}
+
 	return map[string]interface{}{
 		"id":       id,
 		"name":     name,
 		"type":     "Microsoft.Network/networkSecurityGroups",
 		"location": location,
+		"tags":     tags,
 		"etag":     "W/\"miniblue\"",
 		"properties": map[string]interface{}{
 			"provisioningState":    "Succeeded",

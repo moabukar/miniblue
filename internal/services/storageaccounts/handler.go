@@ -73,8 +73,28 @@ func (h *Handler) CreateOrUpdateStorageAccount(w http.ResponseWriter, r *http.Re
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "accountName")
 
+	var input map[string]interface{}
+	json.NewDecoder(r.Body).Decode(&input)
+
 	k := h.storageAccountKey(sub, rg, name)
 	acct := h.buildStorageAccountResponse(sub, rg, name)
+	if input != nil {
+		if tags, ok := input["tags"].(map[string]interface{}); ok {
+			acct["tags"] = tags
+		}
+		if loc, ok := input["location"].(string); ok && loc != "" {
+			acct["location"] = loc
+		}
+		if kind, ok := input["kind"].(string); ok && kind != "" {
+			acct["kind"] = kind
+		}
+		if sku, ok := input["sku"].(map[string]interface{}); ok {
+			acct["sku"] = sku
+		}
+	}
+	if acct["tags"] == nil {
+		acct["tags"] = map[string]interface{}{}
+	}
 	h.store.Set(k, acct)
 	storageauth.PersistSharedKeyContext(h.store, sub, rg, name)
 

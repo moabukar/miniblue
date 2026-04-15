@@ -69,11 +69,17 @@ func buildResponse(sub, rg, name string, input map[string]interface{}) map[strin
 		}
 	}
 
+	tags, _ := input["tags"].(map[string]interface{})
+	if tags == nil {
+		tags = map[string]interface{}{}
+	}
+
 	result := map[string]interface{}{
 		"id":       id,
 		"name":     name,
 		"type":     "Microsoft.Network/applicationGateways",
 		"location": location,
+		"tags":     tags,
 		"etag":     "W/\"miniblue\"",
 		"properties": map[string]interface{}{
 			"provisioningState":            "Succeeded",

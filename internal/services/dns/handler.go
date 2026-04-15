@@ -10,11 +10,12 @@ import (
 )
 
 type Zone struct {
-	ID         string    `json:"id"`
-	Name       string    `json:"name"`
-	Type       string    `json:"type"`
-	Location   string    `json:"location"`
-	Properties ZoneProps `json:"properties"`
+	ID         string                 `json:"id"`
+	Name       string                 `json:"name"`
+	Type       string                 `json:"type"`
+	Location   string                 `json:"location"`
+	Tags       map[string]interface{} `json:"tags"`
+	Properties ZoneProps              `json:"properties"`
 }
 
 type ZoneProps struct {
@@ -72,6 +73,9 @@ func (h *Handler) CreateOrUpdateZone(w http.ResponseWriter, r *http.Request) {
 	zone.Name = name
 	zone.Type = "Microsoft.Network/dnsZones"
 	zone.Location = "global"
+	if zone.Tags == nil {
+		zone.Tags = map[string]interface{}{}
+	}
 	zone.Properties.NameServers = []string{"ns1-01.azure-dns.com.", "ns2-01.azure-dns.net."}
 
 	k := h.zoneKey(sub, rg, name)
