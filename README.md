@@ -131,8 +131,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Each service is its own Go package under
 ## Sponsors
 
 <p>
-  <!-- CoderCo logo placeholder -->
-  <a href="https://coderco.io"><strong>CoderCo</strong></a>
+  <a href="https://coderco.io"><img src="assets/cc.jpg" alt="CoderCo" width="200" /></a>
 </p>
 
 miniblue is sponsored by [CoderCo](https://coderco.io).
