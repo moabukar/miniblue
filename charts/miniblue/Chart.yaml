@@ -2,5 +2,5 @@ apiVersion: v2
 name: miniblue
 description: Local Azure development emulator
 type: application
-version: 0.2.1
-appVersion: "0.2.1"
+version: 0.3.0
+appVersion: "0.4.3"
