@@ -74,7 +74,9 @@ nav:
     - DB for MySQL: services/database-mysql.md
     - Azure SQL Database: services/database-sql.md
     - Azure Cache for Redis: services/redis.md
-  - Architecture: architecture/overview.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Scope and Philosophy: architecture/scope.md
   - Contributing: contributing.md
 
 markdown_extensions:
