@@ -12,11 +12,24 @@ service:
 
 persistence:
   enabled: false
+  storageClass: ""
+  size: 1Gi
+
+databaseUrl: ""
+databaseUrlSecret:
+  name: ""
+  key: ""
 
 env:
   PORT: "4566"
   TLS_PORT: "4567"
   LOG_LEVEL: "info"
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
 
 resources:
   limits:

@@ -28,6 +28,24 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            {{- if .Values.persistence.enabled }}
+            - name: PERSISTENCE
+              value: "1"
+            {{- end }}
+            {{- if .Values.databaseUrl }}
+            - name: DATABASE_URL
+              value: {{ .Values.databaseUrl | quote }}
+            {{- else if .Values.databaseUrlSecret.name }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.databaseUrlSecret.name }}
+                  key: {{ .Values.databaseUrlSecret.key | default "url" }}
+            {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /health
@@ -42,3 +60,14 @@ spec:
             periodSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: /home/miniblue
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-data
+      {{- end }}
