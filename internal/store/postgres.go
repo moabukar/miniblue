@@ -77,11 +77,11 @@ func (p *PostgresBackend) Delete(key string) bool {
 func (p *PostgresBackend) List() []string {
 	rows, err := p.db.Query(`SELECT key FROM miniblue_store`)
 	if err != nil {
-		return nil
+		return []string{}
 	}
 	defer rows.Close()
 
-	var keys []string
+	keys := make([]string, 0)
 	for rows.Next() {
 		var k string
 		if err := rows.Scan(&k); err == nil {
@@ -97,11 +97,11 @@ func (p *PostgresBackend) ListByPrefix(prefix string) []interface{} {
 		prefix+"%",
 	)
 	if err != nil {
-		return nil
+		return []interface{}{}
 	}
 	defer rows.Close()
 
-	var results []interface{}
+	results := make([]interface{}, 0)
 	for rows.Next() {
 		var data []byte
 		if err := rows.Scan(&data); err != nil {

@@ -96,6 +96,63 @@ func TestFileBackend_AutoSave(t *testing.T) {
 	}
 }
 
+func TestFileBackend_ConcurrentWriteDuringSave(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "state.json")
+	fb := NewFileBackend(path)
+
+	for i := 0; i < 100; i++ {
+		fb.Set("key-"+string(rune('a'+i%26)), i)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		for j := 0; j < 50; j++ {
+			fb.Set("concurrent", j)
+			fb.Delete("key-a")
+			fb.Set("key-a", j*10)
+		}
+		close(done)
+	}()
+
+	for k := 0; k < 10; k++ {
+		if err := fb.Save(); err != nil {
+			t.Errorf("Save() error during concurrent writes: %v", err)
+		}
+	}
+	<-done
+
+	if err := fb.Save(); err != nil {
+		t.Fatalf("final Save() error: %v", err)
+	}
+
+	fb2 := NewFileBackend(path)
+	if _, ok := fb2.Get("concurrent"); !ok {
+		t.Error("key 'concurrent' missing after concurrent save/write")
+	}
+}
+
+func TestMemoryBackend_Snapshot(t *testing.T) {
+	m := NewMemoryBackend()
+	m.Set("a", 1)
+	m.Set("b", 2)
+
+	snap := m.Snapshot()
+	if len(snap) != 2 {
+		t.Fatalf("expected 2 keys in snapshot, got %d", len(snap))
+	}
+
+	m.Set("c", 3)
+	m.Delete("a")
+
+	if len(snap) != 2 {
+		t.Fatalf("snapshot should be isolated from mutations, got %d keys", len(snap))
+	}
+	if snap["a"] != 1 {
+		t.Errorf("snapshot should still have a=1, got %v", snap["a"])
+	}
+}
+
 func TestStore_StartAutoSave_NoOp_MemoryBackend(t *testing.T) {
 	s := New() // memory backend
 	stop := s.StartAutoSave(10 * time.Millisecond)

@@ -48,13 +48,7 @@ func (f *FileBackend) Save() error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	keys := f.mem.List()
-	state := make(map[string]interface{}, len(keys))
-	for _, k := range keys {
-		if v, ok := f.mem.Get(k); ok {
-			state[k] = v
-		}
-	}
+	state := f.mem.Snapshot()
 	data, err := json.Marshal(state)
 	if err != nil {
 		return err

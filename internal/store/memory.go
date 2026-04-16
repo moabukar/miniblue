@@ -113,6 +113,16 @@ func (m *MemoryBackend) Reset() {
 	m.data = make(map[string]interface{})
 }
 
+func (m *MemoryBackend) Snapshot() map[string]interface{} {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	snapshot := make(map[string]interface{}, len(m.data))
+	for k, v := range m.data {
+		snapshot[k] = v
+	}
+	return snapshot
+}
+
 // Store wraps a Backend and provides the public API used by all handlers.
 // It preserves backward compatibility -- handlers continue to use *store.Store.
 type Store struct {
