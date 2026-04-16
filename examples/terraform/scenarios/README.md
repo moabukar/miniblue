@@ -9,6 +9,7 @@ Example architectures you can test locally with miniblue.
 | [three-tier](three-tier/) | Web + App + Data tier with VNet isolation | RG, VNet, 3 Subnets, DNS, ACR |
 | [serverless](serverless/) | Event-driven with Functions and Event Grid | RG, Event Grid, DNS |
 | [microservices](microservices/) | Multi-service with shared infra and per-service subnets | 4 RGs, VNet, 3 Subnets, ACR, DNS, Event Grid |
+| [webapps](webapps/) | App Service with Linux Web App | RG, App Service Plan, Linux Web App |
 
 ## Running any scenario
 
