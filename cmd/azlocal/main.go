@@ -219,7 +219,11 @@ func doGet(path string) {
 }
 
 func doPut(path string, body interface{}) {
-	data, _ := json.Marshal(body)
+	data, err := json.Marshal(body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to encode request body: %v\n", err)
+		os.Exit(1)
+	}
 	req, _ := http.NewRequest("PUT", baseURL+armPath(path), bytes.NewReader(data))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
@@ -263,7 +267,11 @@ func doDelete(path string) {
 }
 
 func doPost(path string, body interface{}) {
-	data, _ := json.Marshal(body)
+	data, err := json.Marshal(body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to encode request body: %v\n", err)
+		os.Exit(1)
+	}
 	resp, err := http.Post(baseURL+armPath(path), "application/json", bytes.NewReader(data))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -274,7 +282,11 @@ func doPost(path string, body interface{}) {
 }
 
 func printResponse(resp *http.Response) {
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to read response: %v\n", err)
+		return
+	}
 	if len(body) == 0 {
 		return
 	}
