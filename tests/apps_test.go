@@ -154,3 +154,53 @@ func TestContainerAppListBySubscription(t *testing.T) {
 		t.Fatalf("expected 2 items, got %d", len(items))
 	}
 }
+
+func TestManagedEnvironmentCRUD(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	base := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.App/managedEnvironments"
+	av := "?api-version=2023-09-01"
+
+	resp := doRequest(t, "PUT", base+"/myenv"+av, `{"location":"eastus"}`)
+	defer resp.Body.Close()
+	expectStatus(t, resp, 200)
+
+	m := decodeJSON(t, resp)
+	props := m["properties"].(map[string]interface{})
+	if props["provisioningState"] != "Succeeded" {
+		t.Fatalf("expected provisioningState=Succeeded")
+	}
+	if m["id"] != "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.App/managedEnvironments/myenv" {
+		t.Fatalf("unexpected id: %v", m["id"])
+	}
+
+	resp = doRequest(t, "GET", base+"/myenv"+av, "")
+	defer resp.Body.Close()
+	expectStatus(t, resp, 200)
+
+	doRequest(t, "DELETE", base+"/myenv"+av, "").Body.Close()
+	resp = doRequest(t, "GET", base+"/myenv"+av, "")
+	defer resp.Body.Close()
+	expectStatus(t, resp, 404)
+}
+
+func TestContainerAppWithEnvironment(t *testing.T) {
+	ts := setupServer()
+	defer ts.Close()
+	envBase := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.App/managedEnvironments"
+	appBase := ts.URL + "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.App/containerApps"
+	av := "?api-version=2023-09-01"
+
+	doRequest(t, "PUT", envBase+"/myenv"+av, `{"location":"eastus"}`).Body.Close()
+
+	resp := doRequest(t, "PUT", appBase+"/myapp"+av, `{"location":"eastus","properties":{"environmentId":"/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.App/managedEnvironments/myenv"}}`)
+	defer resp.Body.Close()
+	expectStatus(t, resp, 201)
+
+	m := decodeJSON(t, resp)
+	props := m["properties"].(map[string]interface{})
+	envID, _ := props["managedEnvironmentId"].(string)
+	if envID == "" {
+		t.Fatalf("expected managedEnvironmentId in response")
+	}
+}
