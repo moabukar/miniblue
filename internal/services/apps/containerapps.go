@@ -437,7 +437,7 @@ func (h *Handler) CreateContainerAppSecrets(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	var secrets []map[string]any = []map[string]any{
+	var secrets = []map[string]any{
 		{"name": "secret1" },
 		{"name": "secret2" },
 	}
