@@ -52,8 +52,14 @@ func (h *Handler) buildManagedEnvironmentResponse(sub, rg, name string, input ma
 			"deploymentErrors":  "",
 			"externalEndpoints": []interface{}{},
 			"customDomainConfiguration": map[string]interface{}{
-				"customDomainName": "",
-				"dnsSuffix":        "",
+				"customDomainVerificationId": "",
+				"customDomainName":           "",
+				"dnsSuffix":                  "",
+			},
+			"peerAuthentication": map[string]interface{}{
+				"mtls": map[string]interface{}{
+					"enabled": false,
+				},
 			},
 			"vnetConfiguration":    props["vnetConfiguration"],
 			"appLogsConfiguration": props["appLogsConfiguration"],
@@ -77,7 +83,7 @@ func (h *Handler) CreateOrUpdateManagedEnvironment(w http.ResponseWriter, r *htt
 	if exists {
 		w.WriteHeader(http.StatusOK)
 	} else {
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 	}
 	json.NewEncoder(w).Encode(env)
 }
