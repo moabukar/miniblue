@@ -437,9 +437,16 @@ func (h *Handler) CreateContainerAppSecrets(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	var secrets = []map[string]any{
-		{"name": "secret1" },
-		{"name": "secret2" },
+	var input struct {
+		Properties struct {
+			Secrets []map[string]any `json:"secrets"`
+		} `json:"properties"`
+	}
+	json.NewDecoder(r.Body).Decode(&input)
+
+	secrets := input.Properties.Secrets
+	if secrets == nil {
+		secrets = []map[string]any{}
 	}
 
 	app, _ := h.store.Get(h.containerAppKey(sub, rg, name))
@@ -455,5 +462,14 @@ func (h *Handler) CreateContainerAppSecrets(w http.ResponseWriter, r *http.Reque
 	app.(map[string]any)["properties"] = props
 	h.store.Set(h.containerAppKey(sub, rg, name), app)
 
-	json.NewEncoder(w).Encode(map[string]any{"value": secrets})
+	var response []map[string]any
+	for _, s := range secrets {
+		response = append(response, map[string]any{
+			"name":  s["name"],
+			"value": "***",
+			"type":  s["type"],
+		})
+	}
+
+	json.NewEncoder(w).Encode(map[string]any{"value": response})
 }

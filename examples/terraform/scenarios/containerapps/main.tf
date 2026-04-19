@@ -58,6 +58,11 @@ resource "azurerm_container_app" "api" {
       memory = "0.5Gi"
     }
   }
+
+  secret {
+    name  = "api-key"
+    value = "placeholder-secret-value"
+  }
 }
 
 resource "azurerm_container_app" "web" {
@@ -92,6 +97,11 @@ resource "azurerm_container_app" "web" {
         value = "https://api-app.hashed.eastus.containerApps.k4apps.io"
       }
     }
+  }
+
+  secret {
+    name  = "db-password"
+    value = "placeholder-secret-value"
   }
 }
 

@@ -67,15 +67,23 @@ func (h *Handler) buildServerFarmResponse(sub, rg, name string, input map[string
 	}
 
 	skuName, _ := props["skuName"].(string)
-	skuTier := "Premium"
+	skuTier := "Free"
 	if skuName != "" {
-		switch {
-		case skuName[0] >= 'F' && skuName[0] <= 'P':
-			skuTier = "Premium"
-		case skuName[0] >= 'B' && skuName[0] <= 'D':
+		switch skuName[0] {
+		case 'F', 'f':
+			skuTier = "Free"
+		case 'D', 'd':
+			skuTier = "Shared"
+		case 'B', 'b':
 			skuTier = "Basic"
-		case skuName[0] >= 'S':
+		case 'S', 's':
 			skuTier = "Standard"
+		case 'P', 'p':
+			skuTier = "Premium"
+		case 'I', 'i':
+			skuTier = "Isolated"
+		case 'Y', 'y':
+			skuTier = "Dynamic"
 		}
 	}
 
