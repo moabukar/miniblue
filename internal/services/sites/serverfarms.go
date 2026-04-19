@@ -151,6 +151,6 @@ func (h *Handler) DeleteServerFarm(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ListServerFarms(w http.ResponseWriter, r *http.Request) {
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
-	items := h.store.ListByPrefix("serverfarm:" + sub + ":" + rg + ":")
+	items := h.store.ListByPrefix("serverfarm:" + sub + ":" + rg)
 	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
 }

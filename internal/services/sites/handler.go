@@ -88,8 +88,12 @@ func (h *Handler) Register(r chi.Router) {
 	r.Post("/subscriptions/{subscriptionId}/providers/Microsoft.Web/checknameavailability", h.CheckNameAvailability)
 }
 
-func (h *Handler) siteKey(sub, rg, name string) string {
+func (h *Handler) siteResourceGroupKey(sub, rg, name string) string {
 	return "func:" + sub + ":" + rg + ":" + name
+}
+
+func (h *Handler) siteSubscriptionKey(sub, name string) string {
+	return "func:" + sub + ":" + name
 }
 
 func (h *Handler) buildSiteResponse(sub, rg, name string, input map[string]interface{}) map[string]interface{} {
@@ -142,9 +146,11 @@ func (h *Handler) CreateOrUpdate(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&input)
 
 	site := h.buildSiteResponse(sub, rg, name, input)
-	k := h.siteKey(sub, rg, name)
-	_, exists := h.store.Get(k)
-	h.store.Set(k, site)
+	kRG := h.siteResourceGroupKey(sub, rg, name)
+	kSub := h.siteSubscriptionKey(sub,name)
+	_, exists := h.store.Get(kRG)
+	h.store.Set(kRG, site)
+	h.store.Set(kSub, site)
 
 	if exists {
 		w.WriteHeader(http.StatusOK)
@@ -159,7 +165,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
 
-	v, ok := h.store.Get(h.siteKey(sub, rg, name))
+	v, ok := h.store.Get(h.siteResourceGroupKey(sub, rg, name))
 	if !ok {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return
@@ -172,7 +178,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
 
-	if !h.store.Delete(h.siteKey(sub, rg, name)) {
+	if !h.store.Delete(h.siteResourceGroupKey(sub, rg, name)) {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return
 	}
@@ -211,41 +217,11 @@ func (h *Handler) CheckNameAvailability(w http.ResponseWriter, r *http.Request) 
 
 	switch input.Type {
 	case "Microsoft.Web/sites":
-		funcItems := h.store.ListByPrefix("func:" + sub + "::")
-		for _, item := range funcItems {
-			if site, ok := item.(map[string]interface{}); ok {
-				if site["name"] == input.Name {
-					nameAvailable = false
-					reason = "AlreadyExists"
-					message = "The site " + input.Name + " is already in use."
-					break
-				}
-			}
-		}
-		if nameAvailable {
-			webappItems := h.store.ListByPrefix("webapp:" + sub + "::")
-			for _, item := range webappItems {
-				if site, ok := item.(map[string]interface{}); ok {
-					if site["name"] == input.Name {
-						nameAvailable = false
-						reason = "AlreadyExists"
-						message = "The site " + input.Name + " is already in use."
-						break
-					}
-				}
-			}
-		}
-	case "Microsoft.Web/serverFarms":
-		items := h.store.ListByPrefix("serverfarm:" + sub + "::")
-		for _, item := range items {
-			if sf, ok := item.(map[string]interface{}); ok {
-				if sf["name"] == input.Name {
-					nameAvailable = false
-					reason = "AlreadyExists"
-					message = "The server farm " + input.Name + " is already in use."
-					break
-				}
-			}
+		site, _ := h.store.Get("func:" + sub + ":" + input.Name)
+		if site != nil {
+			nameAvailable = false
+			reason = "AlreadyExists"
+			message = "The site " + input.Name + " is already in use."
 		}
 	default:
 		nameAvailable = true
@@ -257,6 +233,7 @@ func (h *Handler) CheckNameAvailability(w http.ResponseWriter, r *http.Request) 
 	if !nameAvailable {
 		resp["reason"] = reason
 		resp["message"] = message
+		w.WriteHeader(http.StatusFound)
 	}
 	json.NewEncoder(w).Encode(resp)
 }
@@ -270,7 +247,7 @@ func (h *Handler) GetBasicPublishingCredentialsPolicies(w http.ResponseWriter, r
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
 
-	v, ok := h.store.Get(h.siteKey(sub, rg, name))
+	v, ok := h.store.Get(h.siteResourceGroupKey(sub, rg, name))
 	if !ok {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return
@@ -303,7 +280,7 @@ func (h *Handler) UpdateBasicPublishingCredentialsPolicies(w http.ResponseWriter
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
 
-	v, ok := h.store.Get(h.siteKey(sub, rg, name))
+	v, ok := h.store.Get(h.siteResourceGroupKey(sub, rg, name))
 	if !ok {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return
@@ -348,7 +325,7 @@ func (h *Handler) GetScmAllowed(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
 
-	v, ok := h.store.Get(h.siteKey(sub, rg, name))
+	v, ok := h.store.Get(h.siteResourceGroupKey(sub, rg, name))
 	if !ok {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return
@@ -376,7 +353,7 @@ func (h *Handler) UpdateScmAllowed(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
 
-	v, ok := h.store.Get(h.siteKey(sub, rg, name))
+	v, ok := h.store.Get(h.siteResourceGroupKey(sub, rg, name))
 	if !ok {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return
@@ -416,7 +393,7 @@ func (h *Handler) GetFtpAllowed(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
 
-	v, ok := h.store.Get(h.siteKey(sub, rg, name))
+	v, ok := h.store.Get(h.siteResourceGroupKey(sub, rg, name))
 	if !ok {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return
@@ -444,7 +421,7 @@ func (h *Handler) UpdateFtpAllowed(w http.ResponseWriter, r *http.Request) {
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "name")
 
-	v, ok := h.store.Get(h.siteKey(sub, rg, name))
+	v, ok := h.store.Get(h.siteResourceGroupKey(sub, rg, name))
 	if !ok {
 		azerr.NotFound(w, "Microsoft.Web/sites", name)
 		return

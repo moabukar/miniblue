@@ -163,7 +163,7 @@ func TestManagedEnvironmentCRUD(t *testing.T) {
 
 	resp := doRequest(t, "PUT", base+"/myenv"+av, `{"location":"eastus"}`)
 	defer resp.Body.Close()
-	expectStatus(t, resp, 200)
+	expectStatus(t, resp, 201)
 
 	m := decodeJSON(t, resp)
 	props := m["properties"].(map[string]interface{})
