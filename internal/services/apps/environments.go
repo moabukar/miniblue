@@ -83,7 +83,7 @@ func (h *Handler) CreateOrUpdateManagedEnvironment(w http.ResponseWriter, r *htt
 	if exists {
 		w.WriteHeader(http.StatusOK)
 	} else {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusCreated)
 	}
 	json.NewEncoder(w).Encode(env)
 }
