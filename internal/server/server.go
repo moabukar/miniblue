@@ -15,6 +15,7 @@ import (
 	"github.com/moabukar/miniblue/internal/services/acr"
 	"github.com/moabukar/miniblue/internal/services/appconfig"
 	"github.com/moabukar/miniblue/internal/services/appgw"
+	"github.com/moabukar/miniblue/internal/services/apps"
 	"github.com/moabukar/miniblue/internal/services/auth"
 	"github.com/moabukar/miniblue/internal/services/blob"
 	"github.com/moabukar/miniblue/internal/services/cosmosdb"
@@ -22,7 +23,6 @@ import (
 	"github.com/moabukar/miniblue/internal/services/dbpostgres"
 	"github.com/moabukar/miniblue/internal/services/dns"
 	"github.com/moabukar/miniblue/internal/services/eventgrid"
-	"github.com/moabukar/miniblue/internal/services/functions"
 	"github.com/moabukar/miniblue/internal/services/identity"
 	"github.com/moabukar/miniblue/internal/services/keyvault"
 	"github.com/moabukar/miniblue/internal/services/loadbalancer"
@@ -33,8 +33,9 @@ import (
 	"github.com/moabukar/miniblue/internal/services/queue"
 	"github.com/moabukar/miniblue/internal/services/redis"
 	"github.com/moabukar/miniblue/internal/services/resourcegroups"
-	"github.com/moabukar/miniblue/internal/services/sqldb"
 	"github.com/moabukar/miniblue/internal/services/servicebus"
+	"github.com/moabukar/miniblue/internal/services/sites"
+	"github.com/moabukar/miniblue/internal/services/sqldb"
 	"github.com/moabukar/miniblue/internal/services/storageaccounts"
 	"github.com/moabukar/miniblue/internal/services/subscriptions"
 	"github.com/moabukar/miniblue/internal/services/table"
@@ -162,7 +163,8 @@ func (s *Server) setupRoutes() {
 		{"keyvault", func() { keyvault.NewHandler(s.store).Register(s.router) }},
 		{"cosmosdb", func() { cosmosdb.NewHandler(s.store).Register(s.router) }},
 		{"servicebus", func() { servicebus.NewHandler(s.store).Register(s.router) }},
-		{"functions", func() { functions.NewHandler(s.store).Register(s.router) }},
+		{"sites", func() { sites.NewHandler(s.store).Register(s.router) }},
+		{"apps", func() { apps.NewHandler(s.store).Register(s.router) }},
 		{"network", func() { network.NewHandler(s.store).Register(s.router) }},
 		{"dns", func() { dns.NewHandler(s.store).Register(s.router) }},
 		{"aci", func() { aci.NewHandler(s.store).Register(s.router) }},
@@ -201,11 +203,11 @@ func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
 	m := GetMetrics()
 	uptime := time.Since(m.StartTime)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"uptime_seconds":  int(uptime.Seconds()),
-		"total_requests":  m.TotalRequests.Load(),
-		"total_errors":    m.TotalErrors.Load(),
-		"error_rate":      fmt.Sprintf("%.2f%%", errorRate(m)),
-		"store_backend":   storeBackendName(s.store),
+		"uptime_seconds": int(uptime.Seconds()),
+		"total_requests": m.TotalRequests.Load(),
+		"total_errors":   m.TotalErrors.Load(),
+		"error_rate":     fmt.Sprintf("%.2f%%", errorRate(m)),
+		"store_backend":  storeBackendName(s.store),
 	})
 }
 

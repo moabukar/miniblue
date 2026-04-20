@@ -60,6 +60,8 @@ func main() {
 		handleMySQL(args[1:])
 	case "aci":
 		handleACI(args[1:])
+	case "containerapp":
+		handleContainerApp(args[1:])
 	case "table":
 		handleTable(args[1:])
 	case "queue":
@@ -100,6 +102,7 @@ Commands:
   sql          Azure SQL Database operations
   mysql        Azure Database for MySQL operations
   aci          Azure Container Instances operations
+  containerapp Azure Container Apps operations
   table        Azure Table Storage operations
   queue        Azure Queue Storage operations
   reset        Reset all miniblue state
@@ -149,6 +152,15 @@ Examples:
 
   azlocal aci create --resource-group myRG --name mygroup --image nginx --location eastus
   azlocal aci list --resource-group myRG
+
+  azlocal containerapp env create --resource-group myRG --name myenv --location eastus
+  azlocal containerapp env list --resource-group myRG
+  azlocal containerapp env show --resource-group myRG --name myenv
+
+  azlocal containerapp create --resource-group myRG --name myapp --image nginx --environment myenv
+  azlocal containerapp list --resource-group myRG
+  azlocal containerapp show --resource-group myRG --name myapp
+  azlocal containerapp delete --resource-group myRG --name myapp
 
   azlocal table create --account myaccount --name mytable
   azlocal table entity put --account myaccount --table mytable --partition-key pk1 --row-key rk1 --data '{"foo":"bar"}'
@@ -1289,5 +1301,167 @@ func handleQueueMessage(args []string) {
 		doDelete(base)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown subcommand: queue message %s\n", args[0])
+	}
+}
+
+// --- Container Apps ---
+
+func handleContainerApp(args []string) {
+	if len(args) == 0 {
+		fmt.Println(`Usage:
+  azlocal containerapp <create|show|list|delete> [flags]
+  azlocal containerapp env <create|show|list|delete> [flags]`)
+		return
+	}
+	switch args[0] {
+	case "env":
+		handleContainerAppEnv(args[1:])
+	case "create", "show", "list", "delete":
+		handleContainerAppOps(args[0:])
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown subcommand: containerapp %s\n", args[0])
+	}
+}
+
+func handleContainerAppEnv(args []string) {
+	if len(args) == 0 {
+		fmt.Println("Usage: azlocal containerapp env <create|show|list|delete> [flags]")
+		return
+	}
+	// Check if it's not a subcommand (like 'create')
+	if args[0] == "create" || args[0] == "show" || args[0] == "list" || args[0] == "delete" {
+		handleContainerAppEnvOps(args[0:])
+	} else {
+		fmt.Println("Usage: azlocal containerapp env <create|show|list|delete> [flags]")
+	}
+}
+
+func handleContainerAppEnvOps(args []string) {
+	if len(args) == 0 {
+		fmt.Println("Usage: azlocal containerapp env <create|show|list|delete> [flags]")
+		return
+	}
+	op := args[0]
+	rg := requireFlag(args, "resource-group")
+	s := sub(args)
+	base := "/subscriptions/" + s + "/resourceGroups/" + rg + "/providers/Microsoft.App/managedEnvironments"
+
+	switch op {
+	case "create":
+		name := requireFlag(args, "name")
+		location := getFlag(args, "location")
+		if location == "" {
+			location = "eastus"
+		}
+
+		props := map[string]interface{}{}
+		logsID := getFlag(args, "logs-workspace-id")
+		logsKey := getFlag(args, "logs-workspace-key")
+		if logsID != "" && logsKey != "" {
+			props["appLogsConfiguration"] = map[string]interface{}{
+				"logAnalytics": map[string]string{
+					"workspaceId": logsID,
+					"sharedKey":   logsKey,
+				},
+			}
+		}
+
+		doPut(base+"/"+name, map[string]interface{}{
+			"location":   location,
+			"properties": props,
+		})
+	case "show":
+		name := requireFlag(args, "name")
+		doGet(base + "/" + name)
+	case "list":
+		doGet(base)
+	case "delete":
+		name := requireFlag(args, "name")
+		doDelete(base + "/" + name)
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown subcommand: containerapp env %s\n", op)
+	}
+}
+
+func handleContainerAppOps(args []string) {
+	if len(args) == 0 {
+		fmt.Println("Usage: azlocal containerapp <create|show|list|delete> [flags]")
+		return
+	}
+	op := args[0]
+	rg := requireFlag(args, "resource-group")
+	s := sub(args)
+	base := "/subscriptions/" + s + "/resourceGroups/" + rg + "/providers/Microsoft.App/containerApps"
+
+	switch op {
+	case "create":
+		name := requireFlag(args, "name")
+		location := getFlag(args, "location")
+		if location == "" {
+			location = "eastus"
+		}
+		image := getFlag(args, "image")
+		if image == "" {
+			image = "nginx:latest"
+		}
+		envName := getFlag(args, "environment")
+		ingress := getFlag(args, "ingress")
+		if ingress == "" {
+			ingress = "external"
+		}
+		targetPort := getFlag(args, "target-port")
+		if targetPort == "" {
+			targetPort = "80"
+		}
+		cpu := getFlag(args, "cpu")
+		if cpu == "" {
+			cpu = "0.5"
+		}
+		memory := getFlag(args, "memory")
+		if memory == "" {
+			memory = "1Gi"
+		}
+
+		props := map[string]interface{}{}
+		if envName != "" {
+			envID := "/subscriptions/" + s + "/resourceGroups/" + rg + "/providers/Microsoft.App/managedEnvironments/" + envName
+			props["environmentId"] = envID
+			props["managedEnvironmentId"] = envID
+		}
+
+		props["configuration"] = map[string]interface{}{
+			"ingress": map[string]interface{}{
+				"external":   ingress == "external",
+				"targetPort": targetPort,
+			},
+		}
+
+		props["template"] = map[string]interface{}{
+			"containers": []interface{}{
+				map[string]interface{}{
+					"name":  name,
+					"image": image,
+					"resources": map[string]interface{}{
+						"cpu":    cpu,
+						"memory": memory,
+					},
+				},
+			},
+		}
+
+		doPut(base+"/"+name, map[string]interface{}{
+			"location":   location,
+			"properties": props,
+		})
+	case "show":
+		name := requireFlag(args, "name")
+		doGet(base + "/" + name)
+	case "list":
+		doGet(base)
+	case "delete":
+		name := requireFlag(args, "name")
+		doDelete(base + "/" + name)
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown subcommand: containerapp %s\n", op)
 	}
 }

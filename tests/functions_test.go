@@ -14,7 +14,7 @@ func TestFunctionAppCRUD(t *testing.T) {
 	resp := doRequest(t, "PUT", base+"/myfunc"+av,
 		`{"location":"eastus"}`)
 	defer resp.Body.Close()
-	expectStatus(t, resp, 201)
+	expectStatus(t, resp, 200)
 
 	m := decodeJSON(t, resp)
 	props := m["properties"].(map[string]interface{})
