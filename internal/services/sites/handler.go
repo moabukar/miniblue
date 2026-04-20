@@ -233,7 +233,6 @@ func (h *Handler) CheckNameAvailability(w http.ResponseWriter, r *http.Request) 
 	if !nameAvailable {
 		resp["reason"] = reason
 		resp["message"] = message
-		w.WriteHeader(http.StatusFound)
 	}
 	json.NewEncoder(w).Encode(resp)
 }
