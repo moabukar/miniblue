@@ -82,7 +82,7 @@ Documentation: https://moabukar.github.io/miniblue`)
 	certDir := certDirectory()
 	cert, certPEM, err := generateAndSaveCert(certDir)
 	if err != nil {
-		log.Fatalf("Failed to generate cert: %v", err)
+		log.Fatalf("Failed to load / generate cert: %v", err)
 	}
 
 	certPath := filepath.Join(certDir, "cert.pem")
@@ -198,24 +198,41 @@ func certDirectory() string {
 }
 
 func generateAndSaveCert(dir string) (tls.Certificate, []byte, error) {
-	os.MkdirAll(dir, 0700)
-
 	certPath := filepath.Join(dir, "cert.pem")
 	keyPath := filepath.Join(dir, "key.pem")
 
-	// Reuse existing cert if it's still valid
-	if certPEM, err := os.ReadFile(certPath); err == nil {
-		if keyPEM, err := os.ReadFile(keyPath); err == nil {
-			if tlsCert, err := tls.X509KeyPair(certPEM, keyPEM); err == nil {
-				// Check expiry
-				if leaf, err := x509.ParseCertificate(tlsCert.Certificate[0]); err == nil {
-					if time.Now().Before(leaf.NotAfter.Add(-24 * time.Hour)) {
-						log.Printf("Reusing existing certificate (expires %s)", leaf.NotAfter.Format("2006-01-02"))
-						return tlsCert, certPEM, nil
+	if _, err := os.Stat(dir); err == nil {
+		if certPEM, err := os.ReadFile(certPath); err == nil {
+			if keyPEM, err := os.ReadFile(keyPath); err == nil {
+				if tlsCert, err := tls.X509KeyPair(certPEM, keyPEM); err == nil {
+					if leaf, err := x509.ParseCertificate(tlsCert.Certificate[0]); err == nil {
+						if time.Now().Before(leaf.NotAfter.Add(-24 * time.Hour)) {
+							log.Printf("Reusing existing certificate (expires %s)", leaf.NotAfter.Format("2006-01-02"))
+							return tlsCert, certPEM, nil
+						} else {
+							return tls.Certificate{}, nil, fmt.Errorf("failed to load certificate, expired: %w", err)
+						}
+					} else {
+						return tls.Certificate{}, nil, fmt.Errorf("failed to parse certificate: %w", err)
 					}
+				} else {
+					return tls.Certificate{}, nil, fmt.Errorf("failed to load existing certificate: %w", err)
 				}
+			} else {
+				return tls.Certificate{}, nil, fmt.Errorf("failed to load key: %w", err)
 			}
+		} else {
+			return tls.Certificate{}, nil, fmt.Errorf("failed to load certificate: %w", err)
 		}
+	} else if os.IsNotExist(err) {
+		log.Printf("cert directory does not exist, creating ...")
+		if err := os.MkdirAll(dir, 0700); err != nil {
+			return tls.Certificate{}, nil, fmt.Errorf("failed to create cert directory: %w", err)
+		} else {
+			log.Printf("created cert directory: %s", dir)
+		}
+	} else {
+		return tls.Certificate{}, nil, fmt.Errorf("failed to access cert directory: %w", err)
 	}
 
 	// Generate new
@@ -223,6 +240,7 @@ func generateAndSaveCert(dir string) (tls.Certificate, []byte, error) {
 	if err != nil {
 		return tls.Certificate{}, nil, err
 	}
+	log.Printf("generated new key for the certificate");
 
 	serialNumber, _ := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 
@@ -256,5 +274,6 @@ func generateAndSaveCert(dir string) (tls.Certificate, []byte, error) {
 	os.WriteFile(keyPath, keyPEM, 0600)
 
 	tlsCert, err := tls.X509KeyPair(certPEM, keyPEM)
+	log.Printf("generated new certificate")
 	return tlsCert, certPEM, err
 }
