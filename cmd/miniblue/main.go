@@ -210,19 +210,19 @@ func generateAndSaveCert(dir string) (tls.Certificate, []byte, error) {
 							log.Printf("Reusing existing certificate (expires %s)", leaf.NotAfter.Format("2006-01-02"))
 							return tlsCert, certPEM, nil
 						} else {
-							return tls.Certificate{}, nil, fmt.Errorf("failed to load certificate, expired: %w", err)
+							log.Printf("existing certificate expired, generating new one")
 						}
 					} else {
-						return tls.Certificate{}, nil, fmt.Errorf("failed to parse certificate: %w", err)
+						log.Printf("failed to parse existing certificate: %v, generating new one", err)
 					}
 				} else {
-					return tls.Certificate{}, nil, fmt.Errorf("failed to load existing certificate: %w", err)
+					log.Printf("failed to load existing key pair: %v, generating new one", err)
 				}
 			} else {
-				return tls.Certificate{}, nil, fmt.Errorf("failed to load key: %w", err)
+				log.Printf("key file not found or unreadable: %v, generating new certificate", err)
 			}
 		} else {
-			return tls.Certificate{}, nil, fmt.Errorf("failed to load certificate: %w", err)
+			log.Printf("cert file not found or unreadable: %v, generating new certificate", err)
 		}
 	} else if os.IsNotExist(err) {
 		log.Printf("cert directory does not exist, creating ...")
