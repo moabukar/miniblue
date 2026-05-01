@@ -204,3 +204,32 @@ func TestNotFound(t *testing.T) {
 		t.Errorf("GET missing: want 404, got %d", r.Code)
 	}
 }
+
+// TestCleanupClustersInRGIsSafeWithoutBackends verifies the public helper
+// used by resourcegroups during cascade delete is a no-op for stub-mode
+// clusters and does not panic on missing/empty/malformed handles.
+func TestCleanupClustersInRGIsSafeWithoutBackends(t *testing.T) {
+	t.Setenv("AKS_BACKEND", "")
+	t.Setenv("MINIBLUE_AKS_REAL", "")
+	s := store.New()
+	r := chi.NewRouter()
+	NewHandler(s).Register(r)
+
+	for _, n := range []string{"a", "b", "c"} {
+		req := httptest.NewRequest("PUT",
+			"/subscriptions/sub1/resourcegroups/rg1/providers/Microsoft.ContainerService/managedClusters/"+n,
+			strings.NewReader(`{"location":"eastus"}`))
+		req.Header.Set("Content-Type", "application/json")
+		r.ServeHTTP(httptest.NewRecorder(), req)
+	}
+
+	// No backend handles set in stub mode; this should be a no-op (and not
+	// shell out to docker for anything).
+	CleanupClustersInRG(s, "sub1", "rg1")
+
+	// The clusters themselves are still in the store; the helper only cleans
+	// real backend containers, leaving the store delete to the caller.
+	if got := len(s.ListByPrefix("aks:cluster:sub1:rg1:")); got != 3 {
+		t.Errorf("CleanupClustersInRG should not delete store keys, want 3 left, got %d", got)
+	}
+}

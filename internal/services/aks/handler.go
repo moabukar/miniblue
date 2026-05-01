@@ -45,7 +45,9 @@ func NewHandler(s *store.Store) *Handler {
 	wantReal := os.Getenv("AKS_BACKEND") == "k3s" || os.Getenv("MINIBLUE_AKS_REAL") == "1"
 	if wantReal {
 		if dockerAvailable() {
-			h.backend = newK3sBackend()
+			b := newK3sBackend()
+			b.reapOrphans(s)
+			h.backend = b
 			h.realMode = true
 			log.Println("[aks] real backend enabled (rancher/k3s in Docker) – kubectl will work against created clusters")
 		} else {

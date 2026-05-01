@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/moabukar/miniblue/internal/store"
 )
 
 // k3sImage is the upstream Rancher k3s image. Pinned to a known-good patch
@@ -163,6 +165,42 @@ func (b *k3sBackend) Kubeconfig(h *backendHandle, clusterName string) ([]byte, e
 	return out, nil
 }
 
+// reapOrphans removes any miniblue-aks-* containers that the store does not
+// reference. Covers two restart cases:
+//
+//   - PERSISTENCE off: the store is empty after restart, so every leftover
+//     container is an orphan from a previous run and gets removed.
+//   - PERSISTENCE=1 / DATABASE_URL set: containers referenced by a stored
+//     cluster's _miniblue_backend.containerName are preserved; anything else
+//     (e.g. a cluster that was deleted out-of-band) is removed.
+//
+// Errors are logged not returned; orphan cleanup is best-effort.
+func (b *k3sBackend) reapOrphans(s *store.Store) {
+	expected := map[string]struct{}{}
+	for _, item := range s.ListByPrefix("aks:cluster:") {
+		if h := backendHandleFromCluster(item); h != nil && h.ContainerName != "" {
+			expected[h.ContainerName] = struct{}{}
+		}
+	}
+	out, err := exec.Command("docker", "ps", "-a",
+		"--filter", "name=^miniblue-aks-",
+		"--format", "{{.Names}}").Output()
+	if err != nil {
+		log.Printf("[aks] startup orphan reap: docker ps failed: %v", err)
+		return
+	}
+	for _, name := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if name == "" {
+			continue
+		}
+		if _, ok := expected[name]; ok {
+			continue
+		}
+		log.Printf("[aks] reaping orphan k3s container %s (no matching AKS resource in store)", name)
+		_ = exec.Command("docker", "rm", "-f", name).Run()
+	}
+}
+
 // freePort asks the kernel for an available TCP port. There's an unavoidable
 // TOCTOU window between closing the listener and Docker binding the port; in
 // practice the window is a few milliseconds and miniblue serializes Create
@@ -176,16 +214,38 @@ func freePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
-// waitForK3s polls until the k3s container's API server is responding.
+// waitForK3s polls until the k3s container is ready in two phases:
+//
+//  1. /healthz returns "ok" (API server up). Without this we cannot even
+//     kubectl exec into the cluster.
+//  2. At least one node reports Ready=True. Without this `kubectl apply`
+//     succeeds but pods sit in Pending until k3s registers the node, which
+//     is surprising right after `azlocal aks create` returns.
+//
+// Both phases share the same timeout budget.
 func waitForK3s(containerName string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
+
 	for time.Now().Before(deadline) {
 		out, err := exec.Command("docker", "exec", containerName,
 			"kubectl", "--kubeconfig=/etc/rancher/k3s/k3s.yaml", "get", "--raw=/healthz").CombinedOutput()
 		if err == nil && strings.TrimSpace(string(out)) == "ok" {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+	if !time.Now().Before(deadline) {
+		return fmt.Errorf("API server /healthz never returned ok within %s", timeout)
+	}
+
+	for time.Now().Before(deadline) {
+		out, err := exec.Command("docker", "exec", containerName,
+			"kubectl", "--kubeconfig=/etc/rancher/k3s/k3s.yaml", "get", "nodes",
+			"-o", `jsonpath={.items[*].status.conditions[?(@.type=="Ready")].status}`).CombinedOutput()
+		if err == nil && strings.Contains(string(out), "True") {
 			return nil
 		}
 		time.Sleep(2 * time.Second)
 	}
-	return fmt.Errorf("timeout after %s", timeout)
+	return fmt.Errorf("no node reached Ready=True within %s", timeout)
 }

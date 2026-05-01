@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/moabukar/miniblue/internal/azerr"
+	"github.com/moabukar/miniblue/internal/services/aks"
 	"github.com/moabukar/miniblue/internal/store"
 )
 
@@ -165,6 +166,9 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	h.store.DeleteByPrefix("sqldb:server:" + p)
 	h.store.DeleteByPrefix("sqldb:db:" + p)
 	h.store.DeleteByPrefix("aci:containergroup:" + p)
+	// Tear down any real AKS k3s containers BEFORE clearing the store, so we
+	// can read the backend handles. No-op in stub mode.
+	aks.CleanupClustersInRG(h.store, sub, name)
 	h.store.DeleteByPrefix("aks:cluster:" + p)
 	h.store.DeleteByPrefix("nsg:" + p)
 	h.store.DeleteByPrefix("nsgrule:" + p)
