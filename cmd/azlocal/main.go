@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -60,6 +62,8 @@ func main() {
 		handleMySQL(args[1:])
 	case "aci":
 		handleACI(args[1:])
+	case "aks":
+		handleAKS(args[1:])
 	case "containerapp":
 		handleContainerApp(args[1:])
 	case "table":
@@ -102,6 +106,7 @@ Commands:
   sql          Azure SQL Database operations
   mysql        Azure Database for MySQL operations
   aci          Azure Container Instances operations
+  aks          Azure Kubernetes Service operations
   containerapp Azure Container Apps operations
   table        Azure Table Storage operations
   queue        Azure Queue Storage operations
@@ -152,6 +157,12 @@ Examples:
 
   azlocal aci create --resource-group myRG --name mygroup --image nginx --location eastus
   azlocal aci list --resource-group myRG
+
+  azlocal aks create --resource-group myRG --name mycluster --node-count 1
+  azlocal aks list --resource-group myRG
+  azlocal aks show --resource-group myRG --name mycluster
+  azlocal aks get-credentials --resource-group myRG --name mycluster --file -
+  azlocal aks delete --resource-group myRG --name mycluster
 
   azlocal containerapp env create --resource-group myRG --name myenv --location eastus
   azlocal containerapp env list --resource-group myRG
@@ -1196,6 +1207,126 @@ func handleACI(args []string) {
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown subcommand: aci %s\n", args[0])
 	}
+}
+
+// --- AKS ---
+
+func handleAKS(args []string) {
+	if len(args) == 0 {
+		fmt.Println(`Usage:
+  azlocal aks create --resource-group RG --name NAME [--location eastus] [--node-count 1] [--kubernetes-version 1.30.0]
+  azlocal aks list --resource-group RG
+  azlocal aks show --resource-group RG --name NAME
+  azlocal aks delete --resource-group RG --name NAME
+  azlocal aks get-credentials --resource-group RG --name NAME [--file PATH|-]   (default: ~/.kube/config)`)
+		return
+	}
+	rg := requireFlag(args, "resource-group")
+	s := sub(args)
+	base := "/subscriptions/" + s + "/resourceGroups/" + rg + "/providers/Microsoft.ContainerService/managedClusters"
+
+	switch args[0] {
+	case "create":
+		name := requireFlag(args, "name")
+		location := getFlag(args, "location")
+		if location == "" {
+			location = "eastus"
+		}
+		nodeCount := 1
+		if v := getFlag(args, "node-count"); v != "" {
+			fmt.Sscanf(v, "%d", &nodeCount)
+		}
+		kubeVersion := getFlag(args, "kubernetes-version")
+		if kubeVersion == "" {
+			kubeVersion = "1.30.0"
+		}
+		doPut(base+"/"+name, map[string]interface{}{
+			"location": location,
+			"identity": map[string]interface{}{"type": "SystemAssigned"},
+			"properties": map[string]interface{}{
+				"kubernetesVersion": kubeVersion,
+				"dnsPrefix":         name,
+				"agentPoolProfiles": []interface{}{
+					map[string]interface{}{
+						"name":   "default",
+						"count":  nodeCount,
+						"vmSize": "Standard_DS2_v2",
+						"mode":   "System",
+					},
+				},
+			},
+		})
+	case "list":
+		doGet(base)
+	case "show":
+		name := requireFlag(args, "name")
+		doGet(base + "/" + name)
+	case "delete":
+		name := requireFlag(args, "name")
+		doDelete(base + "/" + name)
+	case "get-credentials":
+		name := requireFlag(args, "name")
+		writeKubeconfig(base+"/"+name+"/listClusterAdminCredential", getFlag(args, "file"))
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown subcommand: aks %s\n", args[0])
+	}
+}
+
+// writeKubeconfig POSTs to a listClusterAdminCredential endpoint and writes
+// the decoded kubeconfig either to the path given by --file (or ~/.kube/config
+// when omitted), or to stdout when --file=-.
+func writeKubeconfig(path, file string) {
+	resp, err := http.Post(baseURL+armPath(path), "application/json", bytes.NewReader([]byte("{}")))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		printResponse(resp)
+		os.Exit(1)
+	}
+	var body struct {
+		Kubeconfigs []struct {
+			Name  string `json:"name"`
+			Value string `json:"value"`
+		} `json:"kubeconfigs"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to parse credentials response: %v\n", err)
+		os.Exit(1)
+	}
+	if len(body.Kubeconfigs) == 0 {
+		fmt.Fprintln(os.Stderr, "Error: empty kubeconfigs in response")
+		os.Exit(1)
+	}
+	cfg, err := base64.StdEncoding.DecodeString(body.Kubeconfigs[0].Value)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to base64-decode kubeconfig: %v\n", err)
+		os.Exit(1)
+	}
+
+	if file == "-" {
+		os.Stdout.Write(cfg)
+		return
+	}
+	if file == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: cannot determine home dir for default --file: %v\n", err)
+			os.Exit(1)
+		}
+		file = filepath.Join(home, ".kube", "config")
+	}
+	if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: mkdir %s: %v\n", filepath.Dir(file), err)
+		os.Exit(1)
+	}
+	if err := os.WriteFile(file, cfg, 0o600); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: write %s: %v\n", file, err)
+		os.Exit(1)
+	}
+	fmt.Printf("Wrote kubeconfig to %s\n", file)
 }
 
 // --- Table Storage ---

@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/moabukar/miniblue/internal/services/aci"
 	"github.com/moabukar/miniblue/internal/services/acr"
+	"github.com/moabukar/miniblue/internal/services/aks"
 	"github.com/moabukar/miniblue/internal/services/appconfig"
 	"github.com/moabukar/miniblue/internal/services/appgw"
 	"github.com/moabukar/miniblue/internal/services/apps"
@@ -169,6 +170,7 @@ func (s *Server) setupRoutes() {
 		{"dns", func() { dns.NewHandler(s.store).Register(s.router) }},
 		{"aci", func() { aci.NewHandler(s.store).Register(s.router) }},
 		{"acr", func() { acr.NewHandler(s.store).Register(s.router) }},
+		{"aks", func() { aks.NewHandler(s.store).Register(s.router) }},
 		{"eventgrid", func() { eventgrid.NewHandler(s.store).Register(s.router) }},
 		{"appconfig", func() { appconfig.NewHandler(s.store).Register(s.router) }},
 		{"identity", func() { identity.NewHandler(s.store).Register(s.router) }},

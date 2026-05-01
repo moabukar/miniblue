@@ -165,6 +165,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	h.store.DeleteByPrefix("sqldb:server:" + p)
 	h.store.DeleteByPrefix("sqldb:db:" + p)
 	h.store.DeleteByPrefix("aci:containergroup:" + p)
+	h.store.DeleteByPrefix("aks:cluster:" + p)
 	h.store.DeleteByPrefix("nsg:" + p)
 	h.store.DeleteByPrefix("nsgrule:" + p)
 	h.store.DeleteByPrefix("publicip:" + p)
