@@ -122,11 +122,18 @@ func (h *Handler) CreateOrUpdateCluster(w http.ResponseWriter, r *http.Request) 
 
 	// If real backend, provision a k3s container and stash its handle on the
 	// resource so listClusterAdminCredential can return the real kubeconfig.
+	// Surface the error rather than silently falling back to stub: a user who
+	// opted in to AKS_BACKEND=k3s should not get back a "Succeeded" cluster
+	// whose kubeconfig points at miniblue-aks.invalid.
 	if h.realMode {
 		handle, err := h.backend.Create(name)
 		if err != nil {
-			log.Printf("[aks] real backend Create failed for %s/%s: %v – returning stub cluster", rg, name, err)
-		} else if handle != nil {
+			log.Printf("[aks] real backend Create failed for %s/%s: %v", rg, name, err)
+			azerr.WriteError(w, http.StatusInternalServerError, "AksBackendUnavailable",
+				"AKS_BACKEND=k3s is set but cluster provisioning failed: "+err.Error())
+			return
+		}
+		if handle != nil {
 			cluster["_miniblue_backend"] = handle.serialize()
 		}
 	}

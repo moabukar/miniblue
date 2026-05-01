@@ -28,7 +28,9 @@ To run a **real Kubernetes cluster** behind the AKS resource:
 AKS_BACKEND=k3s ./bin/miniblue
 ```
 
-When set, miniblue starts a `rancher/k3s` container per cluster create and returns a working kubeconfig:
+> **Run miniblue as a binary, not via the published Docker image.** The image is `FROM scratch` and has no `docker` CLI to shell out to. Use `brew install miniblue` or download from the releases page. Same constraint applies to ACI's real backend.
+
+When set, miniblue starts a `rancher/k3s` container per cluster create (about 5 to 10 seconds) and returns a working kubeconfig:
 
 ```bash
 azlocal aks get-credentials --resource-group aks-example-rg --name miniblue-aks
@@ -36,7 +38,7 @@ kubectl get nodes
 kubectl create deployment hello --image=nginx
 ```
 
-Requires Docker (or OrbStack / Rancher Desktop) running on the host.
+Requires Docker (or OrbStack / Rancher Desktop) running on the host. The first cluster create downloads `rancher/k3s` (about 200 MB), subsequent creates reuse the cached image. There is a short gap of a few seconds between cluster create returning and the node showing as Ready in `kubectl get nodes`.
 
 ### Cleanup note for real backend
 

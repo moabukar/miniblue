@@ -8,12 +8,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
-// k3sImage is the upstream Rancher k3s image. Pinned to a major.minor channel
-// so a release of miniblue uses a known-good k3s while still picking up
-// security patches automatically.
-const k3sImage = "rancher/k3s:v1.30-k3s1"
+// k3sImage is the upstream Rancher k3s image. Pinned to a known-good patch
+// version (rancher/k3s does not publish floating tags like v1.30-k3s1).
+const k3sImage = "rancher/k3s:v1.30.14-k3s1"
 
 // k3sBackend launches one rancher/k3s container per AKS cluster.
 //
@@ -85,26 +86,81 @@ func (b *k3sBackend) Delete(h *backendHandle) error {
 }
 
 // Kubeconfig reads /etc/rancher/k3s/k3s.yaml from inside the container and
-// rewrites the server URL from the in-container address to the host-mapped
-// localhost port, so the returned kubeconfig works from outside Docker.
+// rewrites it so that:
+//
+//   - the API server URL points at the host-mapped localhost port instead of
+//     the in-container address, so external kubectl can reach it;
+//   - the cluster, context, and user are renamed from k3s's "default" to the
+//     AKS resource name (cluster + context) and clusterAdmin_miniblue_<name>
+//     (user), matching what real `az aks get-credentials` produces and so
+//     multiple cluster kubeconfigs do not collide when merged into ~/.kube/config.
+//
+// Done with a YAML round-trip rather than text replacement because k3s emits
+// "name: default" three times (cluster, context, user) and string-level
+// replacement cannot tell them apart.
 func (b *k3sBackend) Kubeconfig(h *backendHandle, clusterName string) ([]byte, error) {
 	if h == nil || h.ContainerName == "" {
 		return nil, fmt.Errorf("nil backend handle")
 	}
-	out, err := exec.Command("docker", "exec", h.ContainerName, "cat", "/etc/rancher/k3s/k3s.yaml").Output()
+	raw, err := exec.Command("docker", "exec", h.ContainerName, "cat", "/etc/rancher/k3s/k3s.yaml").Output()
 	if err != nil {
 		return nil, fmt.Errorf("docker exec cat k3s.yaml: %w", err)
 	}
-	cfg := string(out)
-	// k3s writes server: https://127.0.0.1:6443 by default.
-	cfg = strings.ReplaceAll(cfg, "https://127.0.0.1:6443", fmt.Sprintf("https://localhost:%d", h.HostPort))
-	cfg = strings.ReplaceAll(cfg, "https://0.0.0.0:6443", fmt.Sprintf("https://localhost:%d", h.HostPort))
-	// Friendlier names so `kubectl config current-context` shows the AKS name.
-	cfg = strings.ReplaceAll(cfg, "name: default", "name: "+clusterName)
-	cfg = strings.ReplaceAll(cfg, "cluster: default", "cluster: "+clusterName)
-	cfg = strings.ReplaceAll(cfg, "user: default", "user: clusterAdmin_miniblue_"+clusterName)
-	cfg = strings.ReplaceAll(cfg, "current-context: default", "current-context: "+clusterName)
-	return []byte(cfg), nil
+
+	var cfg map[string]interface{}
+	if err := yaml.Unmarshal(raw, &cfg); err != nil {
+		return nil, fmt.Errorf("parse k3s kubeconfig: %w", err)
+	}
+
+	userName := "clusterAdmin_miniblue_" + clusterName
+	hostServer := fmt.Sprintf("https://localhost:%d", h.HostPort)
+
+	if clusters, ok := cfg["clusters"].([]interface{}); ok {
+		for _, c := range clusters {
+			cm, _ := c.(map[string]interface{})
+			if cm == nil {
+				continue
+			}
+			cm["name"] = clusterName
+			if inner, ok := cm["cluster"].(map[string]interface{}); ok {
+				if s, ok := inner["server"].(string); ok {
+					inner["server"] = strings.NewReplacer(
+						"https://127.0.0.1:6443", hostServer,
+						"https://0.0.0.0:6443", hostServer,
+					).Replace(s)
+				}
+			}
+		}
+	}
+	if contexts, ok := cfg["contexts"].([]interface{}); ok {
+		for _, c := range contexts {
+			cm, _ := c.(map[string]interface{})
+			if cm == nil {
+				continue
+			}
+			cm["name"] = clusterName
+			if inner, ok := cm["context"].(map[string]interface{}); ok {
+				inner["cluster"] = clusterName
+				inner["user"] = userName
+			}
+		}
+	}
+	if users, ok := cfg["users"].([]interface{}); ok {
+		for _, u := range users {
+			um, _ := u.(map[string]interface{})
+			if um == nil {
+				continue
+			}
+			um["name"] = userName
+		}
+	}
+	cfg["current-context"] = clusterName
+
+	out, err := yaml.Marshal(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("re-marshal kubeconfig: %w", err)
+	}
+	return out, nil
 }
 
 // freePort asks the kernel for an available TCP port. There's an unavoidable
