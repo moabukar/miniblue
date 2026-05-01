@@ -13,18 +13,25 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Build miniblue image from PR
+        run: docker build -t miniblue:pr .
+
       - name: Start miniblue
         run: |
-          docker run -d --name miniblue -p 4566:4566 -p 4567:4567 moabukar/miniblue:latest
+          docker run -d --name miniblue -p 4566:4566 -p 4567:4567 miniblue:pr
           echo "Waiting for miniblue..."
           for i in $(seq 1 30); do
-            if curl -s http://localhost:4566/health > /dev/null 2>&1; then
+            if curl -fs http://localhost:4566/health > /dev/null 2>&1; then
               echo "miniblue is ready"
               break
             fi
             sleep 1
           done
-          curl -s http://localhost:4566/health | python3 -m json.tool
+          if ! curl -fsS http://localhost:4566/health | python3 -m json.tool; then
+            echo "miniblue did not become healthy; container logs:"
+            docker logs miniblue || true
+            exit 1
+          fi
 
       - name: Test health
         run: |
