@@ -128,7 +128,7 @@ func (h *Handler) CreateOrUpdateCluster(w http.ResponseWriter, r *http.Request) 
 	// opted in to AKS_BACKEND=k3s should not get back a "Succeeded" cluster
 	// whose kubeconfig points at miniblue-aks.invalid.
 	if h.realMode {
-		handle, err := h.backend.Create(name)
+		handle, err := h.backend.Create(sub, rg, name)
 		if err != nil {
 			log.Printf("[aks] real backend Create failed for %s/%s: %v", rg, name, err)
 			azerr.WriteError(w, http.StatusInternalServerError, "AksBackendUnavailable",
@@ -147,7 +147,7 @@ func (h *Handler) CreateOrUpdateCluster(w http.ResponseWriter, r *http.Request) 
 	} else {
 		w.WriteHeader(http.StatusCreated)
 	}
-	_ = json.NewEncoder(w).Encode(cluster)
+	_ = json.NewEncoder(w).Encode(stripInternalFields(cluster))
 }
 
 func (h *Handler) GetCluster(w http.ResponseWriter, r *http.Request) {
@@ -225,13 +225,23 @@ func (h *Handler) writeKubeconfigResponse(w http.ResponseWriter, r *http.Request
 
 	var kubeconfig []byte
 	if h.realMode {
-		if handle := backendHandleFromCluster(v); handle != nil {
-			if cfg, err := h.backend.Kubeconfig(handle, name); err == nil {
-				kubeconfig = cfg
-			} else {
-				log.Printf("[aks] real backend Kubeconfig failed for %s/%s: %v – returning stub kubeconfig", rg, name, err)
-			}
+		handle := backendHandleFromCluster(v)
+		if handle == nil {
+			// Cluster exists in store but has no real backend (e.g. created in
+			// stub mode then miniblue restarted with AKS_BACKEND=k3s, or a
+			// failed Create). Surface rather than silently downgrade.
+			azerr.WriteError(w, http.StatusInternalServerError, "AksBackendUnavailable",
+				"AKS_BACKEND=k3s is set but this cluster has no real backend; recreate it")
+			return
 		}
+		cfg, err := h.backend.Kubeconfig(handle, name)
+		if err != nil {
+			log.Printf("[aks] real backend Kubeconfig failed for %s/%s: %v", rg, name, err)
+			azerr.WriteError(w, http.StatusInternalServerError, "AksBackendUnavailable",
+				"k3s container is unreachable: "+err.Error())
+			return
+		}
+		kubeconfig = cfg
 	}
 	if kubeconfig == nil {
 		kubeconfig = stubKubeconfig(name)

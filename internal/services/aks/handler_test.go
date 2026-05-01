@@ -205,6 +205,69 @@ func TestNotFound(t *testing.T) {
 	}
 }
 
+// TestPutResponseStripsInternalFields verifies the PUT handler does not
+// leak miniblue-internal fields like _miniblue_backend (which holds the
+// docker container handle for the real backend) to API consumers.
+func TestPutResponseStripsInternalFields(t *testing.T) {
+	h := newTestServer(t)
+	r := do(t, h, "PUT",
+		"/subscriptions/sub1/resourcegroups/rg1/providers/Microsoft.ContainerService/managedClusters/k1",
+		map[string]interface{}{"location": "eastus"})
+	if r.Code != http.StatusCreated {
+		t.Fatalf("PUT: %d %s", r.Code, r.Body.String())
+	}
+	if strings.Contains(r.Body.String(), "_miniblue_backend") {
+		t.Errorf("PUT response leaked internal field _miniblue_backend: %s", r.Body.String())
+	}
+	if strings.Contains(r.Body.String(), "_miniblue") {
+		t.Errorf("PUT response leaked internal field starting with _miniblue: %s", r.Body.String())
+	}
+}
+
+// TestContainerNameIsUniqueAcrossRGs is a regression for Bug H: two clusters
+// with the same name in different resource groups must produce distinct
+// docker container names so they do not clobber each other's backend.
+func TestContainerNameIsUniqueAcrossRGs(t *testing.T) {
+	b := newK3sBackend()
+	a := b.containerName("sub1", "rgA", "k1")
+	c := b.containerName("sub1", "rgB", "k1")
+	if a == c {
+		t.Fatalf("container names collide across RGs: %q == %q", a, c)
+	}
+	if !strings.HasPrefix(a, "miniblue-aks-k1-") || !strings.HasPrefix(c, "miniblue-aks-k1-") {
+		t.Errorf("expected miniblue-aks-k1-<hash> form, got %q and %q", a, c)
+	}
+	// Same triple should be deterministic.
+	if b.containerName("sub1", "rgA", "k1") != a {
+		t.Errorf("containerName not deterministic")
+	}
+	// Sub also disambiguates.
+	d := b.containerName("sub2", "rgA", "k1")
+	if a == d {
+		t.Fatalf("container names collide across subs: %q == %q", a, d)
+	}
+}
+
+// TestSanitizeDockerName covers the helper that maps cluster names to a
+// docker-safe form so a name like "My.Cluster_01" still produces a valid
+// container name.
+func TestSanitizeDockerName(t *testing.T) {
+	cases := map[string]string{
+		"k1":            "k1",
+		"My-Cluster":    "my-cluster",
+		"FOO_bar.baz":   "foo_bar.baz",
+		"":              "x",
+		"a b c":         "a_b_c",
+		"-leading-dash": "x-leading-dash", // first char must be alphanumeric
+		"ünîcødé":       "_n_c_d_",        // 7 runes, exotic chars get _
+	}
+	for in, want := range cases {
+		if got := sanitizeDockerName(in); got != want {
+			t.Errorf("sanitizeDockerName(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
 // TestCleanupClustersInRGIsSafeWithoutBackends verifies the public helper
 // used by resourcegroups during cascade delete is a no-op for stub-mode
 // clusters and does not panic on missing/empty/malformed handles.

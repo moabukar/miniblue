@@ -1,6 +1,8 @@
 package aks
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -30,15 +32,46 @@ type k3sBackend struct {
 
 func newK3sBackend() *k3sBackend { return &k3sBackend{} }
 
-func (b *k3sBackend) containerName(clusterName string) string {
-	return "miniblue-aks-" + clusterName
+// containerName returns a Docker container name unique to the
+// (subscription, resourceGroup, cluster) triple. A short hash suffix avoids
+// collisions when two clusters share the same short name across RGs or
+// subscriptions, while keeping the human-readable cluster name in the
+// docker name for `docker ps` recognisability.
+func (b *k3sBackend) containerName(sub, rg, clusterName string) string {
+	h := sha256.Sum256([]byte(sub + ":" + rg + ":" + clusterName))
+	return "miniblue-aks-" + sanitizeDockerName(clusterName) + "-" + hex.EncodeToString(h[:4])
 }
 
-func (b *k3sBackend) Create(clusterName string) (*backendHandle, error) {
+// sanitizeDockerName lower-cases and replaces any character not allowed in a
+// Docker container name with '_'. Docker names match [a-zA-Z0-9][a-zA-Z0-9_.-]*.
+func sanitizeDockerName(s string) string {
+	if s == "" {
+		return "x"
+	}
+	var b strings.Builder
+	for i, r := range s {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+		case r >= 'A' && r <= 'Z':
+			b.WriteRune(r + 32)
+		case r == '-' || r == '_' || r == '.':
+			if i == 0 {
+				b.WriteRune('x') // first char must be alphanumeric
+			}
+			b.WriteRune(r)
+		default:
+			b.WriteRune('_')
+		}
+	}
+	return b.String()
+}
+
+func (b *k3sBackend) Create(sub, rg, clusterName string) (*backendHandle, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	name := b.containerName(clusterName)
+	name := b.containerName(sub, rg, clusterName)
 
 	// Idempotent PUT: tear down any prior container with the same name.
 	_ = exec.Command("docker", "rm", "-f", name).Run()

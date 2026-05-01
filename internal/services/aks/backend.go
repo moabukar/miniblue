@@ -8,8 +8,12 @@ import (
 
 // backend abstracts the per-cluster lifecycle. The stub backend is a no-op;
 // the k3s backend launches and tears down rancher/k3s containers.
+//
+// Create takes (sub, rg, name) because two clusters can share a name across
+// different resource groups (or subscriptions); the backend uses the triple
+// to produce a unique container identifier so they do not collide.
 type backend interface {
-	Create(clusterName string) (*backendHandle, error)
+	Create(sub, rg, clusterName string) (*backendHandle, error)
 	Delete(handle *backendHandle) error
 	Kubeconfig(handle *backendHandle, clusterName string) ([]byte, error)
 }
@@ -71,6 +75,6 @@ func dockerAvailable() bool {
 // is the source of truth.
 type stubBackend struct{}
 
-func (stubBackend) Create(string) (*backendHandle, error)                    { return nil, nil }
-func (stubBackend) Delete(*backendHandle) error                              { return nil }
-func (stubBackend) Kubeconfig(*backendHandle, string) ([]byte, error)        { return nil, nil }
+func (stubBackend) Create(string, string, string) (*backendHandle, error) { return nil, nil }
+func (stubBackend) Delete(*backendHandle) error                           { return nil }
+func (stubBackend) Kubeconfig(*backendHandle, string) ([]byte, error)     { return nil, nil }
