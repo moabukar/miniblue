@@ -29,10 +29,8 @@ import (
 	"github.com/moabukar/miniblue/internal/store"
 )
 
-// validClusterName matches Azure's AKS cluster name rule: 1 to 63 characters,
-// starting with an alphanumeric, then alphanumerics, hyphens, or underscores.
-// Validating up front prevents PUTs that would silently work in miniblue but
-// fail when the same Terraform/Bicep is later applied to real Azure.
+// Azure AKS naming rule. Reject early so PUTs that would fail at real Azure
+// also fail here.
 var validClusterName = regexp.MustCompile(`^[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}$`).MatchString
 
 // Handler serves the Microsoft.ContainerService ARM endpoints.
@@ -42,10 +40,8 @@ type Handler struct {
 	realMode bool
 }
 
-// NewHandler returns a Handler. It probes for Docker once at startup; the
-// real backend only activates when both Docker is reachable AND the user
-// opted in via env var, to preserve miniblue's "fast & cheap by default"
-// behavior.
+// NewHandler probes for Docker once at startup. The real backend activates
+// only when both Docker is reachable and the user opted in via env var.
 func NewHandler(s *store.Store) *Handler {
 	h := &Handler{store: s}
 
@@ -68,10 +64,8 @@ func NewHandler(s *store.Store) *Handler {
 	return h
 }
 
-// Register mounts all AKS routes on the given router.
-//
-// Azure ARM is case-insensitive on segments like "resourceGroups" but go-chi
-// is case-sensitive, so both spellings are mounted.
+// Register mounts all AKS routes. Both "resourceGroups" and "resourcegroups"
+// are mounted because Azure ARM is case-insensitive on that segment.
 func (h *Handler) Register(r chi.Router) {
 	for _, rgSeg := range []string{"resourcegroups", "resourceGroups"} {
 		r.Route("/subscriptions/{subscriptionId}/"+rgSeg+"/{resourceGroupName}/providers/Microsoft.ContainerService/managedClusters", func(r chi.Router) {
@@ -134,11 +128,6 @@ func (h *Handler) CreateOrUpdateCluster(w http.ResponseWriter, r *http.Request) 
 
 	cluster := buildClusterResponse(sub, rg, name, input)
 
-	// If real backend, provision a k3s container and stash its handle on the
-	// resource so listClusterAdminCredential can return the real kubeconfig.
-	// Surface the error rather than silently falling back to stub: a user who
-	// opted in to AKS_BACKEND=k3s should not get back a "Succeeded" cluster
-	// whose kubeconfig points at miniblue-aks.invalid.
 	if h.realMode {
 		handle, err := h.backend.Create(sub, rg, name)
 		if err != nil {
@@ -212,10 +201,8 @@ func (h *Handler) ListClustersInSubscription(w http.ResponseWriter, r *http.Requ
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{"value": stripInternalFieldsList(items)})
 }
 
-// ListAdminCredential and ListUserCredential are POST actions that return a
-// base64-encoded kubeconfig. In real mode we extract it from the running k3s
-// container and rewrite the server URL to the host-mapped port; in stub mode
-// we return a syntactically-valid kubeconfig pointing at a sentinel host.
+// ListAdminCredential and ListUserCredential return a base64-encoded
+// kubeconfig: real one from the k3s container in real mode, stub otherwise.
 func (h *Handler) ListAdminCredential(w http.ResponseWriter, r *http.Request) {
 	h.writeKubeconfigResponse(w, r, "clusterAdmin")
 }
@@ -239,9 +226,6 @@ func (h *Handler) writeKubeconfigResponse(w http.ResponseWriter, r *http.Request
 	if h.realMode {
 		handle := backendHandleFromCluster(v)
 		if handle == nil {
-			// Cluster exists in store but has no real backend (e.g. created in
-			// stub mode then miniblue restarted with AKS_BACKEND=k3s, or a
-			// failed Create). Surface rather than silently downgrade.
 			azerr.WriteError(w, http.StatusInternalServerError, "AksBackendUnavailable",
 				"AKS_BACKEND=k3s is set but this cluster has no real backend; recreate it")
 			return

@@ -20,14 +20,10 @@ import (
 // version (rancher/k3s does not publish floating tags like v1.30-k3s1).
 const k3sImage = "rancher/k3s:v1.30.14-k3s1"
 
-// k3sBackend launches one rancher/k3s container per AKS cluster.
-//
-// Each cluster gets a unique localhost port (chosen by asking the kernel for a
-// free one), so multiple clusters can coexist. The kubeconfig is extracted
-// from the running container and the server URL rewritten so external
-// `kubectl` connects through the host-mapped port.
+// k3sBackend launches one rancher/k3s container per AKS cluster on its own
+// localhost port.
 type k3sBackend struct {
-	mu sync.Mutex // serializes container creates so port reservation can't race
+	mu sync.Mutex // serializes Create so freePort + docker run cannot race
 }
 
 func newK3sBackend() *k3sBackend {
@@ -37,8 +33,8 @@ func newK3sBackend() *k3sBackend {
 }
 
 // warmPull fetches the k3s image in the background so the first cluster
-// create does not block the user for the ~200MB image download. Failures
-// are non-fatal: docker run on Create will fall back to its own pull.
+// create is not blocked on the ~200MB pull. Best-effort; lazy pull on
+// Create otherwise.
 func (b *k3sBackend) warmPull() {
 	log.Printf("[aks] warming up: docker pull %s (200MB on first run)", k3sImage)
 	if out, err := exec.Command("docker", "pull", k3sImage).CombinedOutput(); err != nil {
@@ -48,18 +44,15 @@ func (b *k3sBackend) warmPull() {
 	log.Printf("[aks] image %s ready", k3sImage)
 }
 
-// containerName returns a Docker container name unique to the
-// (subscription, resourceGroup, cluster) triple. A short hash suffix avoids
-// collisions when two clusters share the same short name across RGs or
-// subscriptions, while keeping the human-readable cluster name in the
-// docker name for `docker ps` recognisability.
+// Hash suffix disambiguates clusters that share a name across RGs/subscriptions
+// while keeping the readable cluster name visible in `docker ps`.
 func (b *k3sBackend) containerName(sub, rg, clusterName string) string {
 	h := sha256.Sum256([]byte(sub + ":" + rg + ":" + clusterName))
 	return "miniblue-aks-" + sanitizeDockerName(clusterName) + "-" + hex.EncodeToString(h[:4])
 }
 
-// sanitizeDockerName lower-cases and replaces any character not allowed in a
-// Docker container name with '_'. Docker names match [a-zA-Z0-9][a-zA-Z0-9_.-]*.
+// Docker container names match [a-zA-Z0-9][a-zA-Z0-9_.-]*; map anything
+// else to '_'.
 func sanitizeDockerName(s string) string {
 	if s == "" {
 		return "x"
@@ -136,19 +129,11 @@ func (b *k3sBackend) Delete(h *backendHandle) error {
 	return nil
 }
 
-// Kubeconfig reads /etc/rancher/k3s/k3s.yaml from inside the container and
-// rewrites it so that:
-//
-//   - the API server URL points at the host-mapped localhost port instead of
-//     the in-container address, so external kubectl can reach it;
-//   - the cluster, context, and user are renamed from k3s's "default" to the
-//     AKS resource name (cluster + context) and clusterAdmin_miniblue_<name>
-//     (user), matching what real `az aks get-credentials` produces and so
-//     multiple cluster kubeconfigs do not collide when merged into ~/.kube/config.
-//
-// Done with a YAML round-trip rather than text replacement because k3s emits
-// "name: default" three times (cluster, context, user) and string-level
-// replacement cannot tell them apart.
+// Kubeconfig reads k3s.yaml from inside the container and rewrites the
+// server URL to the host-mapped port and the cluster/context/user names to
+// the AKS resource name so multiple cluster kubeconfigs do not collide when
+// merged into ~/.kube/config. YAML round-trip (not string replace) because
+// k3s emits "name: default" in three places that look identical to a regex.
 func (b *k3sBackend) Kubeconfig(h *backendHandle, clusterName string) ([]byte, error) {
 	if h == nil || h.ContainerName == "" {
 		return nil, fmt.Errorf("nil backend handle")
@@ -214,16 +199,10 @@ func (b *k3sBackend) Kubeconfig(h *backendHandle, clusterName string) ([]byte, e
 	return out, nil
 }
 
-// reapOrphans removes any miniblue-aks-* containers that the store does not
-// reference. Covers two restart cases:
-//
-//   - PERSISTENCE off: the store is empty after restart, so every leftover
-//     container is an orphan from a previous run and gets removed.
-//   - PERSISTENCE=1 / DATABASE_URL set: containers referenced by a stored
-//     cluster's _miniblue_backend.containerName are preserved; anything else
-//     (e.g. a cluster that was deleted out-of-band) is removed.
-//
-// Errors are logged not returned; orphan cleanup is best-effort.
+// reapOrphans removes miniblue-aks-* containers not referenced by any cluster
+// in the store. Empty store = stateless restart, all containers are orphans.
+// Persistent store = only out-of-band containers (none should normally
+// exist) are removed.
 func (b *k3sBackend) reapOrphans(s *store.Store) {
 	expected := map[string]struct{}{}
 	for _, item := range s.ListByPrefix("aks:cluster:") {
@@ -250,10 +229,8 @@ func (b *k3sBackend) reapOrphans(s *store.Store) {
 	}
 }
 
-// freePort asks the kernel for an available TCP port. There's an unavoidable
-// TOCTOU window between closing the listener and Docker binding the port; in
-// practice the window is a few milliseconds and miniblue serializes Create
-// calls via the backend mutex.
+// Kernel-allocated free port. TOCTOU window between close and `docker run`
+// is a few ms, mitigated by Create's mutex.
 func freePort() (int, error) {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -263,15 +240,9 @@ func freePort() (int, error) {
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
-// waitForK3s polls until the k3s container is ready in two phases:
-//
-//  1. /healthz returns "ok" (API server up). Without this we cannot even
-//     kubectl exec into the cluster.
-//  2. At least one node reports Ready=True. Without this `kubectl apply`
-//     succeeds but pods sit in Pending until k3s registers the node, which
-//     is surprising right after `azlocal aks create` returns.
-//
-// Both phases share the same timeout budget.
+// Two-phase wait: API healthz, then a node Ready=True. Without phase 2,
+// `kubectl apply` right after Create succeeds but pods sit Pending until
+// the node registers.
 func waitForK3s(containerName string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 
