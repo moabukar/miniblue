@@ -48,4 +48,17 @@ Requires Docker (or OrbStack / Rancher Desktop) running on the host. There is a 
 
 ### Cleanup
 
-`terraform destroy`, `azlocal aks delete`, and resource group cascade delete all remove the underlying k3s container. If miniblue is killed mid-flight, restart it with `AKS_BACKEND=k3s` and any orphaned `miniblue-aks-*` containers will be reaped automatically (the reaper preserves containers referenced by stored AKS clusters when `PERSISTENCE=1`).
+The k3s container backing each AKS resource is torn down on every normal exit path:
+
+| Trigger | What happens |
+|---|---|
+| `terraform destroy` / `azlocal aks delete` / direct `DELETE` on the cluster | container removed immediately |
+| Resource group cascade delete | every cluster's container in that RG removed |
+| miniblue `SIGTERM` / `SIGINT` / `docker stop` | every running k3s container torn down before miniblue exits |
+| miniblue `SIGKILL` / OOM / host crash | containers persist; next miniblue start with `AKS_BACKEND=k3s` reaps any orphans (or preserves them if `PERSISTENCE=1` shows they are still owned by a stored cluster) |
+
+Manual purge if needed:
+
+```bash
+docker ps --filter name=miniblue-aks- -q | xargs -r docker rm -f
+```

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -44,9 +45,10 @@ import (
 )
 
 type Server struct {
-	router   *chi.Mux
-	store    *store.Store
-	services []string
+	router      *chi.Mux
+	store       *store.Store
+	services    []string
+	aksHandler  *aks.Handler
 }
 
 func New() *Server {
@@ -66,6 +68,15 @@ func (s *Server) Handler() http.Handler {
 // SaveState persists the store to disk if file-based persistence is active.
 func (s *Server) SaveState() error {
 	return s.store.Save()
+}
+
+// Shutdown lets services release external resources (Docker containers,
+// etc.) before miniblue exits. Currently delegates to the AKS handler so
+// real backend k3s clusters are torn down gracefully on SIGTERM/SIGINT.
+func (s *Server) Shutdown(ctx context.Context) {
+	if s.aksHandler != nil {
+		s.aksHandler.Shutdown(ctx)
+	}
 }
 
 // StartAutoSave starts periodic background saves for file-based persistence.
@@ -170,7 +181,10 @@ func (s *Server) setupRoutes() {
 		{"dns", func() { dns.NewHandler(s.store).Register(s.router) }},
 		{"aci", func() { aci.NewHandler(s.store).Register(s.router) }},
 		{"acr", func() { acr.NewHandler(s.store).Register(s.router) }},
-		{"aks", func() { aks.NewHandler(s.store).Register(s.router) }},
+		{"aks", func() {
+			s.aksHandler = aks.NewHandler(s.store)
+			s.aksHandler.Register(s.router)
+		}},
 		{"eventgrid", func() { eventgrid.NewHandler(s.store).Register(s.router) }},
 		{"appconfig", func() { appconfig.NewHandler(s.store).Register(s.router) }},
 		{"identity", func() { identity.NewHandler(s.store).Register(s.router) }},

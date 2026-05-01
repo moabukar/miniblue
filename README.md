@@ -101,6 +101,17 @@ See [examples/terraform/](examples/terraform/) for full examples including three
 | File persistence | `PERSISTENCE=1` |
 | Postgres persistence | `DATABASE_URL=postgres://...` |
 
+Real backends shell out to the host Docker daemon. The default `moabukar/miniblue:latest` image is `FROM scratch` and has no docker CLI, so use the binary install (Homebrew, releases page) **or** the `full` Docker target which adds it:
+
+```bash
+docker build --target=full -t miniblue:full .
+docker run -v /var/run/docker.sock:/var/run/docker.sock \
+  -p 4566:4566 -p 4567:4567 \
+  -e AKS_BACKEND=k3s miniblue:full
+```
+
+miniblue tears down its k3s containers on graceful shutdown (`SIGTERM`/`SIGINT`/`docker stop`); orphans from a forced kill are reaped by the next start.
+
 ## Configuration
 
 | Variable | Default | Description |

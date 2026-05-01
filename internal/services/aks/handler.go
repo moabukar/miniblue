@@ -18,11 +18,13 @@
 package aks
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
+	"sync"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/moabukar/miniblue/internal/azerr"
@@ -199,6 +201,40 @@ func (h *Handler) ListClustersInSubscription(w http.ResponseWriter, r *http.Requ
 	sub := chi.URLParam(r, "subscriptionId")
 	items := h.store.ListByPrefix(clusterPrefixSub(sub))
 	_ = json.NewEncoder(w).Encode(map[string]interface{}{"value": stripInternalFieldsList(items)})
+}
+
+// Shutdown deletes every real backend container before miniblue exits.
+// Called from the server's SIGTERM/SIGINT path; no-op in stub mode.
+func (h *Handler) Shutdown(ctx context.Context) {
+	if !h.realMode {
+		return
+	}
+	clusters := h.store.ListByPrefix("aks:cluster:")
+	if len(clusters) == 0 {
+		return
+	}
+	log.Printf("[aks] tearing down %d k3s cluster(s) before exit", len(clusters))
+	var wg sync.WaitGroup
+	for _, item := range clusters {
+		handle := backendHandleFromCluster(item)
+		if handle == nil {
+			continue
+		}
+		wg.Add(1)
+		go func(hh *backendHandle) {
+			defer wg.Done()
+			if err := h.backend.Delete(hh); err != nil {
+				log.Printf("[aks] shutdown delete %s: %v", hh.ContainerName, err)
+			}
+		}(handle)
+	}
+	done := make(chan struct{})
+	go func() { wg.Wait(); close(done) }()
+	select {
+	case <-done:
+	case <-ctx.Done():
+		log.Printf("[aks] shutdown timed out: %v", ctx.Err())
+	}
 }
 
 // ListAdminCredential and ListUserCredential return a base64-encoded
