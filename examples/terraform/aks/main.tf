@@ -21,7 +21,8 @@ resource "azurerm_kubernetes_cluster" "example" {
 }
 
 output "kube_config_host" {
-  value = azurerm_kubernetes_cluster.example.kube_config[0].host
+  value     = azurerm_kubernetes_cluster.example.kube_config[0].host
+  sensitive = true
 }
 
 output "node_resource_group" {
