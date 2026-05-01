@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/go-chi/chi/v5"
@@ -130,7 +131,17 @@ func (h *Handler) CreateOrUpdateCluster(w http.ResponseWriter, r *http.Request) 
 
 	cluster := buildClusterResponse(sub, rg, name, input)
 
+	// Real backend always runs k3s pinned at k3sActualVersion. Warn the user
+	// if they asked for a different one so a "1.27 -> 1.30 upgrade" test
+	// against miniblue does not silently succeed while the actual server
+	// stays the same.
 	if h.realMode {
+		if props, ok := input["properties"].(map[string]interface{}); ok {
+			if reqVer, _ := props["kubernetesVersion"].(string); reqVer != "" && !strings.HasPrefix(reqVer, k3sActualVersion) {
+				log.Printf("[aks] WARNING: cluster %s/%s requested kubernetesVersion=%q but real backend always runs %s.x (k3s %s); ARM response will report %q but kubectl will see the actual version",
+					rg, name, reqVer, k3sActualVersion, k3sImage, reqVer)
+			}
+		}
 		handle, err := h.backend.Create(sub, rg, name)
 		if err != nil {
 			log.Printf("[aks] real backend Create failed for %s/%s: %v", rg, name, err)

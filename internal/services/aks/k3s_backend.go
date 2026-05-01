@@ -18,7 +18,10 @@ import (
 
 // k3sImage is the upstream Rancher k3s image. Pinned to a known-good patch
 // version (rancher/k3s does not publish floating tags like v1.30-k3s1).
-const k3sImage = "rancher/k3s:v1.30.14-k3s1"
+const (
+	k3sImage         = "rancher/k3s:v1.30.14-k3s1"
+	k3sActualVersion = "1.30" // major.minor real clusters will report
+)
 
 // k3sBackend launches one rancher/k3s container per AKS cluster on its own
 // localhost port.
