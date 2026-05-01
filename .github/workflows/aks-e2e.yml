@@ -1,0 +1,198 @@
+name: AKS E2E
+
+# Heavier than the standard E2E (real Kubernetes + Terraform), so this only
+# runs when AKS code changes, on push to main, or when manually triggered.
+# The default `e2e.yml` covers the stub backend on every PR.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'internal/services/aks/**'
+      - 'cmd/azlocal/main.go'
+      - 'examples/terraform/aks/**'
+      - 'Dockerfile'
+      - '.github/workflows/aks-e2e.yml'
+  pull_request:
+    paths:
+      - 'internal/services/aks/**'
+      - 'cmd/azlocal/main.go'
+      - 'examples/terraform/aks/**'
+      - 'Dockerfile'
+      - '.github/workflows/aks-e2e.yml'
+  workflow_dispatch:
+
+jobs:
+  real-backend:
+    name: AKS real backend (k3s in DinD)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26'
+
+      - name: Build miniblue + azlocal
+        run: |
+          go build -o bin/miniblue ./cmd/miniblue
+          go build -o bin/azlocal ./cmd/azlocal
+
+      - name: Pre-pull k3s image
+        run: docker pull rancher/k3s:v1.30.14-k3s1
+
+      - name: Start miniblue with AKS_BACKEND=k3s
+        run: |
+          mkdir -p /tmp/mb-cert
+          AKS_BACKEND=k3s LOCAL_AZURE_CERT_DIR=/tmp/mb-cert ./bin/miniblue > /tmp/miniblue.log 2>&1 &
+          for i in $(seq 1 20); do
+            if curl -fs http://localhost:4566/health > /dev/null; then
+              echo "ready after ${i}s"; break
+            fi
+            sleep 1
+          done
+          curl -fsS http://localhost:4566/health | python3 -m json.tool | head -5
+
+      - name: Create resource group + cluster
+        run: |
+          curl -fsS -X PUT 'http://localhost:4566/subscriptions/s1/resourcegroups/aks-ci' \
+            -H 'Content-Type: application/json' -d '{"location":"eastus"}' > /dev/null
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
+            'http://localhost:4566/subscriptions/s1/resourceGroups/aks-ci/providers/Microsoft.ContainerService/managedClusters/k1' \
+            -H 'Content-Type: application/json' \
+            -d '{"location":"eastus","identity":{"type":"SystemAssigned"},"properties":{"dnsPrefix":"k1"}}')
+          [ "$STATUS" = "201" ] && echo "OK" || (echo "FAIL: $STATUS"; tail -50 /tmp/miniblue.log; exit 1)
+
+      - name: Verify k3s container is up
+        run: |
+          docker ps --filter name=miniblue-aks- --format '{{.Names}} - {{.Status}} - {{.Ports}}'
+          docker ps --filter name=miniblue-aks- -q | grep -q . || (echo "no k3s container"; exit 1)
+
+      - name: Get credentials and verify kubectl works
+        env:
+          KUBECONFIG: /tmp/aks-kubeconfig
+        run: |
+          ./bin/azlocal aks get-credentials --subscription s1 --resource-group aks-ci --name k1 --file $KUBECONFIG --overwrite-existing
+          kubectl get nodes -o wide
+          kubectl version --short 2>/dev/null || kubectl version
+
+      - name: Deploy nginx and verify pod runs
+        env:
+          KUBECONFIG: /tmp/aks-kubeconfig
+        run: |
+          kubectl create deployment nginx --image=nginx:1.27-alpine --replicas=2
+          kubectl wait --for=condition=available deployment/nginx --timeout=120s
+          kubectl get pods -o wide
+          kubectl expose deployment nginx --port=80
+          kubectl get svc nginx
+
+      - name: Apply a manifest end to end
+        env:
+          KUBECONFIG: /tmp/aks-kubeconfig
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: ci-check
+          data:
+            msg: "miniblue AKS in CI"
+          EOF
+          got=$(kubectl get cm ci-check -o jsonpath='{.data.msg}')
+          [ "$got" = "miniblue AKS in CI" ] && echo "ConfigMap roundtrip OK" || (echo "FAIL: got '$got'"; exit 1)
+
+      - name: Tear down via API and assert k3s container removed
+        run: |
+          curl -s -o /dev/null -w 'DELETE: %{http_code}\n' -X DELETE \
+            'http://localhost:4566/subscriptions/s1/resourceGroups/aks-ci/providers/Microsoft.ContainerService/managedClusters/k1'
+          sleep 2
+          if docker ps --filter name=miniblue-aks- -q | grep -q .; then
+            echo "FAIL: k3s container still present after DELETE"
+            exit 1
+          fi
+          echo "k3s container cleaned up"
+
+      - name: RG cascade delete also cleans real container
+        run: |
+          curl -fsS -X PUT 'http://localhost:4566/subscriptions/s1/resourceGroups/aks-ci/providers/Microsoft.ContainerService/managedClusters/k2' \
+            -H 'Content-Type: application/json' -d '{"location":"eastus","identity":{"type":"SystemAssigned"}}' > /dev/null
+          docker ps --filter name=miniblue-aks- --format '{{.Names}}'
+          curl -s -X DELETE 'http://localhost:4566/subscriptions/s1/resourcegroups/aks-ci' -o /dev/null -w 'RG DELETE: %{http_code}\n'
+          sleep 2
+          if docker ps --filter name=miniblue-aks- -q | grep -q .; then
+            echo "FAIL: cascade delete left k3s container behind"
+            exit 1
+          fi
+          echo "cascade delete cleaned up real container"
+
+      - name: miniblue logs on success (for debugging if needed later)
+        if: always()
+        run: tail -100 /tmp/miniblue.log
+
+      - name: Cleanup
+        if: always()
+        run: |
+          pkill -f bin/miniblue || true
+          docker ps -aq --filter name=miniblue-aks- | xargs -r docker rm -f
+
+  terraform:
+    name: AKS Terraform apply
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26'
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.10.0'
+          terraform_wrapper: false
+
+      - name: Build miniblue
+        run: go build -o bin/miniblue ./cmd/miniblue
+
+      - name: Start miniblue (stub mode is enough for terraform plan/apply)
+        run: |
+          mkdir -p /tmp/mb-cert
+          LOCAL_AZURE_CERT_DIR=/tmp/mb-cert ./bin/miniblue > /tmp/miniblue.log 2>&1 &
+          for i in $(seq 1 20); do
+            if curl -fs http://localhost:4566/health > /dev/null; then
+              echo "ready after ${i}s"; break
+            fi
+            sleep 1
+          done
+
+      - name: Trust miniblue cert (so azurerm provider talks to TLS endpoint)
+        run: |
+          sudo cp /tmp/mb-cert/cert.pem /usr/local/share/ca-certificates/miniblue.crt
+          sudo update-ca-certificates
+          curl -sS https://localhost:4567/metadata/endpoints | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['name']=='AzureCloud'; print('TLS endpoint OK')"
+
+      - name: terraform init + apply
+        working-directory: examples/terraform/aks
+        run: |
+          terraform init
+          terraform apply -auto-approve -no-color
+
+      - name: terraform output
+        working-directory: examples/terraform/aks
+        run: terraform output
+
+      - name: verify cluster shows up via miniblue API
+        run: |
+          curl -fsS 'http://localhost:4566/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/aks-example-rg/providers/Microsoft.ContainerService/managedClusters' \
+            | python3 -c "import json,sys; v=json.load(sys.stdin)['value']; assert any(c['name']=='miniblue-aks' for c in v); print('cluster present')"
+
+      - name: terraform destroy
+        if: always()
+        working-directory: examples/terraform/aks
+        run: terraform destroy -auto-approve -no-color
+
+      - name: Cleanup
+        if: always()
+        run: pkill -f bin/miniblue || true

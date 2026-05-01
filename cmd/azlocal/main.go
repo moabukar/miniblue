@@ -2,12 +2,16 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 var baseURL = "http://localhost:4566"
@@ -60,6 +64,8 @@ func main() {
 		handleMySQL(args[1:])
 	case "aci":
 		handleACI(args[1:])
+	case "aks":
+		handleAKS(args[1:])
 	case "containerapp":
 		handleContainerApp(args[1:])
 	case "table":
@@ -102,6 +108,7 @@ Commands:
   sql          Azure SQL Database operations
   mysql        Azure Database for MySQL operations
   aci          Azure Container Instances operations
+  aks          Azure Kubernetes Service operations
   containerapp Azure Container Apps operations
   table        Azure Table Storage operations
   queue        Azure Queue Storage operations
@@ -152,6 +159,12 @@ Examples:
 
   azlocal aci create --resource-group myRG --name mygroup --image nginx --location eastus
   azlocal aci list --resource-group myRG
+
+  azlocal aks create --resource-group myRG --name mycluster --node-count 1
+  azlocal aks list --resource-group myRG
+  azlocal aks show --resource-group myRG --name mycluster
+  azlocal aks get-credentials --resource-group myRG --name mycluster --file -
+  azlocal aks delete --resource-group myRG --name mycluster
 
   azlocal containerapp env create --resource-group myRG --name myenv --location eastus
   azlocal containerapp env list --resource-group myRG
@@ -1196,6 +1209,226 @@ func handleACI(args []string) {
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown subcommand: aci %s\n", args[0])
 	}
+}
+
+// --- AKS ---
+
+func handleAKS(args []string) {
+	if len(args) == 0 {
+		fmt.Println(`Usage:
+  azlocal aks create --resource-group RG --name NAME [--location eastus] [--node-count 1] [--kubernetes-version 1.30.0]
+  azlocal aks list --resource-group RG
+  azlocal aks show --resource-group RG --name NAME
+  azlocal aks delete --resource-group RG --name NAME
+  azlocal aks get-credentials --resource-group RG --name NAME [--file PATH|-] [--overwrite-existing]
+                                                                          (default: merge into ~/.kube/config; --file - for stdout)`)
+		return
+	}
+	rg := requireFlag(args, "resource-group")
+	s := sub(args)
+	base := "/subscriptions/" + s + "/resourceGroups/" + rg + "/providers/Microsoft.ContainerService/managedClusters"
+
+	switch args[0] {
+	case "create":
+		name := requireFlag(args, "name")
+		location := getFlag(args, "location")
+		if location == "" {
+			location = "eastus"
+		}
+		nodeCount := 1
+		if v := getFlag(args, "node-count"); v != "" {
+			fmt.Sscanf(v, "%d", &nodeCount)
+		}
+		kubeVersion := getFlag(args, "kubernetes-version")
+		if kubeVersion == "" {
+			kubeVersion = "1.30.0"
+		}
+		doPut(base+"/"+name, map[string]interface{}{
+			"location": location,
+			"identity": map[string]interface{}{"type": "SystemAssigned"},
+			"properties": map[string]interface{}{
+				"kubernetesVersion": kubeVersion,
+				"dnsPrefix":         name,
+				"agentPoolProfiles": []interface{}{
+					map[string]interface{}{
+						"name":   "default",
+						"count":  nodeCount,
+						"vmSize": "Standard_DS2_v2",
+						"mode":   "System",
+					},
+				},
+			},
+		})
+	case "list":
+		doGet(base)
+	case "show":
+		name := requireFlag(args, "name")
+		doGet(base + "/" + name)
+	case "delete":
+		name := requireFlag(args, "name")
+		doDelete(base + "/" + name)
+	case "get-credentials":
+		name := requireFlag(args, "name")
+		writeKubeconfig(base+"/"+name+"/listClusterAdminCredential", getFlag(args, "file"), hasFlag(args, "overwrite-existing"))
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown subcommand: aks %s\n", args[0])
+	}
+}
+
+// writeKubeconfig POSTs to a listClusterAdminCredential endpoint and writes
+// the decoded kubeconfig either to the path given by --file (or ~/.kube/config
+// when omitted), or to stdout when --file=-.
+//
+// When the target file already exists and overwrite is false (the default,
+// matching `az aks get-credentials`), new clusters/contexts/users entries are
+// merged in: same-name entries are replaced; the new current-context is set.
+// With overwrite=true the file is replaced entirely.
+func writeKubeconfig(path, file string, overwrite bool) {
+	resp, err := http.Post(baseURL+armPath(path), "application/json", bytes.NewReader([]byte("{}")))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		printResponse(resp)
+		os.Exit(1)
+	}
+	var body struct {
+		Kubeconfigs []struct {
+			Name  string `json:"name"`
+			Value string `json:"value"`
+		} `json:"kubeconfigs"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to parse credentials response: %v\n", err)
+		os.Exit(1)
+	}
+	if len(body.Kubeconfigs) == 0 {
+		fmt.Fprintln(os.Stderr, "Error: empty kubeconfigs in response")
+		os.Exit(1)
+	}
+	cfg, err := base64.StdEncoding.DecodeString(body.Kubeconfigs[0].Value)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to base64-decode kubeconfig: %v\n", err)
+		os.Exit(1)
+	}
+
+	if file == "-" {
+		os.Stdout.Write(cfg)
+		return
+	}
+	if file == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: cannot determine home dir for default --file: %v\n", err)
+			os.Exit(1)
+		}
+		file = filepath.Join(home, ".kube", "config")
+	}
+	if err := os.MkdirAll(filepath.Dir(file), 0o755); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: mkdir %s: %v\n", filepath.Dir(file), err)
+		os.Exit(1)
+	}
+
+	out := cfg
+	if !overwrite {
+		merged, err := mergeKubeconfig(file, cfg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: merge into %s failed: %v (use --overwrite-existing to replace)\n", file, err)
+			os.Exit(1)
+		}
+		out = merged
+	}
+
+	if err := os.WriteFile(file, out, 0o600); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: write %s: %v\n", file, err)
+		os.Exit(1)
+	}
+	if overwrite {
+		fmt.Printf("Wrote kubeconfig to %s (overwritten)\n", file)
+	} else {
+		fmt.Printf("Merged credentials into %s\n", file)
+	}
+}
+
+// mergeKubeconfig returns YAML for `file` after merging the clusters,
+// contexts, and users from `incoming` into it, replacing same-name entries
+// and adopting incoming's current-context. Returns `incoming` unchanged if
+// `file` does not exist or cannot be parsed (defensive: treat unreadable
+// existing kubeconfig as empty rather than refusing the operation).
+func mergeKubeconfig(file string, incoming []byte) ([]byte, error) {
+	var newCfg map[string]interface{}
+	if err := yaml.Unmarshal(incoming, &newCfg); err != nil {
+		return nil, fmt.Errorf("parse incoming kubeconfig: %w", err)
+	}
+
+	var existing map[string]interface{}
+	if data, err := os.ReadFile(file); err == nil {
+		_ = yaml.Unmarshal(data, &existing)
+	}
+	if existing == nil {
+		// Nothing to merge into; just return the incoming kubeconfig.
+		return incoming, nil
+	}
+
+	for _, section := range []string{"clusters", "contexts", "users"} {
+		existing[section] = mergeNamedList(existing[section], newCfg[section])
+	}
+	if cc, ok := newCfg["current-context"]; ok {
+		existing["current-context"] = cc
+	}
+	if v, ok := newCfg["apiVersion"]; ok {
+		existing["apiVersion"] = v
+	}
+	if v, ok := newCfg["kind"]; ok {
+		existing["kind"] = v
+	}
+
+	return yaml.Marshal(existing)
+}
+
+// mergeNamedList merges two YAML-decoded lists keyed by their "name" field.
+// Entries from `incoming` replace same-named entries in `existing`; new
+// entries from `incoming` are appended. Order: surviving existing entries
+// (in their original order), then incoming entries.
+func mergeNamedList(existingI, incomingI interface{}) []interface{} {
+	existing, _ := existingI.([]interface{})
+	incoming, _ := incomingI.([]interface{})
+
+	incomingNames := map[string]bool{}
+	for _, item := range incoming {
+		m, _ := item.(map[string]interface{})
+		if m == nil {
+			continue
+		}
+		if name, ok := m["name"].(string); ok {
+			incomingNames[name] = true
+		}
+	}
+
+	out := make([]interface{}, 0, len(existing)+len(incoming))
+	for _, item := range existing {
+		m, _ := item.(map[string]interface{})
+		if m != nil {
+			if name, ok := m["name"].(string); ok && incomingNames[name] {
+				continue
+			}
+		}
+		out = append(out, item)
+	}
+	out = append(out, incoming...)
+	return out
+}
+
+// hasFlag returns true if --name is present in args (no value required).
+func hasFlag(args []string, name string) bool {
+	for _, a := range args {
+		if a == "--"+name {
+			return true
+		}
+	}
+	return false
 }
 
 // --- Table Storage ---

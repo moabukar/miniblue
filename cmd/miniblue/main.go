@@ -156,8 +156,9 @@ Documentation: https://moabukar.github.io/miniblue`)
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+	srv.Shutdown(ctx)
 	httpServer.Shutdown(ctx)
 	tlsServer.Shutdown(ctx)
 	log.Println("miniblue stopped")

@@ -82,6 +82,29 @@ jobs:
           import json,sys; assert json.load(sys.stdin)['body'] == 'msg1'; print('OK: Service Bus')
           "
 
+      - name: Test AKS
+        run: |
+          curl -s -X PUT "http://localhost:4566/subscriptions/s1/resourcegroups/aks-rg" \
+            -H "Content-Type: application/json" -d '{"location":"eastus"}'
+          curl -s -X PUT "http://localhost:4566/subscriptions/s1/resourceGroups/aks-rg/providers/Microsoft.ContainerService/managedClusters/k1" \
+            -H "Content-Type: application/json" \
+            -d '{"location":"eastus","identity":{"type":"SystemAssigned"},"properties":{"dnsPrefix":"k1","agentPoolProfiles":[{"name":"default","count":1,"vmSize":"Standard_DS2_v2","mode":"System"}]}}' \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); assert d['name']=='k1' and d['properties']['provisioningState']=='Succeeded'; print('OK: AKS create')"
+          curl -s "http://localhost:4566/subscriptions/s1/resourcegroups/aks-rg/providers/Microsoft.ContainerService/managedClusters" \
+            | python3 -c "import json,sys; assert len(json.load(sys.stdin)['value'])==1; print('OK: AKS list')"
+          curl -s -X POST "http://localhost:4566/subscriptions/s1/resourceGroups/aks-rg/providers/Microsoft.ContainerService/managedClusters/k1/listClusterAdminCredential" \
+            -H "Content-Type: application/json" -d '{}' \
+            | python3 -c "
+          import json, sys, base64
+          d = json.load(sys.stdin)
+          assert d['kubeconfigs'][0]['name'] == 'clusterAdmin'
+          cfg = base64.b64decode(d['kubeconfigs'][0]['value']).decode()
+          assert 'apiVersion: v1' in cfg and 'kind: Config' in cfg and 'k1' in cfg
+          print('OK: AKS get-credentials')
+          "
+          curl -s -X DELETE "http://localhost:4566/subscriptions/s1/resourceGroups/aks-rg/providers/Microsoft.ContainerService/managedClusters/k1" \
+            -o /dev/null -w '%{http_code}' | grep -q '^204$' && echo 'OK: AKS delete'
+
       - name: Test reset
         run: |
           curl -s -X POST http://localhost:4566/_miniblue/reset
@@ -97,6 +120,8 @@ jobs:
             -H "Content-Type: application/json" -d '{"location":"eastus"}'
           curl -s -X PUT "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.Cache/redis/r1" \
             -H "Content-Type: application/json" -d '{"location":"eastus","properties":{"sku":{"name":"Basic","family":"C","capacity":1}}}'
+          curl -s -X PUT "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.ContainerService/managedClusters/k-cascade" \
+            -H "Content-Type: application/json" -d '{"location":"eastus","identity":{"type":"SystemAssigned"},"properties":{"dnsPrefix":"k-cascade"}}'
           echo "OK: DB services"
 
       - name: Test cascade delete
@@ -104,7 +129,9 @@ jobs:
           curl -s -X DELETE "http://localhost:4566/subscriptions/s1/resourcegroups/rg1"
           sleep 1
           CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.Cache/redis/r1")
-          [ "$CODE" = "404" ] && echo "OK: Cascade delete" || (echo "FAIL: Expected 404, got $CODE" && exit 1)
+          [ "$CODE" = "404" ] && echo "OK: Cascade delete (redis)" || (echo "FAIL: Expected 404, got $CODE" && exit 1)
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:4566/subscriptions/s1/resourceGroups/rg1/providers/Microsoft.ContainerService/managedClusters/k-cascade")
+          [ "$CODE" = "404" ] && echo "OK: Cascade delete (aks)" || (echo "FAIL: Expected 404 for AKS, got $CODE" && exit 1)
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -124,6 +151,17 @@ jobs:
           ./bin/azlocal storage account show --resource-group testRG --name testacct | grep -q "testacct" && echo "OK: Show account"
           ./bin/azlocal storage account list-keys --resource-group testRG --name testacct | grep -q "key1" && echo "OK: List keys"
           ./bin/azlocal storage account delete --resource-group testRG --name testacct | grep -qi "deleted" && echo "OK: Delete account"
+
+      - name: Test azlocal aks operations
+        env:
+          LOCAL_AZURE_ENDPOINT: http://localhost:4566
+        run: |
+          ./bin/azlocal group create --name aksRG --location eastus
+          ./bin/azlocal aks create --resource-group aksRG --name testaks --node-count 2 | grep -q "testaks" && echo "OK: aks create"
+          ./bin/azlocal aks list --resource-group aksRG | grep -q "testaks" && echo "OK: aks list"
+          ./bin/azlocal aks show --resource-group aksRG --name testaks | grep -q "Succeeded" && echo "OK: aks show"
+          ./bin/azlocal aks get-credentials --resource-group aksRG --name testaks --file - | grep -q "apiVersion: v1" && echo "OK: aks get-credentials"
+          ./bin/azlocal aks delete --resource-group aksRG --name testaks | grep -qi "deleted" && echo "OK: aks delete"
 
       - name: Cleanup
         if: always()

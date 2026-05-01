@@ -43,7 +43,7 @@ No Azure account or credentials needed.
 
 ## What it does
 
-26 Azure services emulated behind a single port. Works with Terraform, Pulumi, Azure SDKs, and curl.
+27 Azure services emulated behind a single port. Works with Terraform, Pulumi, Azure SDKs, and curl.
 
 | Service | Service | Service |
 |---------|---------|---------|
@@ -53,8 +53,9 @@ No Azure account or credentials needed.
 | DNS Zones | Container Registry | Event Grid |
 | App Configuration | Managed Identity | DB for PostgreSQL |
 | DB for MySQL | Azure SQL Database | Azure Cache for Redis |
-| Container Instances | Public IP Addresses | Network Security Groups |
-| Load Balancer | Application Gateway | Storage Accounts |
+| Container Instances | Kubernetes Service (AKS) | Public IP Addresses |
+| Network Security Groups | Load Balancer | Application Gateway |
+| Storage Accounts | | |
 
 ## How it compares
 
@@ -96,8 +97,20 @@ See [examples/terraform/](examples/terraform/) for full examples including three
 | Real PostgreSQL databases | `POSTGRES_URL=postgres://user:pass@host:5432/db` |
 | Real Redis connectivity | `REDIS_URL=redis://host:6379` |
 | Real Docker containers (ACI) | Docker daemon running |
+| Real k3s cluster per AKS resource | `AKS_BACKEND=k3s` (Docker daemon required) |
 | File persistence | `PERSISTENCE=1` |
 | Postgres persistence | `DATABASE_URL=postgres://...` |
+
+Real backends shell out to the host Docker daemon. The default `moabukar/miniblue:latest` image is `FROM scratch` and has no docker CLI, so use the binary install (Homebrew, releases page) **or** the `full` Docker target which adds it:
+
+```bash
+docker build --target=full -t miniblue:full .
+docker run -v /var/run/docker.sock:/var/run/docker.sock \
+  -p 4566:4566 -p 4567:4567 \
+  -e AKS_BACKEND=k3s miniblue:full
+```
+
+miniblue tears down its k3s containers on graceful shutdown (`SIGTERM`/`SIGINT`/`docker stop`); orphans from a forced kill are reaped by the next start.
 
 ## Configuration
 

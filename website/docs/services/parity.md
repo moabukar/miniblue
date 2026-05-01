@@ -25,6 +25,7 @@ What's implemented, stubbed, and unsupported in miniblue compared to real Azure 
 | Azure SQL Database | Stub | Stub | Stub | Stub | - | ARM only, no real SQL Server |
 | Azure Cache for Redis | Full | Full | Full | Full | - | Real connectivity check via REDIS_URL |
 | Container Instances | Full | Full | Full | Full | - | Real Docker containers when available |
+| Kubernetes Service (AKS) | Full | Full | Full | Full | - | Real k3s clusters with `AKS_BACKEND=k3s`; agent pool GET only |
 | Public IP Addresses | Full | Full | Full | Full | - | Static/dynamic allocation, auto-generated IPs |
 | Network Security Groups | Full | Full | Full | Full | - | Security rules, default rules, cascade delete |
 | Load Balancer | Full | Full | Full | Full | - | Frontends, backends, rules, probes, NAT |

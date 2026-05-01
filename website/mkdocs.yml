@@ -70,6 +70,7 @@ nav:
     - DNS Zones: services/dns-zones.md
     - Container Registry: services/container-registry.md
     - Container Instances: services/container-instances.md
+    - Kubernetes Service (AKS): services/kubernetes-service.md
     - DB for PostgreSQL: services/database-postgresql.md
     - DB for MySQL: services/database-mysql.md
     - Azure SQL Database: services/database-sql.md
