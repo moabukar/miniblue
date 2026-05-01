@@ -30,7 +30,23 @@ type k3sBackend struct {
 	mu sync.Mutex // serializes container creates so port reservation can't race
 }
 
-func newK3sBackend() *k3sBackend { return &k3sBackend{} }
+func newK3sBackend() *k3sBackend {
+	b := &k3sBackend{}
+	go b.warmPull()
+	return b
+}
+
+// warmPull fetches the k3s image in the background so the first cluster
+// create does not block the user for the ~200MB image download. Failures
+// are non-fatal: docker run on Create will fall back to its own pull.
+func (b *k3sBackend) warmPull() {
+	log.Printf("[aks] warming up: docker pull %s (200MB on first run)", k3sImage)
+	if out, err := exec.Command("docker", "pull", k3sImage).CombinedOutput(); err != nil {
+		log.Printf("[aks] background image pull failed: %v – %s (first cluster create will retry)", err, strings.TrimSpace(string(out)))
+		return
+	}
+	log.Printf("[aks] image %s ready", k3sImage)
+}
 
 // containerName returns a Docker container name unique to the
 // (subscription, resourceGroup, cluster) triple. A short hash suffix avoids

@@ -205,6 +205,36 @@ func TestNotFound(t *testing.T) {
 	}
 }
 
+// TestInvalidClusterNameRejected verifies the handler rejects names that
+// would silently work in miniblue but fail at real Azure (Bug S regression).
+func TestInvalidClusterNameRejected(t *testing.T) {
+	h := newTestServer(t)
+	bad := []string{
+		"_starts_with_underscore",
+		"-starts-with-dash",
+		"has.dot",
+		"has$dollar",
+		strings.Repeat("a", 64), // length > 63
+	}
+	for _, n := range bad {
+		r := do(t, h, "PUT",
+			"/subscriptions/sub1/resourcegroups/rg1/providers/Microsoft.ContainerService/managedClusters/"+n,
+			map[string]interface{}{"location": "eastus"})
+		if r.Code != http.StatusBadRequest {
+			t.Errorf("PUT name=%q: want 400, got %d (%s)", n, r.Code, r.Body.String())
+		}
+	}
+	good := []string{"k1", "myCluster", "my-cluster", "my_cluster", "a", strings.Repeat("a", 63), "0lead"}
+	for _, n := range good {
+		r := do(t, h, "PUT",
+			"/subscriptions/sub1/resourcegroups/rg1/providers/Microsoft.ContainerService/managedClusters/"+n,
+			map[string]interface{}{"location": "eastus"})
+		if r.Code != http.StatusCreated {
+			t.Errorf("PUT name=%q: want 201, got %d (%s)", n, r.Code, r.Body.String())
+		}
+	}
+}
+
 // TestPutResponseStripsInternalFields verifies the PUT handler does not
 // leak miniblue-internal fields like _miniblue_backend (which holds the
 // docker container handle for the real backend) to API consumers.

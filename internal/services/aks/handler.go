@@ -22,11 +22,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/moabukar/miniblue/internal/azerr"
 	"github.com/moabukar/miniblue/internal/store"
 )
+
+// validClusterName matches Azure's AKS cluster name rule: 1 to 63 characters,
+// starting with an alphanumeric, then alphanumerics, hyphens, or underscores.
+// Validating up front prevents PUTs that would silently work in miniblue but
+// fail when the same Terraform/Bicep is later applied to real Azure.
+var validClusterName = regexp.MustCompile(`^[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}$`).MatchString
 
 // Handler serves the Microsoft.ContainerService ARM endpoints.
 type Handler struct {
@@ -110,6 +117,11 @@ func (h *Handler) CreateOrUpdateCluster(w http.ResponseWriter, r *http.Request) 
 	sub := chi.URLParam(r, "subscriptionId")
 	rg := chi.URLParam(r, "resourceGroupName")
 	name := chi.URLParam(r, "clusterName")
+
+	if !validClusterName(name) {
+		azerr.BadRequest(w, `Cluster name must match ^[a-zA-Z0-9][-_a-zA-Z0-9]{0,62}$ (Azure AKS naming rule).`)
+		return
+	}
 
 	var input map[string]interface{}
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {

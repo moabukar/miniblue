@@ -24,6 +24,11 @@ env:
   PORT: "4566"
   TLS_PORT: "4567"
   LOG_LEVEL: "info"
+  # Real-backend env vars (POSTGRES_URL, REDIS_URL, AKS_BACKEND=k3s) are
+  # listed here for discoverability but are not usable from this chart:
+  # they require the miniblue process to shell out to the local Docker
+  # daemon, which is not available inside a Kubernetes pod. Use the binary
+  # install for those (brew install miniblue or download from releases).
 
 securityContext:
   runAsNonRoot: true
