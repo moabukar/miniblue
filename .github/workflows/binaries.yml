@@ -50,3 +50,30 @@ jobs:
           files: |
             miniblue-*
             azlocal-*
+
+  checksums:
+    needs: binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir assets && cd assets
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern 'miniblue-*' --pattern 'azlocal-*'
+
+      - name: Generate SHA256SUMS
+        run: |
+          cd assets
+          sha256sum miniblue-* azlocal-* | sort -k2 > ../SHA256SUMS
+          echo "--- SHA256SUMS ---"
+          cat ../SHA256SUMS
+
+      - name: Upload SHA256SUMS to release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: SHA256SUMS
