@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="top" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#93C5FD"/>
+      <stop offset="100%" style="stop-color:#3B82F6"/>
+    </linearGradient>
+    <linearGradient id="left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB"/>
+      <stop offset="100%" style="stop-color:#1E40AF"/>
+    </linearGradient>
+    <linearGradient id="right" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6"/>
+      <stop offset="100%" style="stop-color:#1D4ED8"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#1E3A5F" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <polygon points="100,35 160,68 100,101 40,68" fill="url(#top)"/>
+    <polygon points="40,68 100,101 100,167 40,134" fill="url(#left)"/>
+    <polygon points="160,68 100,101 100,167 160,134" fill="url(#right)"/>
+  </g>
+  <line x1="100" y1="101" x2="100" y2="167" stroke="white" stroke-opacity="0.12" stroke-width="0.8"/>
+  <line x1="100" y1="101" x2="40" y2="68" stroke="white" stroke-opacity="0.08" stroke-width="0.8"/>
+  <line x1="100" y1="101" x2="160" y2="68" stroke="white" stroke-opacity="0.08" stroke-width="0.8"/>
+  <text x="100" y="78" text-anchor="middle" dominant-baseline="central" font-family="'SF Pro Display','Helvetica Neue',Arial,sans-serif" font-size="30" font-weight="800" fill="white" fill-opacity="0.95">m</text>
+</svg>

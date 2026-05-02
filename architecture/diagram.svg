@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" font-family="system-ui, -apple-system, sans-serif" font-size="12">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#64748B"/></marker>
+  </defs>
+
+  <rect width="800" height="600" fill="#F8FAFC" rx="8"/>
+
+  <text x="400" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#1E293B">miniblue Architecture</text>
+
+  <!-- Clients -->
+  <g transform="translate(20,50)">
+    <rect width="140" height="40" rx="6" fill="#DBEAFE" stroke="#3B82F6"/>
+    <text x="70" y="25" text-anchor="middle" font-weight="600" fill="#1E40AF">curl / SDKs</text>
+  </g>
+  <g transform="translate(180,50)">
+    <rect width="140" height="40" rx="6" fill="#DBEAFE" stroke="#3B82F6"/>
+    <text x="70" y="25" text-anchor="middle" font-weight="600" fill="#1E40AF">azlocal CLI</text>
+  </g>
+  <g transform="translate(340,50)">
+    <rect width="140" height="40" rx="6" fill="#DBEAFE" stroke="#3B82F6"/>
+    <text x="70" y="25" text-anchor="middle" font-weight="600" fill="#1E40AF">Terraform</text>
+  </g>
+  <g transform="translate(500,50)">
+    <rect width="140" height="40" rx="6" fill="#DBEAFE" stroke="#3B82F6"/>
+    <text x="70" y="25" text-anchor="middle" font-weight="600" fill="#1E40AF">Pulumi</text>
+  </g>
+  <g transform="translate(660,50)">
+    <rect width="120" height="40" rx="6" fill="#DBEAFE" stroke="#3B82F6"/>
+    <text x="60" y="25" text-anchor="middle" font-weight="600" fill="#1E40AF">Azure SDKs</text>
+  </g>
+
+  <!-- Arrows to ports -->
+  <line x1="90" y1="90" x2="300" y2="120" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="250" y1="90" x2="300" y2="120" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="410" y1="90" x2="500" y2="120" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="570" y1="90" x2="400" y2="120" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="720" y1="90" x2="400" y2="120" stroke="#64748B" marker-end="url(#arrow)"/>
+
+  <!-- Ports -->
+  <g transform="translate(200,120)">
+    <rect width="180" height="35" rx="6" fill="#FEF3C7" stroke="#F59E0B"/>
+    <text x="90" y="22" text-anchor="middle" font-weight="600" fill="#92400E">HTTP :4566</text>
+  </g>
+  <g transform="translate(420,120)">
+    <rect width="180" height="35" rx="6" fill="#FEF3C7" stroke="#F59E0B"/>
+    <text x="90" y="22" text-anchor="middle" font-weight="600" fill="#92400E">HTTPS :4567</text>
+  </g>
+
+  <!-- Middleware -->
+  <g transform="translate(100,175)">
+    <rect width="600" height="45" rx="6" fill="#F1F5F9" stroke="#94A3B8"/>
+    <text x="300" y="18" text-anchor="middle" font-weight="600" fill="#475569">Middleware Chain</text>
+    <text x="300" y="35" text-anchor="middle" font-size="11" fill="#64748B">CORS > Logger (JSON) > Panic Recovery > RequestID > Azure Headers > API Version</text>
+  </g>
+
+  <!-- Router -->
+  <g transform="translate(100,235)">
+    <rect width="600" height="30" rx="6" fill="#E0E7FF" stroke="#6366F1"/>
+    <text x="300" y="20" text-anchor="middle" font-weight="600" fill="#4338CA">Chi Router</text>
+  </g>
+
+  <!-- Service Groups -->
+  <g transform="translate(20,280)">
+    <rect width="240" height="170" rx="6" fill="#ECFDF5" stroke="#10B981"/>
+    <text x="120" y="20" text-anchor="middle" font-weight="700" fill="#065F46">ARM Services</text>
+    <text x="10" y="40" font-size="11" fill="#047857">Resource Groups</text>
+    <text x="10" y="55" font-size="11" fill="#047857">Virtual Networks + Subnets</text>
+    <text x="10" y="70" font-size="11" fill="#047857">DNS Zones + Records</text>
+    <text x="10" y="85" font-size="11" fill="#047857">Container Registry</text>
+    <text x="10" y="100" font-size="11" fill="#047857">Event Grid Topics</text>
+    <text x="10" y="115" font-size="11" fill="#047857">Azure Functions</text>
+    <text x="10" y="130" font-size="11" fill="#047857">DB for PostgreSQL / MySQL / SQL</text>
+    <text x="10" y="145" font-size="11" fill="#047857">Azure Cache for Redis</text>
+    <text x="10" y="160" font-size="11" fill="#047857">Container Instances (ACI)</text>
+  </g>
+
+  <g transform="translate(280,280)">
+    <rect width="220" height="170" rx="6" fill="#FFF7ED" stroke="#F97316"/>
+    <text x="110" y="20" text-anchor="middle" font-weight="700" fill="#9A3412">Data Plane Services</text>
+    <text x="10" y="40" font-size="11" fill="#C2410C">Blob Storage</text>
+    <text x="10" y="55" font-size="11" fill="#C2410C">Table Storage</text>
+    <text x="10" y="70" font-size="11" fill="#C2410C">Queue Storage</text>
+    <text x="10" y="85" font-size="11" fill="#C2410C">Key Vault Secrets</text>
+    <text x="10" y="100" font-size="11" fill="#C2410C">Cosmos DB Documents</text>
+    <text x="10" y="115" font-size="11" fill="#C2410C">Service Bus Queues/Topics</text>
+    <text x="10" y="130" font-size="11" fill="#C2410C">App Configuration</text>
+  </g>
+
+  <g transform="translate(520,280)">
+    <rect width="260" height="170" rx="6" fill="#F5F3FF" stroke="#8B5CF6"/>
+    <text x="130" y="20" text-anchor="middle" font-weight="700" fill="#5B21B6">Infrastructure</text>
+    <text x="10" y="40" font-size="11" fill="#6D28D9">OAuth2 / OIDC (mock JWT)</text>
+    <text x="10" y="55" font-size="11" fill="#6D28D9">Cloud Metadata Endpoint</text>
+    <text x="10" y="70" font-size="11" fill="#6D28D9">Subscriptions + Tenants</text>
+    <text x="10" y="85" font-size="11" fill="#6D28D9">Provider Registration</text>
+    <text x="10" y="100" font-size="11" fill="#6D28D9">Managed Identity (IMDS)</text>
+    <text x="10" y="130" font-size="11" fill="#6D28D9">/health  /metrics  /_miniblue/reset</text>
+  </g>
+
+  <!-- Store -->
+  <g transform="translate(100,470)">
+    <rect width="600" height="35" rx="6" fill="#FEE2E2" stroke="#EF4444"/>
+    <text x="300" y="22" text-anchor="middle" font-weight="600" fill="#991B1B">Store (Backend Interface)</text>
+  </g>
+
+  <!-- Backends -->
+  <g transform="translate(50,520)">
+    <rect width="160" height="50" rx="6" fill="#FFF1F2" stroke="#FB7185"/>
+    <text x="80" y="20" text-anchor="middle" font-weight="600" fill="#9F1239">MemoryBackend</text>
+    <text x="80" y="38" text-anchor="middle" font-size="10" fill="#BE123C">Default (in-process map)</text>
+  </g>
+  <g transform="translate(230,520)">
+    <rect width="160" height="50" rx="6" fill="#FFF1F2" stroke="#FB7185"/>
+    <text x="80" y="20" text-anchor="middle" font-weight="600" fill="#9F1239">FileBackend</text>
+    <text x="80" y="38" text-anchor="middle" font-size="10" fill="#BE123C">PERSISTENCE=1</text>
+  </g>
+  <g transform="translate(410,520)">
+    <rect width="160" height="50" rx="6" fill="#FFF1F2" stroke="#FB7185"/>
+    <text x="80" y="20" text-anchor="middle" font-weight="600" fill="#9F1239">PostgresBackend</text>
+    <text x="80" y="38" text-anchor="middle" font-size="10" fill="#BE123C">DATABASE_URL</text>
+  </g>
+  <g transform="translate(590,520)">
+    <rect width="160" height="50" rx="6" fill="#E0F2FE" stroke="#0EA5E9"/>
+    <text x="80" y="20" text-anchor="middle" font-weight="600" fill="#0C4A6E">Real Backends</text>
+    <text x="80" y="38" text-anchor="middle" font-size="10" fill="#075985">Postgres / Redis / Docker</text>
+  </g>
+
+  <!-- Arrows store to backends -->
+  <line x1="250" y1="505" x2="130" y2="520" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="350" y1="505" x2="310" y2="520" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="450" y1="505" x2="490" y2="520" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="550" y1="505" x2="670" y2="520" stroke="#64748B" marker-end="url(#arrow)"/>
+
+  <!-- Arrows services to store -->
+  <line x1="140" y1="450" x2="300" y2="470" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="390" y1="450" x2="400" y2="470" stroke="#64748B" marker-end="url(#arrow)"/>
+  <line x1="650" y1="450" x2="500" y2="470" stroke="#64748B" marker-end="url(#arrow)"/>
+</svg>
