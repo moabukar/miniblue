@@ -61,7 +61,7 @@ No Azure account or credentials needed.
 
 | | LocalStack (AWS) | MiniStack (AWS) | Azurite (Azure) | miniblue |
 |---|---|---|---|---|
-| Services | 80+ | 36 | 3 (storage only) | **26** |
+| Services | 80+ | 36 | 3 (storage only) | **27** |
 | Docker image | ~1GB | ~200MB | ~300MB | **~8MB** |
 | Startup | ~10s | ~5s | ~3s | **<1s** |
 | Real backends | DynamoDB Local | RDS, S3, SQS | No | **Postgres, Redis, Docker** |
