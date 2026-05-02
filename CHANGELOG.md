@@ -4,6 +4,20 @@ All notable changes to miniblue are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] - 2026-05-02
+
+### Added
+- **`Microsoft.Resources/deployments` endpoint Phase 1** (#118, addresses parts of #66, #74). PUT/GET/DELETE/List a deployment, walk `template.resources` in declaration order, resolve `[parameters('x')]` and `[variables('x')]`, dispatch each resource to its existing handler via the embedded chi router. Lets `az deployment group create --template-file main.bicep` work end to end against miniblue. Phase 1 does not support `[concat()]` or other template functions, copy loops, conditions, nested templates, `dependsOn` ordering, outputs evaluation, or non-RG-scope deployments
+- **Helm / Kubernetes deployment guide** at `/guides/helm` (#117, closes #86) covering `helm install`, persistence, PostgreSQL backend via secret, exposing the service, and the real-backend limitations in-cluster
+- **`SHA256SUMS` release asset** (#115, closes #94). The release workflow now publishes a single checksums file alongside the binaries
+
+### Changed
+- README comparison table service count bumped 26 to 27 (AKS shipped in v0.6.0)
+- CHANGELOG backfilled for v0.4.2 through v0.6.0 from each release's notes (#116)
+
+### CI
+- New AKS pipeline job that exercises the `:full` Docker image with a mounted docker socket, locking in the in-container real-backend path against future Dockerfile or alpine bumps (#114)
+
 ## [0.6.0] - 2026-05-01
 
 ### Added
