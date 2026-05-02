@@ -23,6 +23,7 @@ import (
 	"github.com/moabukar/miniblue/internal/services/cosmosdb"
 	"github.com/moabukar/miniblue/internal/services/dbmysql"
 	"github.com/moabukar/miniblue/internal/services/dbpostgres"
+	"github.com/moabukar/miniblue/internal/services/deployments"
 	"github.com/moabukar/miniblue/internal/services/dns"
 	"github.com/moabukar/miniblue/internal/services/eventgrid"
 	"github.com/moabukar/miniblue/internal/services/identity"
@@ -196,6 +197,9 @@ func (s *Server) setupRoutes() {
 		{"nsg", func() { nsg.NewHandler(s.store).Register(s.router) }},
 		{"loadbalancer", func() { loadbalancer.NewHandler(s.store).Register(s.router) }},
 		{"appgw", func() { appgw.NewHandler(s.store).Register(s.router) }},
+		{"deployments", func() {
+			deployments.NewHandler(s.store, deployments.NewRouterDispatcher(s.router)).Register(s.router)
+		}},
 	}
 	// Always include core infrastructure in service list
 	s.services = []string{"subscriptions", "tenants"}
