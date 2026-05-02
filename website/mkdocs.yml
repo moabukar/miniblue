@@ -48,6 +48,7 @@ nav:
     - azlocal CLI: guides/azlocal.md
     - CLI Reference: guides/azure-cli.md
     - Docker: guides/docker.md
+    - Helm / Kubernetes: guides/helm.md
   - Services:
     - Overview: services/overview.md
     - API Parity Matrix: services/parity.md
