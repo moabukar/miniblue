@@ -4,6 +4,72 @@ All notable changes to miniblue are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-05-01
+
+### Added
+- **Azure Kubernetes Service (AKS) emulation** (#111, closes #50). `Microsoft.ContainerService/managedClusters` with two backends: stub (default, ARM only) and real (rancher/k3s in Docker, opt-in via `AKS_BACKEND=k3s`). `azlocal aks create/list/show/delete/get-credentials` commands. `get-credentials` merges into `~/.kube/config` like `az aks` does
+- **`full` Dockerfile target** that adds the docker CLI so AKS and ACI real backends work in-container with the host docker socket mounted
+- **Dedicated AKS CI pipeline** (`aks-e2e.yml`): real-backend k3s smoke (DinD on the runner) and a Terraform apply against the AKS example
+- Resource group cascade delete now cleans up child AKS resources
+
+### Changed
+- `cmd/miniblue` graceful shutdown now propagates to AKS so k3s containers do not leak past miniblue's lifetime
+- 27 services total (was 26)
+
+## [0.5.1] - 2026-05-01
+
+### Fixed
+- Container startup crash on fresh Docker runs. Scratch image runs as `USER 65534` but had no writable home directory. Now ships with `/home/nonroot` owned by 65534 and `HOME` set, so the cert dir can be created cleanly (#110)
+- Cert load when existing certs are unusable: missing, corrupted, or expired files now fall through to regeneration instead of `log.Fatal`. Thanks @KarasAlison (#109)
+- Bump `github.com/go-sql-driver/mysql` to v1.10.0 (#108)
+
+### Changed
+- E2E now builds the image from the PR's `Dockerfile` instead of pulling `:latest` from Docker Hub, so regressions are caught on the PR that introduces them. Failed startups dump `docker logs miniblue` for diagnostics (#110)
+- Bump `mislav/bump-homebrew-formula-action` to v4 (#107)
+
+## [0.5.0] - 2026-04-21
+
+### Added
+- **App Service & Web Apps** (`Microsoft.Web/sites`) with full CRUD, slots, publishing credentials, and config sub-resources (app settings, auth settings v1/v2, connection strings, backup, logs, metadata, push settings, slot config names, storage accounts) (#103, contributed by @abusarah-tech)
+- **App Service Plans** (`Microsoft.Web/serverFarms`) with SKU tier detection
+- **Container Apps** (`Microsoft.App/containerApps`) with CRUD, start/stop, revisions, secrets, auth tokens, custom domain analysis, and subscription-level listing
+- **Managed Environments** (`Microsoft.App/managedEnvironments`) with CRUD and app logs configuration
+- **Container App Jobs** (`Microsoft.App/jobs`) with CRUD, start/stop, executions, detectors, and secrets
+- `CheckNameAvailability` endpoint for sites
+- New `containerapp` and `containerapp env` commands in `azlocal`
+- New `containerapps` and `webapps` Terraform scenarios
+
+### Changed
+- Existing Azure Functions emulation refactored into the broader `sites` package
+
+### Fixed
+- Improved error handling when loading existing TLS certificates and keys (#105, fixes #104)
+
+## [0.4.4] - 2026-04-16
+
+### Added
+- Persistent volume support in the Helm chart (#83). Survives pod restarts when enabled in values.yaml
+- PostgreSQL backend support in the Helm chart via Kubernetes secret (`databaseUrlSecret.name` / `.key`)
+
+### Changed
+- Secure defaults set on the Helm container, matching the Dockerfile's non-root user (#88)
+
+## [0.4.3] - 2026-04-16
+
+### Fixed
+- Store backend data race in `FileBackend.Save()`: auto-save goroutine could read inconsistent state while handlers were writing. Now uses an atomic `Snapshot()` under a single lock (#84, #89)
+- `PostgresBackend.List()` and `ListByPrefix()` returned `nil` on error instead of empty slices, causing inconsistent behavior with the memory backend
+- `azlocal` CLI no longer silently swallows `json.Marshal` and `io.ReadAll` errors in `doPut`/`doPost`/`printResponse`. Errors now go to stderr (#85)
+
+### Changed
+- E2E workflow now runs on every push to main and every PR (was `workflow_dispatch` only) so breaking changes can not slip through unnoticed (#82)
+- CI example bumped to `actions/checkout@v6` (#91)
+
+## [0.4.2] - 2026-04-15
+
+### Fixed
+- `miniblue --version` now reports the correct version instead of `dev`. Version is injected via ldflags in all build targets: release binaries, Docker images, and Homebrew formula
+
 ## [0.4.1] - 2026-04-15
 
 ### Fixed
