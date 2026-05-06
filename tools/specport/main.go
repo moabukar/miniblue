@@ -9,6 +9,8 @@
 // Run from the repo root:
 //
 //	go run ./tools/specport list
+//	go run ./tools/specport discover -plane arm -org keyvault
+//	go run ./tools/specport init keyvault --from arm:specification/keyvault/resource-manager/Microsoft.KeyVault/KeyVault
 //	go run ./tools/specport extract <service>
 //	go run ./tools/specport diff <service>
 //
@@ -25,6 +27,16 @@ const usageText = `specport — Azure spec → miniblue coverage tool
 Usage:
   specport list
       List configured services in tools/specport/specs/.
+
+  specport discover [flags]
+      Discover services directly from Azure/azure-rest-api-specs (GitHub API)
+      and print candidates you can initialize into a specport YAML config.
+      Tip: set GITHUB_TOKEN to avoid GitHub API rate limits.
+      Use -format table (default) or -format tsv.
+
+  specport init <slug> --from <discovered_id> [flags]
+      Generate tools/specport/specs/<slug>.yaml from a discovered service.
+      Alternative: use --url + --plane when you are rate-limited.
 
   specport extract <service> [flags]
       Fetch the Azure REST spec(s) for <service>, parse them, and write
@@ -55,6 +67,10 @@ func main() {
 	switch os.Args[1] {
 	case "list":
 		err = cmdList(os.Args[2:])
+	case "discover":
+		err = cmdDiscover(os.Args[2:])
+	case "init":
+		err = cmdInit(os.Args[2:])
 	case "extract":
 		err = cmdExtract(os.Args[2:])
 	case "diff":

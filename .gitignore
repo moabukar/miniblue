@@ -62,3 +62,6 @@ package-lock.json
 
 # Debug
 __debug_bin*
+
+# Specport
+/tools/specport/.cache/

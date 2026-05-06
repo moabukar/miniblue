@@ -14,7 +14,7 @@ func cmdDiff(args []string) error {
 	specDir := fs.String("spec-dir", defaultSpecDir, "directory holding service config files")
 	outDir := fs.String("out-dir", defaultOutDir, "directory where checklists are written")
 	failOnMissing := fs.Bool("fail-on-missing", false, "exit non-zero if any spec operation is MISSING")
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(reorderFlagArgs(args)); err != nil {
 		return err
 	}
 	if fs.NArg() != 1 {

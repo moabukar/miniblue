@@ -15,7 +15,7 @@ import (
 func cmdList(args []string) error {
 	fs := flag.NewFlagSet("list", flag.ContinueOnError)
 	specDir := fs.String("spec-dir", defaultSpecDir, "directory holding service config files")
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(reorderFlagArgs(args)); err != nil {
 		return err
 	}
 	names, err := listServiceConfigs(*specDir)
@@ -39,7 +39,7 @@ func cmdExtract(args []string) error {
 	fs := flag.NewFlagSet("extract", flag.ContinueOnError)
 	specDir := fs.String("spec-dir", defaultSpecDir, "directory holding service config files")
 	outDir := fs.String("out-dir", defaultOutDir, "directory where checklists are written")
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(reorderFlagArgs(args)); err != nil {
 		return err
 	}
 	if fs.NArg() != 1 {
