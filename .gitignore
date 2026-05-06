@@ -2,6 +2,7 @@
 bin/
 /miniblue
 /azlocal
+/specport
 *.exe
 *.dll
 *.so

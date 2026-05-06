@@ -78,6 +78,18 @@ Use the bug report template when opening an issue. Include:
 
 Open a feature request issue with the Azure service name and links to the relevant Azure REST API docs. This helps us match the real API surface.
 
+## Closing gaps against Azure's REST specs
+
+When implementing a new service, or filling holes in an existing one, follow [`tools/specport/SKILL.md`](tools/specport/SKILL.md). The `specport` CLI extracts the inventory of operations Azure's official spec defines and diffs it against miniblue's chi router so you can see exactly which endpoints are missing or extra:
+
+```bash
+go run ./tools/specport list
+go run ./tools/specport extract keyvault
+go run ./tools/specport diff keyvault
+```
+
+The committed checklists under [`tools/specport/checklists/`](tools/specport/checklists/) are the source of truth for "what's covered" — review them in PRs and re-run `diff` whenever you add routes.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License.

@@ -25,6 +25,10 @@ func NewHandler(s *store.Store) *Handler {
 }
 
 func (h *Handler) Register(r chi.Router) {
+	// Data-plane (secrets). Real Azure exposes this under
+	// https://{vaultName}.vault.azure.net/secrets/...; miniblue routes it
+	// under /keyvault/{vaultName}/secrets/... since the vanity host does
+	// not resolve locally.
 	r.Route("/keyvault/{vaultName}/secrets", func(r chi.Router) {
 		r.Get("/", h.ListSecrets)
 		r.Route("/{secretName}", func(r chi.Router) {
@@ -33,6 +37,9 @@ func (h *Handler) Register(r chi.Router) {
 			r.Delete("/", h.DeleteSecret)
 		})
 	})
+
+	// ARM management (Microsoft.KeyVault/vaults).
+	h.registerARM(r)
 }
 
 func (h *Handler) key(vault, name string) string {
