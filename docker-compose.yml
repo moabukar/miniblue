@@ -9,7 +9,7 @@ services:
       - PORT=4566
       - LOG_LEVEL=info
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:4566/health"]
+      test: ["CMD", "/healthcheck"]
       interval: 10s
       timeout: 5s
       retries: 3
