@@ -72,6 +72,10 @@ func main() {
 		handleTable(args[1:])
 	case "queue":
 		handleQueue(args[1:])
+	case "vm":
+		handleVM(args[1:])
+	case "identity":
+		handleIdentity(args[1:])
 	case "reset":
 		doPost("/_miniblue/reset", nil)
 	case "health":
@@ -112,6 +116,8 @@ Commands:
   containerapp Azure Container Apps operations
   table        Azure Table Storage operations
   queue        Azure Queue Storage operations
+  vm           Virtual Machine operations
+  identity     Managed identity operations
   reset        Reset all miniblue state
   health       Check miniblue health
 

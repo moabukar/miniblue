@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/moabukar/miniblue/internal/azerr"
 	"github.com/moabukar/miniblue/internal/services/aks"
+	"github.com/moabukar/miniblue/internal/services/vm"
 	"github.com/moabukar/miniblue/internal/store"
 )
 
@@ -170,6 +171,11 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	// can read the backend handles. No-op in stub mode.
 	aks.CleanupClustersInRG(h.store, sub, name)
 	h.store.DeleteByPrefix("aks:cluster:" + p)
+	// Same for VM containers/networks and their identity-secret index entries.
+	vm.CleanupVMsInRG(h.store, sub, name)
+	h.store.DeleteByPrefix("vm:" + p)
+	h.store.DeleteByPrefix("vmsvc:" + p)
+	h.store.DeleteByPrefix("msi:identity:" + p)
 	h.store.DeleteByPrefix("nsg:" + p)
 	h.store.DeleteByPrefix("nsgrule:" + p)
 	h.store.DeleteByPrefix("publicip:" + p)

@@ -146,3 +146,60 @@ func TestStorageAccountMissingResourceGroup(t *testing.T) {
 		t.Fatal("expected error for missing --resource-group")
 	}
 }
+
+func TestVMLifecycleCLI(t *testing.T) {
+	t.Setenv("MINIBLUE_DISABLE_DOCKER", "1")
+	ts := setupMiniblue()
+	defer ts.Close()
+
+	runAzlocal(ts, "group", "create", "--name", "vmRG", "--location", "eastus")
+
+	output, _, _ := runAzlocal(ts, "vm", "create",
+		"--resource-group", "vmRG",
+		"--name", "webvm",
+		"--image", "ubuntu:24.04")
+	if !strings.Contains(output, "webvm") || !strings.Contains(output, "running") {
+		t.Fatalf("expected created VM in output, got: %s", output)
+	}
+
+	output, _, _ = runAzlocal(ts, "vm", "list", "--resource-group", "vmRG")
+	if !strings.Contains(output, "webvm") {
+		t.Fatalf("expected VM in list, got: %s", output)
+	}
+
+	output, _, _ = runAzlocal(ts, "vm", "show", "--resource-group", "vmRG", "--name", "webvm")
+	if !strings.Contains(output, "Microsoft.Compute/virtualMachines") {
+		t.Fatalf("expected VM type in show, got: %s", output)
+	}
+
+	output, _, _ = runAzlocal(ts, "vm", "delete", "--resource-group", "vmRG", "--name", "webvm")
+	if !strings.Contains(strings.ToLower(output), "deleted") {
+		t.Fatalf("expected delete confirmation, got: %s", output)
+	}
+}
+
+func TestIdentityCLI(t *testing.T) {
+	t.Setenv("MINIBLUE_DISABLE_DOCKER", "1")
+	ts := setupMiniblue()
+	defer ts.Close()
+
+	runAzlocal(ts, "group", "create", "--name", "idRG", "--location", "eastus")
+
+	output, _, _ := runAzlocal(ts, "identity", "create", "--resource-group", "idRG", "--name", "app-id")
+	if !strings.Contains(output, "principalId") || !strings.Contains(output, "clientId") {
+		t.Fatalf("expected identity properties in output, got: %s", output)
+	}
+
+	output, _, _ = runAzlocal(ts, "vm", "create",
+		"--resource-group", "idRG",
+		"--name", "idvm",
+		"--identity", "app-id")
+	if !strings.Contains(output, "UserAssigned") || !strings.Contains(output, "app-id") {
+		t.Fatalf("expected identity assignment in VM output, got: %s", output)
+	}
+
+	output, _, _ = runAzlocal(ts, "identity", "list", "--resource-group", "idRG")
+	if !strings.Contains(output, "app-id") {
+		t.Fatalf("expected identity in list, got: %s", output)
+	}
+}

@@ -23,6 +23,14 @@ var (
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 
+	// Disable the Ryuk reaper container. On Docker Desktop (notably Windows) the
+	// reaper is frequently removed immediately after starting, producing
+	// "unexpected container status \"removing\"" failures. We terminate the
+	// MySQL container explicitly below, so the reaper is not required.
+	if os.Getenv("TESTCONTAINERS_RYUK_DISABLED") == "" {
+		os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
+	}
+
 	c, err := mysql.Run(ctx, "mysql:8.0",
 		mysql.WithUsername("root"),
 		mysql.WithPassword("test"),

@@ -42,6 +42,7 @@ import (
 	"github.com/moabukar/miniblue/internal/services/storageaccounts"
 	"github.com/moabukar/miniblue/internal/services/subscriptions"
 	"github.com/moabukar/miniblue/internal/services/table"
+	"github.com/moabukar/miniblue/internal/services/vm"
 	"github.com/moabukar/miniblue/internal/store"
 )
 
@@ -200,6 +201,7 @@ func (s *Server) setupRoutes() {
 		{"deployments", func() {
 			deployments.NewHandler(s.store, deployments.NewRouterDispatcher(s.router)).Register(s.router)
 		}},
+		{"vm", func() { vm.NewHandler(s.store).Register(s.router) }},
 	}
 	// Always include core infrastructure in service list
 	s.services = []string{"subscriptions", "tenants"}
