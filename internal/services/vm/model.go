@@ -114,10 +114,6 @@ func powerState(rec map[string]interface{}) string {
 	return s
 }
 
-func setPowerState(rec map[string]interface{}, state string) {
-	getMinibluProps(rec)["powerState"] = state
-}
-
 // buildVMRecord assembles the stored VM record from the request input,
 // echoing the accepted subset of the ARM shape and adding miniblue fields.
 func buildVMRecord(sub, rg, name string, input map[string]interface{}, image string) map[string]interface{} {

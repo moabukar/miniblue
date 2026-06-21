@@ -57,7 +57,9 @@ func dockerRun(o runOpts) (string, error) {
 	for _, p := range o.ports {
 		args = append(args, "-p", fmt.Sprintf("%d:%d", p, p))
 	}
-	args = append(args, o.image)
+	// "--" terminates flag parsing so a user-supplied image or command that
+	// starts with "-" is treated as a positional arg, not a docker run flag.
+	args = append(args, "--", o.image)
 	args = append(args, o.cmd...)
 
 	out, err := exec.Command("docker", args...).CombinedOutput()
