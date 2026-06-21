@@ -10,6 +10,7 @@ Code examples showing how to use miniblue with different languages and tools.
 | [go/](go/) | Go | HTTP client for resource groups and Key Vault |
 | [javascript/](javascript/) | JavaScript | Fetch API for resource groups, Key Vault, Blob Storage |
 | [dotnet/](dotnet/) | C# / .NET 10 | Resource groups, Key Vault, Blob Storage, Cosmos DB |
+| [java/](java/) | Java 17+ | HttpClient for resource groups, Key Vault, Blob Storage, Cosmos DB |
 | [terraform/](terraform/) | HCL | Terraform azurerm provider with networking, storage, DNS and more |
 | [ci/](ci/) | YAML | GitHub Actions workflow with miniblue as a service container |
 
@@ -25,4 +26,5 @@ Then run any example:
     cd examples/go && go run main.go
     cd examples/javascript && node example.js
     cd examples/dotnet && dotnet run
+    cd examples/java && mvn -q compile exec:java
     cd examples/terraform && export SSL_CERT_FILE=~/.miniblue/cert.pem && terraform init && terraform apply
