@@ -1,6 +1,6 @@
 # Services Overview
 
-miniblue emulates 27 Azure services on a single port. All services use in-memory storage and require no authentication.
+miniblue emulates 28 Azure services on a single port. All services use in-memory storage and require no authentication.
 
 ## Service status
 
@@ -26,6 +26,7 @@ miniblue emulates 27 Azure services on a single port. All services use in-memory
 | [Azure Cache for Redis](redis.md) | `Microsoft.Cache` | Done | Yes | -- |
 | [Container Instances](container-instances.md) | `Microsoft.ContainerInstance` | Done | Yes | -- |
 | [Kubernetes Service (AKS)](kubernetes-service.md) | `Microsoft.ContainerService` | Done | Yes | Yes (real k3s, opt-in) |
+| [Virtual Machines](virtual-machines.md) | `Microsoft.Compute` | Done | Yes | Yes (real Docker, opt-in) |
 | Public IP Addresses | `Microsoft.Network` | Done | Yes | -- |
 | Network Security Groups | `Microsoft.Network` | Done | Yes | -- |
 | Load Balancer | `Microsoft.Network` | Done | Yes | -- |
