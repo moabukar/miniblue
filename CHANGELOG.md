@@ -4,6 +4,13 @@ All notable changes to miniblue are documented here.
 
 Format follows [Keep a Changelog](https://keepachangelog.com/). Versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Virtual Machines (`Microsoft.Compute/virtualMachines`)**. Create/list/start/stop/restart/delete VMs via ARM API and `azlocal vm`, each backed by a real Docker container (ACI-style stub mode without Docker). Deploy multiple named services per VM (`azlocal vm deploy`), each in its own container on a per-VM Docker network with host-published ports; read per-service or combined labeled logs with tail/follow (`azlocal vm logs`); open an interactive shell (`azlocal vm ssh`) or run one-off commands (`azlocal vm run-command`, mirrors Azure runCommand). Unlike ACI, a VM create whose container fails to start fails fast with `ContainerStartFailed` and persists nothing
+- **User-assigned managed identities (`Microsoft.ManagedIdentity/userAssignedIdentities`)** with `azlocal identity` CRUD. Identities can be assigned to VMs (`azlocal vm identity-assign`); workloads inside a VM (and its services) obtain attestation tokens with zero code changes via the standard `IDENTITY_ENDPOINT`/`IDENTITY_HEADER` env-var protocol that Azure SDK credential chains already probe. Tokens carry `xms_mirid` + VM claims and are verifiable via the new `POST /metadata/identity/introspect` endpoint
+- README service table and comparison count bumped 27 to 28
+
 ## [0.7.0] - 2026-05-02
 
 ### Added
