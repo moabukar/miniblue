@@ -1,0 +1,22 @@
+service: keyvault
+display_name: Key Vault
+rp_namespace: Microsoft.KeyVault
+
+sources:
+  - name: arm-management
+    plane: arm
+    description: ARM management plane (vaults, deleted vaults, managed HSMs, private endpoint connections, operations metadata).
+    url: https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/keyvault/resource-manager/Microsoft.KeyVault/KeyVault/stable/2026-02-01/openapi.json
+
+  - name: data-plane-secrets
+    plane: data-plane
+    description: Data plane (secret CRUD against {vaultBaseUrl}). Miniblue routes this under /keyvault/{vaultName}.
+    url: https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/keyvault/data-plane/Secrets/stable/2025-07-01/secrets.json
+    miniblue_path_prefix: /keyvault/{vaultName}
+
+# Routes considered "in scope" for EXTRA detection. Anything in miniblue's
+# router that contains one of these substrings (case-insensitive) and
+# cannot be matched to a spec operation will be flagged.
+match_route_filters:
+  - /providers/Microsoft.KeyVault
+  - /keyvault

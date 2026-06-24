@@ -2,6 +2,7 @@
 bin/
 /miniblue
 /azlocal
+/specport
 *.exe
 *.dll
 *.so
@@ -61,3 +62,6 @@ package-lock.json
 
 # Debug
 __debug_bin*
+
+# Specport
+/tools/specport/.cache/

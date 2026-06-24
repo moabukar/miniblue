@@ -1,0 +1,560 @@
+{
+  "service": "keyvault",
+  "displayName": "Key Vault",
+  "rpNamespace": "Microsoft.KeyVault",
+  "generatedAt": "2026-05-06T10:59:48Z",
+  "summary": {
+    "specOperations": 60,
+    "implemented": 15,
+    "missing": 45,
+    "extra": 1,
+    "coveragePercent": 25
+  },
+  "sections": [
+    {
+      "name": "arm-management",
+      "plane": "arm",
+      "description": "ARM management plane (vaults, deleted vaults, managed HSMs, private endpoint connections, operations metadata).",
+      "url": "https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/keyvault/resource-manager/Microsoft.KeyVault/KeyVault/stable/2026-02-01/openapi.json",
+      "entries": [
+        {
+          "method": "GET",
+          "specPath": "/providers/Microsoft.KeyVault/operations",
+          "minibluePath": "/providers/Microsoft.KeyVault/operations",
+          "operationId": "Operations_List",
+          "pageable": true,
+          "summary": "List the operations for the provider",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/providers/Microsoft.KeyVault/operations"
+        },
+        {
+          "method": "POST",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/checkMhsmNameAvailability",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/checkMhsmNameAvailability",
+          "operationId": "ManagedHsms_CheckMhsmNameAvailability",
+          "summary": "Checks that the managed hsm name is valid and is not already in use.",
+          "status": "MISSING"
+        },
+        {
+          "method": "POST",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/checkNameAvailability",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/checkNameAvailability",
+          "operationId": "Vaults_CheckNameAvailability",
+          "summary": "Checks that the vault name is valid and is not already in use.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/checkNameAvailability"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/deletedManagedHSMs",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/deletedManagedHSMs",
+          "operationId": "ManagedHsms_ListDeleted",
+          "pageable": true,
+          "summary": "The List operation gets information about the deleted managed HSMs associated with the subscription.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/deletedVaults",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/deletedVaults",
+          "operationId": "Vaults_ListDeleted",
+          "pageable": true,
+          "summary": "Gets information about the deleted vaults in a subscription.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/deletedVaults"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedManagedHSMs/{name}",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedManagedHSMs/{name}",
+          "operationId": "ManagedHsms_GetDeleted",
+          "summary": "Gets the specified deleted managed HSM.",
+          "status": "MISSING"
+        },
+        {
+          "method": "POST",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedManagedHSMs/{name}/purge",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedManagedHSMs/{name}/purge",
+          "operationId": "ManagedHsms_PurgeDeleted",
+          "lro": true,
+          "summary": "Permanently deletes the specified managed HSM.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedVaults/{vaultName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedVaults/{vaultName}",
+          "operationId": "Vaults_GetDeleted",
+          "summary": "Gets the deleted Azure key vault.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedVaults/{vaultName}"
+        },
+        {
+          "method": "POST",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedVaults/{vaultName}/purge",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedVaults/{vaultName}/purge",
+          "operationId": "Vaults_PurgeDeleted",
+          "lro": true,
+          "summary": "Permanently deletes the specified vault. aka Purges the deleted Azure key vault.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/locations/{location}/deletedVaults/{vaultName}/purge"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/managedHSMs",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/managedHSMs",
+          "operationId": "ManagedHsms_ListBySubscription",
+          "pageable": true,
+          "summary": "The List operation gets information about the managed HSM Pools associated with the subscription.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/vaults",
+          "minibluePath": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/vaults",
+          "operationId": "Vaults_ListBySubscription",
+          "pageable": true,
+          "summary": "The List operation gets information about the vaults associated with the subscription.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/providers/Microsoft.KeyVault/vaults"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs",
+          "operationId": "ManagedHsms_ListByResourceGroup",
+          "pageable": true,
+          "summary": "The List operation gets information about the managed HSM Pools associated with the subscription and within the specified resource group.",
+          "status": "MISSING"
+        },
+        {
+          "method": "DELETE",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}",
+          "operationId": "ManagedHsms_Delete",
+          "lro": true,
+          "summary": "Deletes the specified managed HSM Pool.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}",
+          "operationId": "ManagedHsms_Get",
+          "summary": "Gets the specified managed HSM Pool.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PATCH",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}",
+          "operationId": "ManagedHsms_Update",
+          "lro": true,
+          "summary": "Update a managed HSM Pool in the specified subscription.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}",
+          "operationId": "ManagedHsms_CreateOrUpdate",
+          "lro": true,
+          "summary": "Create or update a managed HSM Pool in the specified subscription.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys",
+          "operationId": "ManagedHsmKeys_List",
+          "pageable": true,
+          "summary": "Lists the keys in the specified managed HSM.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys/{keyName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys/{keyName}",
+          "operationId": "ManagedHsmKeys_Get",
+          "summary": "Gets the current version of the specified key from the specified managed HSM.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys/{keyName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys/{keyName}",
+          "operationId": "ManagedHsmKeys_CreateIfNotExist",
+          "summary": "Creates the first version of a new key if it does not exist. If it already exists, then the existing key is returned without any write operations being performed. This API does not create subsequent versions, and does not update existing keys.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys/{keyName}/versions",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys/{keyName}/versions",
+          "operationId": "ManagedHsmKeys_ListVersions",
+          "pageable": true,
+          "summary": "Lists the keys in the specified managed HSM.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys/{keyName}/versions/{keyVersion}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/keys/{keyName}/versions/{keyVersion}",
+          "operationId": "ManagedHsmKeys_GetVersion",
+          "summary": "Gets the specified version of the specified key in the specified managed HSM.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateEndpointConnections",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateEndpointConnections",
+          "operationId": "MHSMPrivateEndpointConnections_ListByResource",
+          "pageable": true,
+          "summary": "The List operation gets information about the private endpoint connections associated with the managed HSM Pool.",
+          "status": "MISSING"
+        },
+        {
+          "method": "DELETE",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "operationId": "MHSMPrivateEndpointConnections_Delete",
+          "lro": true,
+          "summary": "Deletes the specified private endpoint connection associated with the managed hsm pool.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "operationId": "MHSMPrivateEndpointConnections_Get",
+          "summary": "Gets the specified private endpoint connection associated with the managed HSM Pool.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "operationId": "MHSMPrivateEndpointConnections_Put",
+          "summary": "Updates the specified private endpoint connection associated with the managed hsm pool.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateLinkResources",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/privateLinkResources",
+          "operationId": "MHSMPrivateLinkResources_ListByMHSMResource",
+          "summary": "Gets the private link resources supported for the managed hsm pool.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/regions",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}/regions",
+          "operationId": "MHSMRegions_ListByResource",
+          "pageable": true,
+          "summary": "The List operation gets information about the regions associated with the managed HSM Pool.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults",
+          "operationId": "Vaults_ListByResourceGroup",
+          "pageable": true,
+          "summary": "The List operation gets information about the vaults associated with the subscription and within the specified resource group.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/"
+        },
+        {
+          "method": "DELETE",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
+          "operationId": "Vaults_Delete",
+          "summary": "Deletes the specified Azure key vault.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
+          "operationId": "Vaults_Get",
+          "summary": "Gets the specified Azure key vault.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/"
+        },
+        {
+          "method": "PATCH",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
+          "operationId": "Vaults_Update",
+          "summary": "Update a key vault in the specified subscription.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}",
+          "operationId": "Vaults_CreateOrUpdate",
+          "lro": true,
+          "summary": "Create or update a key vault in the specified subscription.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/accessPolicies/{operationKind}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/accessPolicies/{operationKind}",
+          "operationId": "Vaults_UpdateAccessPolicy",
+          "summary": "Update access policies in a key vault in the specified subscription.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/accessPolicies/{operationKind}"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys",
+          "operationId": "Keys_List",
+          "pageable": true,
+          "summary": "Lists the keys in the specified key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}",
+          "operationId": "Keys_Get",
+          "summary": "Gets the current version of the specified key from the specified key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}",
+          "operationId": "Keys_CreateIfNotExist",
+          "summary": "Creates the first version of a new key if it does not exist. If it already exists, then the existing key is returned without any write operations being performed. This API does not create subsequent versions, and does not update existing keys.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}/versions",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}/versions",
+          "operationId": "Keys_ListVersions",
+          "pageable": true,
+          "summary": "Lists the keys in the specified key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}/versions/{keyVersion}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}/versions/{keyVersion}",
+          "operationId": "Keys_GetVersion",
+          "summary": "Gets the specified version of the specified key in the specified key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateEndpointConnections",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateEndpointConnections",
+          "operationId": "PrivateEndpointConnections_ListByResource",
+          "pageable": true,
+          "summary": "The List operation gets information about the private endpoint connections associated with the vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "DELETE",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "operationId": "PrivateEndpointConnections_Delete",
+          "lro": true,
+          "summary": "Deletes the specified private endpoint connection associated with the key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "operationId": "PrivateEndpointConnections_Get",
+          "summary": "Gets the specified private endpoint connection associated with the key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateEndpointConnections/{privateEndpointConnectionName}",
+          "operationId": "PrivateEndpointConnections_Put",
+          "summary": "Updates the specified private endpoint connection associated with the key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateLinkResources",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/privateLinkResources",
+          "operationId": "PrivateLinkResources_ListByVault",
+          "summary": "Gets the private link resources supported for the key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets",
+          "operationId": "Secrets_List",
+          "pageable": true,
+          "summary": "The List operation gets information about the secrets in a vault.  NOTE: This API is intended for internal use in ARM deployments. Users should use the data-plane REST service for interaction with vault secrets.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+          "operationId": "Secrets_Get",
+          "summary": "Gets the specified secret.  NOTE: This API is intended for internal use in ARM deployments. Users should use the data-plane REST service for interaction with vault secrets.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PATCH",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+          "operationId": "Secrets_Update",
+          "summary": "Update a secret in the specified subscription.  NOTE: This API is intended for internal use in ARM deployments.  Users should use the data-plane REST service for interaction with vault secrets.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+          "minibluePath": "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+          "operationId": "Secrets_CreateOrUpdate",
+          "summary": "Create or update a secret in a key vault in the specified subscription.  NOTE: This API is intended for internal use in ARM deployments. Users should use the data-plane REST service for interaction with vault secrets.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/subscriptions/{subscriptionId}/resources",
+          "minibluePath": "/subscriptions/{subscriptionId}/resources",
+          "operationId": "Vaults_List",
+          "pageable": true,
+          "summary": "The List operation gets information about the vaults associated with the subscription.",
+          "status": "MISSING"
+        }
+      ]
+    },
+    {
+      "name": "data-plane-secrets",
+      "plane": "data-plane",
+      "description": "Data plane (secret CRUD against {vaultBaseUrl}). Miniblue routes this under /keyvault/{vaultName}.",
+      "url": "https://raw.githubusercontent.com/Azure/azure-rest-api-specs/main/specification/keyvault/data-plane/Secrets/stable/2025-07-01/secrets.json",
+      "minibluePathPrefix": "/keyvault/{vaultName}",
+      "entries": [
+        {
+          "method": "GET",
+          "specPath": "/deletedsecrets",
+          "minibluePath": "/keyvault/{vaultName}/deletedsecrets",
+          "operationId": "GetDeletedSecrets",
+          "pageable": true,
+          "summary": "Lists deleted secrets for the specified vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "DELETE",
+          "specPath": "/deletedsecrets/{secret-name}",
+          "minibluePath": "/keyvault/{vaultName}/deletedsecrets/{secret-name}",
+          "operationId": "PurgeDeletedSecret",
+          "summary": "Permanently deletes the specified secret.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/deletedsecrets/{secret-name}",
+          "minibluePath": "/keyvault/{vaultName}/deletedsecrets/{secret-name}",
+          "operationId": "GetDeletedSecret",
+          "summary": "Gets the specified deleted secret.",
+          "status": "MISSING"
+        },
+        {
+          "method": "POST",
+          "specPath": "/deletedsecrets/{secret-name}/recover",
+          "minibluePath": "/keyvault/{vaultName}/deletedsecrets/{secret-name}/recover",
+          "operationId": "RecoverDeletedSecret",
+          "summary": "Recovers the deleted secret to the latest version.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/secrets",
+          "minibluePath": "/keyvault/{vaultName}/secrets",
+          "operationId": "GetSecrets",
+          "pageable": true,
+          "summary": "List secrets in a specified key vault.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/keyvault/{vaultName}/secrets/"
+        },
+        {
+          "method": "POST",
+          "specPath": "/secrets/restore",
+          "minibluePath": "/keyvault/{vaultName}/secrets/restore",
+          "operationId": "RestoreSecret",
+          "summary": "Restores a backed up secret to a vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "DELETE",
+          "specPath": "/secrets/{secret-name}",
+          "minibluePath": "/keyvault/{vaultName}/secrets/{secret-name}",
+          "operationId": "DeleteSecret",
+          "summary": "Deletes a secret from a specified key vault.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/keyvault/{vaultName}/secrets/{secretName}/"
+        },
+        {
+          "method": "PUT",
+          "specPath": "/secrets/{secret-name}",
+          "minibluePath": "/keyvault/{vaultName}/secrets/{secret-name}",
+          "operationId": "SetSecret",
+          "summary": "Sets a secret in a specified key vault.",
+          "status": "IMPLEMENTED",
+          "matchedRoute": "/keyvault/{vaultName}/secrets/{secretName}/"
+        },
+        {
+          "method": "POST",
+          "specPath": "/secrets/{secret-name}/backup",
+          "minibluePath": "/keyvault/{vaultName}/secrets/{secret-name}/backup",
+          "operationId": "BackupSecret",
+          "summary": "Backs up the specified secret.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/secrets/{secret-name}/versions",
+          "minibluePath": "/keyvault/{vaultName}/secrets/{secret-name}/versions",
+          "operationId": "GetSecretVersions",
+          "pageable": true,
+          "summary": "List all versions of the specified secret.",
+          "status": "MISSING"
+        },
+        {
+          "method": "GET",
+          "specPath": "/secrets/{secret-name}/{secret-version}",
+          "minibluePath": "/keyvault/{vaultName}/secrets/{secret-name}/{secret-version}",
+          "operationId": "GetSecret",
+          "summary": "Get a specified secret from a given key vault.",
+          "status": "MISSING"
+        },
+        {
+          "method": "PATCH",
+          "specPath": "/secrets/{secret-name}/{secret-version}",
+          "minibluePath": "/keyvault/{vaultName}/secrets/{secret-name}/{secret-version}",
+          "operationId": "UpdateSecret",
+          "summary": "Updates the attributes associated with a specified secret in a given key vault.",
+          "status": "MISSING"
+        }
+      ],
+      "extraRoutes": [
+        {
+          "method": "GET",
+          "pattern": "/keyvault/{vaultName}/secrets/{secretName}/"
+        }
+      ]
+    }
+  ]
+}
