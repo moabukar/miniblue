@@ -14,7 +14,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.26"
+          go-version: "1.27"
 
       - name: Vet
         run: go vet ./...
@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.26"
+          go-version: "1.27"
 
       - name: Lint
         uses: golangci/golangci-lint-action@v9
@@ -41,7 +41,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.26"
+          go-version: "1.27"
 
       - name: Test
         run: go test -v ./tests/...
@@ -54,7 +54,7 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.26"
+          go-version: "1.27"
 
       - name: Build
         run: go build ./...
