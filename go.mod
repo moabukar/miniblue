@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/go-chi/chi/v5 v5.3.0
-	github.com/go-sql-driver/mysql v1.10.0
+	github.com/go-sql-driver/mysql v1.10.1
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.12.3
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.43.0
