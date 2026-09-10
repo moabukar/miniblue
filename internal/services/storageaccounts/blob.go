@@ -2,11 +2,11 @@ package storageaccounts
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/moabukar/miniblue/internal/azerr"
 )
 
 func (h *Handler) GetBlobServiceProperties(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func (h *Handler) buildARMContainerResponse(sub, rg, account, name string) map[s
 			"publicAccess":          "None",
 			"leaseStatus":           "Unlocked",
 			"leaseState":            "Available",
-			"lastModifiedTime":      fmt.Sprintf("\"0x%X\"", time.Now().UnixNano()),
+			"lastModifiedTime":      time.Now().UTC().Format(time.RFC3339),
 			"hasImmutabilityPolicy": false,
 			"hasLegalHold":          false,
 		},
@@ -111,7 +111,7 @@ func (h *Handler) DeleteContainerARM(w http.ResponseWriter, r *http.Request) {
 		writeServiceNotFound(w, "Microsoft.Storage/storageAccounts/blobServices/containers", name)
 		return
 	}
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *Handler) ListContainersARM(w http.ResponseWriter, r *http.Request) {
@@ -120,4 +120,38 @@ func (h *Handler) ListContainersARM(w http.ResponseWriter, r *http.Request) {
 	account := chi.URLParam(r, "accountName")
 	items := h.store.ListByPrefix("blob:armcontainer:" + sub + ":" + rg + ":" + account + ":")
 	json.NewEncoder(w).Encode(map[string]interface{}{"value": items})
+}
+
+func (h *Handler) UpdateContainerARM(w http.ResponseWriter, r *http.Request) {
+
+	sub := chi.URLParam(r, "subscriptionId")
+	rg := chi.URLParam(r, "resourceGroupName")
+	account := chi.URLParam(r, "accountName")
+	name := chi.URLParam(r, "containerName")
+	k := h.armContainerKey(sub, rg, account, name)
+
+	store, ok := h.store.Get(k)
+	if !ok {
+		writeServiceNotFound(w, "Microsoft.Storage/storageAccounts/blobServices/containers", name)
+		return
+	}
+
+	src := map[string]any{}
+	if err := json.NewDecoder(r.Body).Decode(&src); err != nil {
+		azerr.BadRequest(w, "Invalid request body: "+err.Error())
+		return
+	}
+
+	dst, ok := store.(map[string]any)
+	if !ok {
+		// Handle the case where rawData is not a map[string]any
+		azerr.BadRequest(w, "Failed to cast interface{} to map[string]any")
+		return
+	}
+
+	result := DeepMerge(dst, src)
+	h.store.Set(k, result)
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(result)
 }
