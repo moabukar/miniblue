@@ -47,6 +47,7 @@ func (h *Handler) Register(r chi.Router) {
 					r.Put("/", h.CreateContainerARM)
 					r.Get("/", h.GetContainerARM)
 					r.Delete("/", h.DeleteContainerARM)
+					r.Patch("/", h.UpdateContainerARM)
 				})
 			})
 
